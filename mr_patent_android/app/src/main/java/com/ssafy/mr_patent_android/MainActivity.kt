@@ -1,20 +1,30 @@
 package com.ssafy.mr_patent_android
 
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import com.ssafy.mr_patent_android.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
+
+    private val mainBinding: ActivityMainBinding by lazy {
+        ActivityMainBinding.inflate(layoutInflater)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+    }
+
+    private fun openFragment(index: Int, id: String = "") {
+        moveFragment(index, id)
+    }
+
+    private fun moveFragment(index: Int, id: String = "") {
+        val transaction = supportFragmentManager.beginTransaction()
+        when(index) {
+
         }
+
+        transaction.commit()
     }
 }
