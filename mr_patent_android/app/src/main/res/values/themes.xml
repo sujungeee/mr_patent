@@ -3,7 +3,14 @@
     <style name="Base.Theme.Mr_patent_android" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+
+        <item name="android:fontFamily">@font/pretendard_medium</item>
+        <item name="android:textViewStyle">@style/customTextViewFontStyle</item>
+        <item name="materialButtonStyle">@style/customButtonFontStyle</item>
+        <item name="editTextStyle">@style/customEditTextFontStyle</item>
     </style>
+
+
 
     <style name="Theme.Mr_patent_android" parent="Base.Theme.Mr_patent_android" />
 </resources>
