@@ -26,6 +26,7 @@
         app:itemTextAppearanceInactive="@style/BottomNavigationView"
         app:itemIconTint="@drawable/bottom_icon_color"
         app:itemIconSize="24dp"
+        app:itemActiveIndicatorStyle="@android:color/transparent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
