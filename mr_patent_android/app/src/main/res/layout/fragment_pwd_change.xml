@@ -72,14 +72,13 @@
 
     <!-- 로그인 버튼 -->
     <Button
-        android:id="@+id/btn_verify_email"
+        android:id="@+id/btn_chabge_pwd"
         android:layout_width="0dp"
         android:layout_height="50dp"
         android:layout_marginHorizontal="20dp"
         android:layout_marginTop="50dp"
-        android:backgroundTint="#7097FF"
+        android:backgroundTint="@color/mr_blue"
         android:text="비밀번호 변경"
-        android:textColor="@android:color/white"
         android:textSize="16sp"
         android:layout_marginBottom="16dp"
         app:layout_constraintBottom_toBottomOf="parent"

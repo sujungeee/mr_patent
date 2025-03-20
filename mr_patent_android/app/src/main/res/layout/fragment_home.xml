@@ -90,6 +90,7 @@
         app:layout_constraintTop_toBottomOf="@id/tv_title2"
         app:layout_constraintStart_toStartOf="parent"
         app:chipSpacing="10dp"
+        app:checkedChip="@+id/chip_chemi"
         android:paddingStart="16dp">
 
         <com.google.android.material.chip.Chip
