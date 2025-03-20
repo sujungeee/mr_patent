@@ -12,7 +12,6 @@
         android:id="@+id/iv_logo"
         android:layout_width="100dp"
         android:layout_height="100dp"
-        android:layout_marginBottom="50dp"
         android:scaleType="centerInside"
         android:src="@drawable/logo"
         app:layout_constraintBottom_toTopOf="@+id/et_email"
