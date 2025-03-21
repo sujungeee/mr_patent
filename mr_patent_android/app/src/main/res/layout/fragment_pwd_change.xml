@@ -18,9 +18,9 @@
         android:layout_marginTop="70dp"
         android:scaleType="centerInside"
         android:src="@drawable/logo"
-        android:textSize="20sp"
         style="@style/customTitleFontStyle"
-        android:text="비빌번호 변경을 위해\n이메일 인증을 진행해주세요."
+        android:textSize="20dp"
+        android:text="인증이 완료되었어요.\n새로운 비밀번호를 설정해주세요."
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -72,14 +72,13 @@
 
     <!-- 로그인 버튼 -->
     <Button
-        android:id="@+id/btn_verify_email"
+        android:id="@+id/btn_chabge_pwd"
         android:layout_width="0dp"
         android:layout_height="50dp"
         android:layout_marginHorizontal="20dp"
         android:layout_marginTop="50dp"
-        android:backgroundTint="#7097FF"
-        android:text="인증하기"
-        android:textColor="@android:color/white"
+        android:backgroundTint="@color/mr_blue"
+        android:text="비밀번호 변경"
         android:textSize="16sp"
         android:layout_marginBottom="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
