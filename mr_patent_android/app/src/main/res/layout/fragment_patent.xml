@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".ui.patent.PatentFragment">
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/h1_guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.1" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/h2_guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.4" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/v1_guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.07" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/v2_guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.93" />
+
+    <TextView
+        android:id="@+id/tv_patent_create"
+        style="@style/customTitleFontStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="특허 만들기"
+        android:textColor="@color/black"
+        app:layout_constraintTop_toTopOf="@id/h1_guideline"
+        app:layout_constraintStart_toStartOf="@id/v1_guideline" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/cl_file_upload"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginVertical="20dp"
+        android:background="@drawable/rounded_background"
+        android:elevation="2dp"
+        app:layout_constraintEnd_toEndOf="@id/v2_guideline"
+        app:layout_constraintStart_toStartOf="@id/v1_guideline"
+        app:layout_constraintTop_toBottomOf="@+id/tv_patent_create">
+
+        <TextView
+            android:id="@+id/tv_file_upload"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/pretendard_semibold"
+            android:padding="16dp"
+            android:text="명세서 올리기"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tv_file_upload_go"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/pretendard_semibold"
+            android:padding="16dp"
+            android:text=">"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/cl_write"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginVertical="20dp"
+        android:background="@drawable/rounded_background"
+        android:elevation="2dp"
+        app:layout_constraintBottom_toTopOf="@+id/h2_guideline"
+        app:layout_constraintEnd_toEndOf="@id/v2_guideline"
+        app:layout_constraintStart_toStartOf="@id/v1_guideline"
+        app:layout_constraintTop_toBottomOf="@id/cl_file_upload">
+
+        <TextView
+            android:id="@+id/tv_write"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/pretendard_semibold"
+            android:padding="16dp"
+            android:text="초안 직접 작성"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tv_write_go"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/pretendard_semibold"
+            android:padding="16dp"
+            android:text=">"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <TextView
+        android:id="@+id/tv_writing"
+        style="@style/customTitleFontStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="작성 중인 특허"
+        android:textColor="@color/black"
+        app:layout_constraintTop_toTopOf="@id/h2_guideline"
+        app:layout_constraintStart_toStartOf="@+id/v1_guideline" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:padding="12dp"
+        app:layout_constraintTop_toBottomOf="@id/tv_writing"
+        app:layout_constraintStart_toStartOf="@id/v1_guideline"
+        app:layout_constraintEnd_toEndOf="@id/v2_guideline"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
