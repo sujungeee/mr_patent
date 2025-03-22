@@ -4,4 +4,11 @@
     <!-- 밑줄 긋기 -->
     <string name="tv_profile_register"><u>프로필 이미지 등록</u></string>
     <string name="tv_license_register"><u>자격 증명서 등록</u></string>
+    <string name="tv_file_update"><u>명세서 파일 수정</u></string>
+    <string name="tv_floor_plan"><u>도면 파일 수정</u></string>
+
+    <!-- long string -->
+    <string name="tv_patent_exp">본 발명은 더블버블빨대에 관한 것으로, 보다 상세하게는 상부와 하부로 배치되는 더블더블을 적층하도록 하여 공간 활용도를 높임과 동시에, 본 발명은 더블버블빨대에 관한 것으로, 보다 상세하게는 상부와 하부로 배치되는 더블더블을 적층하도록 하여 높임과</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
