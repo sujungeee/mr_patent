@@ -8,6 +8,7 @@
     <color name="mr_gray_dark">#FF565656</color>
     <color name="mr_gray">#FF8F8F8F</color>
     <color name="mr_gray_light">#FFCBCBCB</color>
+    <color name="mr_gray_lighter">#FFECECEC</color>
     <color name="mr_red">#FFF25E5E</color>
     <color name="mr_green">#FF21C054</color>
 </resources>
