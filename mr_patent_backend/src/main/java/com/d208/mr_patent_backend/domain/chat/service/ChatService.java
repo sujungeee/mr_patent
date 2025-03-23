@@ -19,13 +19,14 @@ public class ChatService {
 //        this.chatMessageRepository = chatMessageRepository;
 //    }
 
+    // 메세지 저장 로직 (dto -> 엔티티)
     public void saveMessage(ChatMessageDto dto) {
         ChatMessage message = ChatMessage.builder()
                 .chatId(dto.getChatId())
                 .roomId(dto.getRoomId())
                 .userId(dto.getUserId())
                 .message(dto.getMessage())
-                .timestamp(dto.getTimestamp() != null ? dto.getTimestamp() : LocalDateTime.now())
+                .timestamp(dto.getTimestamp())
                 .isRead(dto.getIsRead())
                 .build();
 
