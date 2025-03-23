@@ -23,9 +23,11 @@ public class ChatMessage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer chatId;
 
-    private String roomId;
-    private String userId;
+    private Integer roomId;
+    private Integer userId;
+
+    @Column(columnDefinition = "TEXT")
     private String message;
     private LocalDateTime timestamp;
-    private String isRead;
+    private boolean isRead; // DB에는 TINYINT형식으로 저장됨
 }

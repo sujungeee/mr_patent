@@ -10,11 +10,11 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class ChatMessageDto {
-    private String chatId;             // 채팅 ID
-    private String roomId;             // 채팅방 ID
-    private String userId;             // 보낸 사람 ID
+    private Integer chatId;            // 채팅 ID
+    private Integer roomId;            // 채팅방 ID
+    private Integer userId;            // 보낸 사람 ID
     private String message;            // 메시지 내용
     private LocalDateTime timestamp;   // 보낸 시간
-    private String isRead;             // 읽음 여부
+    private boolean isRead;            // 읽음 여부
 
 }

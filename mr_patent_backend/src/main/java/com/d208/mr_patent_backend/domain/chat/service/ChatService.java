@@ -25,7 +25,7 @@ public class ChatService {
                 .userId(dto.getUserId())
                 .message(dto.getMessage())
                 .timestamp(dto.getTimestamp() != null ? dto.getTimestamp() : LocalDateTime.now())
-                .isRead(dto.getIsRead())
+                .isRead(dto.isRead())
                 .build();
 
         chatMessageRepository.save(message);
