@@ -24,7 +24,7 @@ public class ChatService {
                 .roomId(dto.getRoomId())
                 .userId(dto.getUserId())
                 .message(dto.getMessage())
-                .timestamp(dto.getTimestamp())
+                .timestamp(dto.getTimestamp() != null ? dto.getTimestamp() : LocalDateTime.now())
                 .isRead(dto.getIsRead())
                 .build();
 

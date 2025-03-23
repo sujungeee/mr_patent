@@ -58,7 +58,6 @@
         const message = document.getElementById('message').value;
 
         stompClient.send('/pub/chat/message', {}, JSON.stringify({
-            chatId: 'chat_' + new Date().getTime(),
             roomId: roomId,
             userId: userId,
             message: message,
@@ -66,8 +65,6 @@
             isRead: "N"
         }));
     }
-
-
     connect();
 </script>
 </body>
