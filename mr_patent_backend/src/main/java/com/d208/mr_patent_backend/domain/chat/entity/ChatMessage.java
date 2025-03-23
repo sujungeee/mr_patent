@@ -21,9 +21,8 @@ public class ChatMessage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer chatId;
 
-    private String chatId;
     private String roomId;
     private String userId;
     private String message;
