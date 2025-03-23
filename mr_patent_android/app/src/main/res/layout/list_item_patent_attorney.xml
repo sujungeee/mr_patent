@@ -18,12 +18,13 @@
 
     <TextView
         android:id="@+id/tv_patent_attorney_name"
-        android:layout_width="83dp"
+        android:layout_width="0dp"
         android:layout_height="30dp"
         android:layout_marginStart="20dp"
         android:text="킹왕짱 변리사"
         android:textSize="16sp"
         android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/iv_patent_attorney"
         app:layout_constraintTop_toTopOf="parent" />
 
