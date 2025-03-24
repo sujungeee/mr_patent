@@ -64,8 +64,8 @@
             android:paddingTop="8dp">
             <View
                 android:layout_width="match_parent"
-                android:layout_height="2dp"
-                android:background="@color/mr_blue"/>
+                android:layout_height="1dp"
+                android:background="@color/mr_gray_light"/>
 
             <TextView
                 android:id="@+id/tv_mean"
