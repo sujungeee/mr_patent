@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
@@ -17,10 +18,45 @@ public class ChatRoomService {
 
     private final ChatRoomRepository chatRoomRepository;
 
+    // 채팅방 생성(2개)
+    public String createChatRoom(Integer userId, Integer receiverId) {
+        String roomId = UUID.randomUUID().toString();
+
+        // 사용자 A용
+        ChatRoom userRoom = ChatRoom.builder()
+                .roomId(roomId)
+                .userId(userId)
+                .lastMessage("")
+                .unreadCount(0)
+                .status(0)
+                .created(LocalDateTime.now())
+                .updated(LocalDateTime.now())
+                .build();
+
+        // 사용자 B용
+        ChatRoom receiverRoom = ChatRoom.builder()
+                .roomId(roomId)
+                .userId(receiverId)
+                .lastMessage("")
+                .unreadCount(0)
+                .status(0)
+                .created(LocalDateTime.now())
+                .updated(LocalDateTime.now())
+                .build();
+
+        chatRoomRepository.save(userRoom);
+        chatRoomRepository.save(receiverRoom);
+
+        return roomId; // 클라이언트에게 전달
+    }
+
+
+    // userId에 따른 채팅방 목록 조회
     public List<ChatListDto> getChatRoomsByUserId(Integer userId) {
         List<ChatRoom> chatRooms = chatRoomRepository.findByUserId(userId);
 
-    // userId에 따른 채팅방 목록 조회
+        //(리스트 조회한걸 -> Dto 형식으로 변환)
+        //room은 chatRooms 리스트 안의 각각의 요소
         return chatRooms.stream()
                 .map(room -> ChatListDto.builder()
                         .roomId(room.getRoomId())
@@ -28,5 +64,5 @@ public class ChatRoomService {
                         .lastTimestamp(room.getLastTimestamp())
                         .build())
                 .collect(Collectors.toList());
-    }
+        }
 }

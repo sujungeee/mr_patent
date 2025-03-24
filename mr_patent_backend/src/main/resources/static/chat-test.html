@@ -10,9 +10,11 @@
 <h2>1:1 채팅 테스트</h2>
 <div>
     <input type="text" id="roomId" placeholder="채팅방 ID 입력" />
-    <button onclick="changeRoom()">채팅방 이동</button>
+    <button onclick="changeRoom()">채팅방 이동</button><br>
     <label>User ID: <input type="text" id="userId" value="user1"></label><br>
+    <label>Receiver ID: <input type="text" id="receiverId" value="user2"></label><br>
     <label>Message: <input type="text" id="message"></label><br>
+
     <button onclick="sendMessage()">메시지 전송</button>
 </div>
 
@@ -55,11 +57,13 @@
     function sendMessage() {
         const roomId = document.getElementById('roomId').value;
         const userId = document.getElementById('userId').value;
+        const receiverId = document.getElementById('receiverId').value;
         const message = document.getElementById('message').value;
 
         stompClient.send('/pub/chat/message', {}, JSON.stringify({
             roomId: roomId,
             userId: userId,
+            receiverId: receiverId,
             message: message,
             timestamp: null,
             isRead: "N"

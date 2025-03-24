@@ -24,7 +24,7 @@ public class ChatMessage {
     @Column(columnDefinition = "INT UNSIGNED")
     private Integer chatId;
 
-    private Integer roomId;
+    private String roomId;
     private Integer userId;
 
     @Column(columnDefinition = "TEXT")

@@ -4,7 +4,9 @@ import com.d208.mr_patent_backend.domain.chat.entity.ChatRoom;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Integer> {
     List<ChatRoom> findByUserId(Integer userId);
+    Optional<ChatRoom> findByRoomIdAndUserId(String roomId, Integer userId);
 }
