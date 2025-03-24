@@ -26,16 +26,9 @@ public class ChatRoomService {
         return chatRoomRepository.save(chatRoom);
     }
 
+    // userId에 따른 채팅방 목록 조회
     public List<ChatRoom> getUserChatRooms(Integer userId) {
         return chatRoomRepository.findByUserId(userId);
     }
 
-    public ChatRoom getRoomById(Integer roomId) {
-        return chatRoomRepository.findById(roomId).orElse(null);
-    }
-
-    public void updateRoom(ChatRoom room) {
-        room.setUpdated(LocalDateTime.now());
-        chatRoomRepository.save(room);
-    }
 }

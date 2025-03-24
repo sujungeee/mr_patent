@@ -14,6 +14,8 @@ public class ChatRoomDto {
     private Integer userId;            // 보낸 사람 ID
     private Integer status;            // 채팅방 상태 ID
     private Integer unreadcount;       // 안읽은 메세지 내용
+    private String lastMessage;                 // 마지막 메세지
+    private LocalDateTime lastTimestamp;        // 마지막 보낸시간
     private LocalDateTime created;     // 생성일자 시간
     private LocalDateTime updated;     // 수정일자 여부
 

@@ -21,6 +21,8 @@ public class ChatRoom {
     private Integer userId;
     private Integer status;
     private String unreadcount;
+    private String lastMessage;
+    private LocalDateTime lastTimestamp;
     private LocalDateTime created;
     private LocalDateTime updated;
 
