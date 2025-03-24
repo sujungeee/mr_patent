@@ -18,7 +18,7 @@ public class ChatRoomService {
         ChatRoom chatRoom = ChatRoom.builder()
                 .userId(userId)
                 .status(0)
-                .unreadcount("0")
+                .unreadcount(0)
                 .created(LocalDateTime.now())
                 .updated(LocalDateTime.now())
                 .build();

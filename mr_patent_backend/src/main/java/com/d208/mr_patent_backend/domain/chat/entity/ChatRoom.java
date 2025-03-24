@@ -16,11 +16,14 @@ public class ChatRoom {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(columnDefinition = "INT UNSIGNED")
     private Integer roomId;
 
     private Integer userId;
     private Integer status;
-    private String unreadcount;
+    private Integer unreadcount;
+
+    @Column(columnDefinition = "TEXT")
     private String lastMessage;
     private LocalDateTime lastTimestamp;
     private LocalDateTime created;
