@@ -17,7 +17,7 @@ public class Expert {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "expert_id")
+    @Column(name = "expert_id", columnDefinition = "INT UNSIGNED")
     private Integer expertId;
 
     @ManyToOne(fetch = FetchType.LAZY)
