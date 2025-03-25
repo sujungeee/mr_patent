@@ -36,7 +36,7 @@
         android:id="@+id/tv_folder_recent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="최근 버전: 2100년 3월 10일 23:26"
+        android:text="@string/tv_version_recent"
         android:textColor="@color/mr_gray_dark"
         app:layout_constraintBottom_toBottomOf="@+id/imageView"
         app:layout_constraintStart_toStartOf="@+id/tv_folder_name"
