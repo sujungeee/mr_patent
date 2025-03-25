@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/navigation"
+    app:startDestination="@id/nav_loginFragment">
+
+    <fragment
+        android:id="@+id/nav_loginFragment"
+        android:name="com.ssafy.mr_patent_android.ui.login.LoginFragment"
+        android:label="fragment_login"
+        tools:layout="@layout/fragment_login" >
+        <action
+            android:id="@+id/action_loginFragment_to_emailVerifyFragment2"
+            app:destination="@id/nav_emailVerifyFragment" />
+        <action
+            android:id="@+id/action_nav_loginFragment_to_joinBranchFragment"
+            app:destination="@id/nav_joinBranchFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/nav_emailVerifyFragment"
+        android:name="com.ssafy.mr_patent_android.ui.login.EmailVerifyFragment"
+        android:label="fragment_email_verify"
+        tools:layout="@layout/fragment_email_verify" >
+        <action
+            android:id="@+id/action_emailVerifyFragment2_to_pwdChangeFragment"
+            app:destination="@id/nav_pwdChangeFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/nav_pwdChangeFragment"
+        android:name="com.ssafy.mr_patent_android.ui.login.PwdChangeFragment"
+        android:label="fragment_pwd_change"
+        tools:layout="@layout/fragment_pwd_change" >
+        <argument
+            android:name="email"
+            app:argType="string"
+            android:defaultValue=""/>
+
+        <argument
+            android:name="code"
+            app:argType="integer"
+            android:defaultValue="5"/>
+
+        <action
+            android:id="@+id/action_nav_pwdChangeFragment_to_nav_loginFragment"
+            app:destination="@id/nav_loginFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/nav_joinBranchFragment"
+        android:name="com.ssafy.mr_patent_android.ui.join.JoinBranchFragment"
+        android:label="fragment_join_branch"
+        tools:layout="@layout/fragment_join_branch" />
+</navigation>
