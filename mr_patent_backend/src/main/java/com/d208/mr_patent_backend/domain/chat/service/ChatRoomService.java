@@ -7,10 +7,12 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -19,13 +21,22 @@ public class ChatRoomService {
     private final ChatRoomRepository chatRoomRepository;
 
     // 채팅방 생성(2개)
+    @Transactional
     public String createChatRoom(Integer userId, Integer receiverId) {
+
+        Optional<ChatRoom> existing = chatRoomRepository.findByUserIdAndReceiverId(userId, receiverId);
+
+        if (existing.isPresent()) {
+            return existing.get().getRoomId(); // 기존 roomId 반환
+        }
+
         String roomId = UUID.randomUUID().toString();
 
         // 사용자 A용
         ChatRoom userRoom = ChatRoom.builder()
                 .roomId(roomId)
                 .userId(userId)
+                .receiverId(receiverId)
                 .lastMessage("")
                 .unreadCount(0)
                 .status(0)
@@ -37,6 +48,7 @@ public class ChatRoomService {
         ChatRoom receiverRoom = ChatRoom.builder()
                 .roomId(roomId)
                 .userId(receiverId)
+                .receiverId(userId)
                 .lastMessage("")
                 .unreadCount(0)
                 .status(0)
@@ -52,6 +64,7 @@ public class ChatRoomService {
 
 
     // userId에 따른 채팅방 목록 조회
+    // 여기서 내용이 비어있으면 조회되지 않게 해야함 아직 구현안함!!!!!
     public List<ChatListDto> getChatRoomsByUserId(Integer userId) {
         List<ChatRoom> chatRooms = chatRoomRepository.findByUserId(userId);
 

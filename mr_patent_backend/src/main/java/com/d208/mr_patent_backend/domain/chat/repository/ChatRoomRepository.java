@@ -9,4 +9,6 @@ import java.util.Optional;
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Integer> {
     List<ChatRoom> findByUserId(Integer userId);
     Optional<ChatRoom> findByRoomIdAndUserId(String roomId, Integer userId);
+    Optional<ChatRoom> findByUserIdAndReceiverId(Integer userId, Integer receiverId);
+
 }
