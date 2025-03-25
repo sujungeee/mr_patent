@@ -3,6 +3,8 @@
     <style name="Base.Theme.Mr_patent_android" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="android:statusBarColor">@color/mr_white</item>
+        <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowBackground">@color/mr_white</item>
         <item name="android:colorPrimaryDark">@color/mr_blue</item>
 
