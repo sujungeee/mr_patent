@@ -9,4 +9,11 @@
         <item name="android:textSize">10sp</item>
     </style>
 
+    <style name="customSwitchStyle" parent="Widget.Material3.CompoundButton.MaterialSwitch">
+        <item name="thumbTint">@color/selector_switch_thumb</item>
+        <item name="trackTint">@color/selector_switch_track</item>
+        <item name="trackDecorationTint">@color/mr_blue</item>
+        <item name="minHeight">28dp</item>
+    </style>
+
 </resources>
