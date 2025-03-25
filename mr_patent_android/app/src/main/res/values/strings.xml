@@ -3,12 +3,22 @@
 
     <!-- 밑줄 긋기 -->
     <string name="tv_profile_register"><u>프로필 이미지 등록</u></string>
-    <string name="tv_license_register"><u>자격 증명서 등록</u></string>
+    <string name="tv_profile_edit"><u>프로필 이미지 수정</u></string>
+    <string name="tv_license_edit"><u>자격 증명서 수정</u></string>
     <string name="tv_file_update"><u>명세서 파일 수정</u></string>
     <string name="tv_floor_plan"><u>도면 파일 수정</u></string>
+    <string name="tv_change_next"><u>다음에 변경하기</u></string>
+
+    <!-- 개행 문자 -->
+    <string name="tv_delete_exp1">탈퇴 시, 회원 가입을 처음부터 진행해야 해요.\n(※ 변리사 자격 검증도 다시 신청하셔야 합니다.)</string>
+    <string name="tv_delete_exp2">탈퇴를 진행하셔도 기존 채팅 내역은 상대방에게 보여져요. 이 점 유의해 주시기 바랍니다.</string>
 
     <!-- long string -->
     <string name="tv_patent_exp">본 발명은 더블버블빨대에 관한 것으로, 보다 상세하게는 상부와 하부로 배치되는 더블더블을 적층하도록 하여 공간 활용도를 높임과 동시에, 본 발명은 더블버블빨대에 관한 것으로, 보다 상세하게는 상부와 하부로 배치되는 더블더블을 적층하도록 하여 높임과</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <!-- format string -->
+    <string name="tv_date_test">검사 시간: %s</string>
+    <string name="tv_similiarity_test_result">유사도 검사: %s</string>
 </resources>
