@@ -103,7 +103,7 @@
         android:layout_marginHorizontal="20dp"
         android:backgroundTint="@color/mr_blue"
         android:fontFamily="@font/pretendard_semibold"
-        android:text="유사도 검사"
+        android:text="명세서 내용 확인"
         android:textSize="18sp"
         app:layout_constraintTop_toTopOf="@id/h4_guideline"
         app:layout_constraintBottom_toBottomOf="parent" />
