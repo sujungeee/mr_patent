@@ -33,10 +33,10 @@ public class WebSocketEventListener {
         System.out.println("🧾 [SUBSCRIBE] sessionId = " + sessionId + ", userId = " + userId + ", roomId = " + roomId);
 
         if (sessionId != null && userId != null && roomId != null) {
-            int uid = Integer.parseInt(userId);
-            System.out.println("✅ 조건 통과. uid = " + uid);
+            int userid = Integer.parseInt(userId);
+            System.out.println("✅ 조건 통과. uid = " + userid);
 
-            chatRoomRepository.findByRoomIdAndUserId(roomId, uid).ifPresent(room -> {
+            chatRoomRepository.findByRoomIdAndUserId(roomId, userid).ifPresent(room -> {
                 System.out.println("✅ ChatRoom 찾음: " + room);
 
                 // 1. sessionId 저장
