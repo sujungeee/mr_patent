@@ -5,17 +5,16 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.ssafy.mr_patent_android.R
-import com.ssafy.mr_patent_android.databinding.FragmentDraftWriteBinding
+import com.ssafy.mr_patent_android.databinding.FragmentPatentContentBinding
 
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
 
-class DraftWriteFragment : Fragment() {
+class PatentContentFragment : Fragment() {
     private var param1: String? = null
     private var param2: String? = null
 
-    private var _binding: FragmentDraftWriteBinding? = null
+    private var _binding: FragmentPatentContentBinding? = null
     private val binding get() = _binding!!
 
 
@@ -31,7 +30,7 @@ class DraftWriteFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        _binding = FragmentDraftWriteBinding.inflate(inflater, container, false)
+        _binding = FragmentPatentContentBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -44,7 +43,7 @@ class DraftWriteFragment : Fragment() {
     companion object {
         @JvmStatic
         fun newInstance(param1: String, param2: String) =
-            DraftWriteFragment().apply {
+            PatentContentFragment().apply {
                 arguments = Bundle().apply {
                     putString(ARG_PARAM1, param1)
                     putString(ARG_PARAM2, param2)
