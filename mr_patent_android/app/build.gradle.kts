@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+
+    id("androidx.navigation.safeargs.kotlin")
 }
 
 android {
@@ -52,19 +54,33 @@ dependencies {
 
 
     // https://github.com/ybq/Android-SpinKit
-    implementation ("com.github.ybq:Android-SpinKit:1.4.0")
+    implementation("com.github.ybq:Android-SpinKit:1.4.0")
 
     // https://github.com/square/retrofit
-    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
 
     // https://github.com/square/okhttp
-    implementation ("com.squareup.okhttp3:okhttp:4.9.0")
+    implementation("com.squareup.okhttp3:okhttp:4.9.0")
 
     // https://github.com/square/retrofit/tree/master/retrofit-converters/gson
-    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 
     // https://github.com/square/okhttp/tree/master/okhttp-logging-interceptor
-    implementation ("com.squareup.okhttp3:logging-interceptor:4.9.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.9.0")
 
-    implementation ("com.github.hannesa2:AndroidSlidingUpPanel:4.2.1")
+    implementation("com.github.hannesa2:AndroidSlidingUpPanel:4.2.1")
+    val lifecycle_version = "2.8.7"
+    // ViewModel
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version")
+    // LiveData
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version")
+    // Lifecycles only (without ViewModel or LiveData)
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version")
+    // Saved state module for ViewModel
+    implementation("androidx.lifecycle:lifecycle-viewmodel-savedstate:$lifecycle_version")
+
+
+    implementation("androidx.navigation:navigation-fragment-ktx:2.8.9")
+    implementation("androidx.navigation:navigation-ui-ktx:2.8.9")
+
 }
