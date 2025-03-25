@@ -31,4 +31,6 @@ public class ChatMessage {
     private String message;
     private LocalDateTime timestamp;
     private boolean isRead; // DB에는 TINYINT형식으로 저장됨 (0 = false ,1 = true)
+    private String type;                //메세지 타입
+
 }

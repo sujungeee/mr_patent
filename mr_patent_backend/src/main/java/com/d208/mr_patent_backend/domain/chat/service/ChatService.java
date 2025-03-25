@@ -30,7 +30,9 @@ public class ChatService {
                 .message(dto.getMessage())
                 .timestamp(now)
                 .isRead(false) // 처음 저장 시 읽음 여부는 false
+                .type("CHAT")
                 .build();
+                     //메세지 타입
         chatMessageRepository.save(message);
         System.out.println(" 메시지 DB 저장 완료: " + dto.getMessage());
 
@@ -56,6 +58,7 @@ public class ChatService {
         // 6. 저장
         chatRoomRepository.save(senderRoom);
         chatRoomRepository.save(receiverRoom);
+
         System.out.println("채팅방 메타데이터 업데이트 완료");
     }
 

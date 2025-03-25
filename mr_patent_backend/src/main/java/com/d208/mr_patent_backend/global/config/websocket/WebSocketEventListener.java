@@ -1,5 +1,6 @@
 package com.d208.mr_patent_backend.global.config.websocket;
 import com.d208.mr_patent_backend.domain.chat.dto.ChatRoomDto;
+import com.d208.mr_patent_backend.domain.chat.entity.ChatRoom;
 import com.d208.mr_patent_backend.domain.chat.repository.ChatRoomRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -34,28 +36,27 @@ public class WebSocketEventListener {
 
         if (sessionId != null && userId != null && roomId != null) {
             int userid = Integer.parseInt(userId);
-            System.out.println("✅ 조건 통과. uid = " + userid);
+            System.out.println("✅ 조건 통과. userid = " + userid);
 
             chatRoomRepository.findByRoomIdAndUserId(roomId, userid).ifPresent(room -> {
                 System.out.println("✅ ChatRoom 찾음: " + room);
 
-                // 1. sessionId 저장
-                room.setSessionId(sessionId);
-
-                // 2. status 증가
-                room.setStatus(room.getStatus() + 1);
-
+                room.setSessionId(sessionId);  // 1. sessionId 저장
+                room.setStatus(room.getStatus() + 1); // 2. status 증가
                 chatRoomRepository.save(room);
                 System.out.println("💾 ChatRoom 저장 완료");
 
-                // 3. 상태 전송
-                messagingTemplate.convertAndSend("/sub/chat/room/" + roomId,
-                        ChatRoomDto.builder()
-                                .roomId(roomId)
-                                .status(room.getStatus())
-                                .build());
-                System.out.println("📤 상태 메시지 전송 완료");
+                int totalStatus = chatRoomRepository.findByRoomId(roomId).stream()
+                        .mapToInt(ChatRoom::getStatus)
+                        .sum();
 
+                // 3. 상태 전송
+                messagingTemplate.convertAndSend("/sub/chat/room/" + roomId, Map.of(
+                        "type", "STATUS",
+                        "message",   userId + "님이 입장하였습니다.",
+                        "status", totalStatus
+                ));
+                System.out.println("📤 상태 메시지 전송 완료");
             });
         }
     }

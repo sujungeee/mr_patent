@@ -18,5 +18,5 @@ public class ChatMessageDto {
     private String message;            // 메시지 내용
     private LocalDateTime timestamp;   // 보낸 시간
     private boolean isRead;            // 읽음 여부
-
+    private String type;                //메세지 타입
 }

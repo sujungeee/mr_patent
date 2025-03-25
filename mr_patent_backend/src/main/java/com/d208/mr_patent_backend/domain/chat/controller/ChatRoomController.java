@@ -7,7 +7,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/chat/rooms")
@@ -19,8 +21,11 @@ public class ChatRoomController {
 
     // 채팅방 목록 조회
     @GetMapping("/{userId}")
-    public List<ChatListDto> getChatRoomsByUserId(@PathVariable Integer userId) {
-        return chatRoomService.getChatRoomsByUserId(userId);
+    public Map<String, Object> getChatRoomsByUserId(@PathVariable Integer userId) {
+        List<ChatListDto> chatRooms = chatRoomService.getChatRoomsByUserId(userId);
+        Map<String, Object> response = new HashMap<>();
+        response.put("data", chatRooms);
+        return response;
     }
     @PostMapping("/create")
     public ResponseEntity<String> createChatRoom(@RequestBody ChatRoomCreateRequest request) {
