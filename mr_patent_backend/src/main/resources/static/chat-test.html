@@ -42,10 +42,16 @@
             console.log('🔄 이전 구독 해제');
         }
         currentSubscription = stompClient.subscribe('/sub/chat/room/' + roomId, (message) => {
+
             const msg = JSON.parse(message.body);
             const log = document.getElementById('chatLog');
             log.innerHTML += `<div><b>${msg.userId}</b>: ${msg.message}</div>`;
-        });
+        },
+            {
+                userId: userId,
+                roomId: roomId
+            }
+        );
         console.log('🟢 새 채팅방 구독 시작: /sub/chat/room/' + roomId);
     }
 

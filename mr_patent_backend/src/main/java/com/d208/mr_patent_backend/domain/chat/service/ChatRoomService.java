@@ -37,7 +37,7 @@ public class ChatRoomService {
                 .roomId(roomId)
                 .userId(userId)
                 .receiverId(receiverId)
-                .lastMessage("")
+                .lastMessage(null)
                 .unreadCount(0)
                 .status(0)
                 .created(LocalDateTime.now())
@@ -49,7 +49,7 @@ public class ChatRoomService {
                 .roomId(roomId)
                 .userId(receiverId)
                 .receiverId(userId)
-                .lastMessage("")
+                .lastMessage(null)
                 .unreadCount(0)
                 .status(0)
                 .created(LocalDateTime.now())
@@ -66,13 +66,14 @@ public class ChatRoomService {
     // userId에 따른 채팅방 목록 조회
     // 여기서 내용이 비어있으면 조회되지 않게 해야함 아직 구현안함!!!!!
     public List<ChatListDto> getChatRoomsByUserId(Integer userId) {
-        List<ChatRoom> chatRooms = chatRoomRepository.findByUserId(userId);
+        List<ChatRoom> chatRooms = chatRoomRepository.findByUserIdAndLastMessageIsNotNull(userId);
 
         //(리스트 조회한걸 -> Dto 형식으로 변환)
         //room은 chatRooms 리스트 안의 각각의 요소
         return chatRooms.stream()
                 .map(room -> ChatListDto.builder()
                         .roomId(room.getRoomId())
+                        .unreadCount(room.getUnreadCount())
                         .lastMessage(room.getLastMessage())
                         .lastTimestamp(room.getLastTimestamp())
                         .build())

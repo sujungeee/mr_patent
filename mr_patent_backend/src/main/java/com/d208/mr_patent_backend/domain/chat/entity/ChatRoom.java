@@ -25,6 +25,7 @@ public class ChatRoom {
     private Integer receiverId;
     private Integer status;
     private Integer unreadCount;
+    private String sessionId;
 
     @Column(columnDefinition = "TEXT")
     private String lastMessage;
