@@ -65,4 +65,6 @@ dependencies {
 
     // https://github.com/square/okhttp/tree/master/okhttp-logging-interceptor
     implementation ("com.squareup.okhttp3:logging-interceptor:4.9.0")
+
+    implementation ("com.github.hannesa2:AndroidSlidingUpPanel:4.2.1")
 }
