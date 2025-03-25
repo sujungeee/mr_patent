@@ -63,6 +63,7 @@ class PwdChangeFragment : Fragment() {
                 if(binding.etPwd.text.toString() == binding.etPwdConfirm.text.toString()){
                     binding.btnChabgePwd.isEnabled = true
                 } else {
+                    binding.etPwdConfirm.error = "비밀번호가 일치하지 않습니다."
                     binding.btnChabgePwd.isEnabled = false
                 }
             }

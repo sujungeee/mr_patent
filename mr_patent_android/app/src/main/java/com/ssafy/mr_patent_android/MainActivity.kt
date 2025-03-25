@@ -18,8 +18,8 @@ import com.ssafy.mr_patent_android.ui.mypage.PatentReportFragment
 import com.ssafy.mr_patent_android.ui.mypage.ProfileEditFragment
 import com.ssafy.mr_patent_android.ui.mypage.ReportResultFragment
 import com.ssafy.mr_patent_android.ui.mypage.UserDeleteFragment
-import com.ssafy.mr_patent_android.ui.patent.DraftWriteFragment
 import com.ssafy.mr_patent_android.ui.patent.FileUploadFragment
+import com.ssafy.mr_patent_android.ui.patent.PatentContentFragment
 import com.ssafy.mr_patent_android.ui.patent.PatentFragment
 import com.ssafy.mr_patent_android.ui.patent.SimiliarityTestFragment
 
@@ -51,7 +51,7 @@ class MainActivity : AppCompatActivity() {
             7 -> transaction.replace(R.id.frame_layout, PatentFragment())
             8 -> transaction.replace(R.id.frame_layout, FileUploadFragment())
             9 -> transaction.replace(R.id.frame_layout, SimiliarityTestFragment())
-            10 -> transaction.replace(R.id.frame_layout, DraftWriteFragment())
+            10 -> transaction.replace(R.id.frame_layout, PatentContentFragment())
 
             11 -> transaction.replace(R.id.frame_layout, MyPageFragment())
             12 -> transaction.replace(R.id.frame_layout, PatentReportFragment())
@@ -63,7 +63,6 @@ class MainActivity : AppCompatActivity() {
             18 -> transaction.replace(R.id.frame_layout, PatentFolderFragment())
             19 -> transaction.replace(R.id.frame_layout, ReportResultFragment())
 
-            20 -> transaction.replace(R.id.frame_layout, PatentFolderChoiceFragment())
         }
 
         transaction.commit()
