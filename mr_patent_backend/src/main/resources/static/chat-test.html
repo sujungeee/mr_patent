@@ -36,6 +36,8 @@
         });
     }
     function subscribeToRoom(roomId) {
+        const userId = document.getElementById('userId').value;
+
         // 기존 구독이 있다면 해제
         if (currentSubscription !== null) {
             currentSubscription.unsubscribe();
