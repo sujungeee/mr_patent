@@ -12,26 +12,17 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.ssafy.mr_patent_android.MainActivity
 import com.ssafy.mr_patent_android.R
+import com.ssafy.mr_patent_android.base.BaseFragment
 import com.ssafy.mr_patent_android.databinding.FragmentLoginBinding
 
 private const val TAG = "LoginFragment"
-class LoginFragment : Fragment() {
-    lateinit var binding: FragmentLoginBinding
+class LoginFragment : BaseFragment<FragmentLoginBinding>(FragmentLoginBinding::bind, R.layout.fragment_login) {
     val viewModel: LoginViewModel by viewModels()
     var emailFlag= false
     var pwdFlag= false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        binding= FragmentLoginBinding.inflate(inflater, container, false)
-        // Inflate the layout for this fragment
-        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -117,7 +108,7 @@ class LoginFragment : Fragment() {
     }
 
     fun checkEmail(email: String): Boolean {
-        return email.contains("@") &&email.contains(".")
+        return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
 
 }
