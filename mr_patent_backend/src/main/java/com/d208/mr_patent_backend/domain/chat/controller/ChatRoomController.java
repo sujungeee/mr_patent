@@ -21,15 +21,20 @@ public class ChatRoomController {
 
     // 채팅방 목록 조회
     @GetMapping("/{userId}")
-    public Map<String, Object> getChatRoomsByUserId(@PathVariable Integer userId) {
+    public ResponseEntity<Map<String, Object>> getChatRoomsByUserId(@PathVariable Integer userId) {
         List<ChatListDto> chatRooms = chatRoomService.getChatRoomsByUserId(userId);
         Map<String, Object> response = new HashMap<>();
         response.put("data", chatRooms);
-        return response;
+        return ResponseEntity.ok(response);
     }
+
+    // 채팅방 생성
     @PostMapping("/create")
-    public ResponseEntity<String> createChatRoom(@RequestBody ChatRoomCreateRequest request) {
+    public ResponseEntity<Map<String, Object>> createChatRoom(@RequestBody ChatRoomCreateRequest request) {
         String roomId = chatRoomService.createChatRoom(request.getUserId(), request.getReceiverId());
-        return ResponseEntity.ok(roomId);
+        Map<String, Object> response = new HashMap<>();
+        response.put("data", roomId);
+        return ResponseEntity.ok(response);
+
     }
 }
