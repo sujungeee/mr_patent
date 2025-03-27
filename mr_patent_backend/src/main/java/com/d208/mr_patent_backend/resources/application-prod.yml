@@ -1,0 +1,70 @@
+# 운영 환경 설정
+spring:
+  security:
+    user:
+      name: ${SPRING_SECURITY_USER_NAME:admin}
+      password: ${SPRING_SECURITY_USER_PASSWORD:admin}
+  
+  # DevTools 비활성화
+  devtools:
+    restart:
+      enabled: false
+  
+  # 데이터베이스 설정
+  datasource:
+    url: jdbc:mysql://mysql:3306/mr_patent?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${MYSQL_USERNAME:mr_patent}
+    password: ${MYSQL_PASSWORD:ssafy}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  
+  # JPA 설정
+  jpa:
+    hibernate:
+      ddl-auto: validate  # 개발 시에는 update, 운영 시에는 validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    show-sql: false
+  
+  # 이메일 인증 설정
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+    auth-code-expiration-millis: 180000
+  
+  # Redis 설정
+  data:
+    redis:
+      host: redis
+      port: 6379
+    
+    # Elasticsearch 설정
+    elasticsearch:
+      cluster-nodes: elasticsearch:9200
+    
+    # MongoDB 설정
+    mongodb:
+      uri: mongodb://mongodb:27017/mr_patent
+
+# AWS S3 설정
+cloud:
+  aws:
+    credentials:
+      access-key: ${AWS_ACCESS_KEY_ID}
+      secret-key: ${AWS_SECRET_ACCESS_KEY}
+    region:
+      static: ${AWS_REGION}
+    s3:
+      bucket: ${S3_BUCKET_NAME}
