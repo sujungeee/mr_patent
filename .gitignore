@@ -12,6 +12,12 @@
 .idea/**/dictionaries
 .idea/**/shelf
 
+### 환경설정 파일 ###
+**/application.yml
+**/application-*.yml
+.env
+*.log
+
 # AWS User-specific
 .idea/**/aws.xml
 

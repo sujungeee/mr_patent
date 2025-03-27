@@ -1,4 +1,4 @@
-# .gitignore
+# /mr_patent_backend/.gitignore
 
 HELP.md
 .gradle
@@ -8,7 +8,8 @@ build/
 !**/src/test/**/build/
 
 ### 환경설정 파일 ###
-*.yml
+**/application.yml
+**/application-*.yml
 .env
 *.log
 
