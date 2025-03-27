@@ -42,15 +42,15 @@ class SharedPreferencesUtil(context: Context) {
 
     fun addUser(userDto: UserDto){
         val editor = preferences.edit()
-        editor.putInt("user_id", userDto.user_id)
-        editor.putString("user_nickname", userDto.user_nickname)
-        editor.putInt("user_role", userDto.user_role)
+        editor.putInt("user_id", userDto.userId)
+        editor.putString("user_nickname", userDto.userName)
+        editor.putInt("user_role", userDto.userRole)
         editor.apply()
     }
 
     fun getUser(): UserDto {
         val user_id = preferences.getInt("user_id", -1)
-        val user_nickname = preferences.getString("user_nickname", null)
+        val user_nickname = preferences.getString("user_nickname", "")
         val user_role = preferences.getInt("user_role", -1)
         return UserDto(user_id, user_nickname!!, user_role)
     }
