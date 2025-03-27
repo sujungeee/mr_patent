@@ -43,6 +43,7 @@ async def process_patent_files(rtf_directory: str, task_id: str):
                 with open(file_path, 'r', encoding='utf-8') as file:
                     rtf_content = file.read()
                 rtf_text = rtf_to_text(rtf_content)
+                logger.info(f"RTF 변환 결과 (처음 500자): {rtf_text[:500]}")
                 
                 # 특허 데이터 추출
                 patents = extract_patent_data(rtf_text)
