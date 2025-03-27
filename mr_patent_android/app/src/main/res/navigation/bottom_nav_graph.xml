@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/bottom_nav_graph"
+    app:startDestination="@id/nav_fragment_home">
+
+    <fragment
+        android:id="@+id/nav_fragment_home"
+        android:name="com.ssafy.mr_patent_android.ui.home.HomeFragment"
+        android:label="fragment_home"
+        tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_nav_fragment_home_to_patentAttorneyListFragment"
+            app:destination="@id/patentAttorneyListFragment" />
+        <action
+            android:id="@+id/action_nav_fragment_home_to_nav_fragment_chat"
+            app:destination="@id/nav_fragment_chat" />
+    </fragment>
+    <fragment
+        android:id="@+id/nav_fragment_study"
+        android:name="com.ssafy.mr_patent_android.ui.study.LevelListFragment"
+        android:label="fragment_level_list"
+        tools:layout="@layout/fragment_level_list">
+        <action
+            android:id="@+id/action_nav_fragment_study_to_levelFragment"
+            app:destination="@id/levelFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/nav_fragment_patent"
+        android:name="com.ssafy.mr_patent_android.ui.patent.PatentFragment"
+        android:label="fragment_patent"
+        tools:layout="@layout/fragment_patent" />
+    <fragment
+        android:id="@+id/nav_fragment_chat"
+        android:name="com.ssafy.mr_patent_android.ui.chat.ChatListFragment"
+        android:label="fragment_chat_list"
+        tools:layout="@layout/fragment_chat_list">
+        <action
+            android:id="@+id/action_nav_fragment_chat_to_chatFragment"
+            app:destination="@id/chatFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/nav_fragment_mypage"
+        android:name="com.ssafy.mr_patent_android.ui.mypage.MyPageFragment"
+        android:label="fragment_my_page"
+        tools:layout="@layout/fragment_my_page" />
+    <fragment
+        android:id="@+id/levelFragment"
+        android:name="com.ssafy.mr_patent_android.ui.study.LevelFragment"
+        android:label="fragment_level"
+        tools:layout="@layout/fragment_level">
+        <action
+            android:id="@+id/action_levelFragment_to_studyCardFragment"
+            app:destination="@id/studyCardFragment" />
+        <action
+            android:id="@+id/action_levelFragment_to_quizFragment"
+            app:destination="@id/quizFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/studyCardFragment"
+        android:name="com.ssafy.mr_patent_android.ui.study.StudyCardFragment"
+        android:label="fragment_study_card"
+        tools:layout="@layout/fragment_study_card">
+        <action
+            android:id="@+id/action_studyCardFragment_to_studyAllFragment"
+            app:destination="@id/studyAllFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/studyAllFragment"
+        android:name="com.ssafy.mr_patent_android.ui.study.StudyAllFragment"
+        android:label="fragment_study_all"
+        tools:layout="@layout/fragment_study_all" />
+    <fragment
+        android:id="@+id/quizFragment"
+        android:name="com.ssafy.mr_patent_android.ui.study.QuizFragment"
+        android:label="fragment_quiz"
+        tools:layout="@layout/fragment_quiz">
+        <action
+            android:id="@+id/action_quizFragment_to_quizResultFragment"
+            app:destination="@id/quizResultFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/quizResultFragment"
+        android:name="com.ssafy.mr_patent_android.ui.study.QuizResultFragment"
+        android:label="fragment_quiz_result"
+        tools:layout="@layout/fragment_quiz_result" />
+    <fragment
+        android:id="@+id/chatFragment"
+        android:name="com.ssafy.mr_patent_android.ui.chat.ChatFragment"
+        android:label="fragment_chat"
+        tools:layout="@layout/fragment_chat">
+        <argument
+            android:name="id"
+            android:defaultValue="-1"
+            app:argType="integer" />
+    </fragment>
+    <fragment
+        android:id="@+id/patentAttorneyListFragment"
+        android:name="com.ssafy.mr_patent_android.ui.patent_attorney.ExpertListFragment"
+        android:label="fragment_patent_attorney_list"
+        tools:layout="@layout/fragment_expert_list">
+
+        <action
+            android:id="@+id/action_patentAttorneyListFragment_to_patentAttorneyFragment"
+            app:destination="@id/patentAttorneyFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/patentAttorneyFragment"
+        android:name="com.ssafy.mr_patent_android.ui.patent_attorney.ExpertFragment"
+        android:label="fragment_patent_attorney"
+        tools:layout="@layout/fragment_expert">
+        <argument
+            android:name="id"
+            android:defaultValue="-1"
+            app:argType="integer" />
+        <action
+            android:id="@+id/action_patentAttorneyFragment_to_chatFragment"
+            app:destination="@id/chatFragment" />
+        <action
+            android:id="@+id/action_patentAttorneyFragment_to_profileEditFragment"
+            app:destination="@id/profileEditFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/profileEditFragment"
+        android:name="com.ssafy.mr_patent_android.ui.mypage.ProfileEditFragment"
+        android:label="fragment_profile_edit"
+        tools:layout="@layout/fragment_profile_edit">
+        <action
+            android:id="@+id/action_profileEditFragment_to_addressChangeFragment"
+            app:destination="@id/addressChangeFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/addressChangeFragment"
+        android:name="com.ssafy.mr_patent_android.ui.mypage.AddressChangeFragment"
+        android:label="fragment_address_edit"
+        tools:layout="@layout/fragment_address_edit" />
+</navigation>

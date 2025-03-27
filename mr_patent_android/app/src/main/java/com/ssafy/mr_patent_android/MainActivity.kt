@@ -1,7 +1,19 @@
 package com.ssafy.mr_patent_android
 
 import android.os.Bundle
+import android.util.Log
+import android.view.View
+import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.get
+import androidx.fragment.app.findFragment
+import androidx.navigation.NavHostController
+import androidx.navigation.findNavController
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.fragment.NavHostFragment.Companion.findNavController
+import androidx.navigation.fragment.findNavController
+import androidx.navigation.ui.NavigationUI
+import androidx.navigation.ui.setupWithNavController
 import com.ssafy.mr_patent_android.databinding.ActivityMainBinding
 import com.ssafy.mr_patent_android.ui.join.JoinApplicationFragment
 import com.ssafy.mr_patent_android.ui.join.JoinBranchFragment
@@ -23,24 +35,27 @@ import com.ssafy.mr_patent_android.ui.patent.PatentContentFragment
 import com.ssafy.mr_patent_android.ui.patent.PatentFragment
 import com.ssafy.mr_patent_android.ui.patent.SimiliarityTestFragment
 
-class MainActivity : AppCompatActivity() {
 
+private const val TAG = "MainActivity"
+
+class MainActivity : AppCompatActivity() {
     private val mainBinding: ActivityMainBinding by lazy {
         ActivityMainBinding.inflate(layoutInflater)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        moveFragment(4)
+        setContentView(mainBinding.root)
+        initNavigation()
     }
+
     private fun openFragment(index: Int, id: String = "") {
         moveFragment(index, id)
     }
 
     private fun moveFragment(index: Int, id: String = "") {
         val transaction = supportFragmentManager.beginTransaction()
-        when(index) {
+        when (index) {
             1 -> transaction.replace(R.id.frame_layout, JoinBranchFragment())
             2 -> transaction.replace(R.id.frame_layout, JoinProfileFragment())
             3 -> transaction.replace(R.id.frame_layout, JoinMemberFragment())
@@ -67,4 +82,26 @@ class MainActivity : AppCompatActivity() {
 
         transaction.commit()
     }
+
+    private fun initNavigation() {
+        val navController = supportFragmentManager.findFragmentById(R.id.frame_layout)
+            ?.findNavController() as NavHostController
+
+        mainBinding.bottomNavigationView.setupWithNavController(navController)
+
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            // 바텀 네비게이션이 표시되는 Fragment
+            if (destination.id == R.id.nav_fragment_home || destination.id == R.id.nav_fragment_patent
+                || destination.id == R.id.nav_fragment_chat || destination.id == R.id.nav_fragment_mypage || destination.id == R.id.nav_fragment_study
+            ) {
+                mainBinding.bottomNavigationView.visibility = View.VISIBLE
+            }
+            // 바텀 네비게이션이 표시되지 않는 Fragment
+            else {
+                mainBinding.bottomNavigationView.visibility = View.GONE
+            }
+        }
+    }
+
+
 }
