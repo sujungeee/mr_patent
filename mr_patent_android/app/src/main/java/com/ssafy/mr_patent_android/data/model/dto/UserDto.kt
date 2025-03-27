@@ -1,9 +1,31 @@
 package com.ssafy.mr_patent_android.data.model.dto
 
 import com.google.gson.annotations.SerializedName
+import java.time.Instant
+import java.time.LocalDateTime
 
 data class UserDto(
-    @SerializedName("user_id") val user_id: Int,
-    @SerializedName("user_nickname")val user_nickname: String,
-    @SerializedName("user_role")val user_role: Int
-)
+    @SerializedName("user_id") val userId: Int,
+    @SerializedName("user_name")val userName: String,
+    @SerializedName("user_role")val userRole: Int,
+    @SerializedName("expert_address")val expertAddress: String,
+    @SerializedName("expert_description") val expertDescription: String,
+    @SerializedName("expert_get_date")val expertGetDate: String,
+    @SerializedName("expert_id")val expertId: Int,
+    @SerializedName("expert_license_number")val expertLicense_number: String,
+    @SerializedName("expert_phone")val expertPhone: String,
+    @SerializedName("expert_category")val expertCategory: MutableList<String>,
+    @SerializedName("user_image")val userImage:String,
+    @SerializedName("expert_created_at")val expertCreatedAt: String
+    ){
+    constructor():this(-1,"",-1,
+        "","","",
+        -1,"","",  mutableListOf(""), "", "")
+
+    constructor(userId: Int, userName: String, userRole: Int):this(userId, userName, userRole,
+        "","","",
+        -1,"","",  mutableListOf(""),"", "")
+
+    constructor(userId: Int, userName: String, expertAddress: String, expertDescription: String, expertGetDate: String, expertId: Int, expertLicense_number: String, expertPhone: String, userImage: String, expertCreatedAt: String):
+            this(userId, userName, -1, expertAddress, expertDescription, expertGetDate, expertId, expertLicense_number, expertPhone, mutableListOf(""),userImage,expertCreatedAt)
+}
