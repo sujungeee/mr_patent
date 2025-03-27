@@ -31,6 +31,9 @@ public class EmailService {
     // ConcurrentHashMap.newKeySet()을 사용하여 thread-safe한 Set 생성
     private final Set<String> verifiedEmails = ConcurrentHashMap.newKeySet();
 
+    // 중복 확인된 이메일 저장용 Set
+    private final Set<String> checkedEmails = ConcurrentHashMap.newKeySet();
+
     @Data
     @AllArgsConstructor
     private static class AuthCode {
@@ -47,7 +50,7 @@ public class EmailService {
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
             helper.setTo(email);
             helper.setSubject("MR.Patent 이메일 인증");
-            helper.setText(createEmailContent(authCode), true);  // HTML 형식 사용
+            helper.setText(createEmailContent(authCode), true);
 
             emailSender.send(message);
             authCodeMap.put(email, new AuthCode(authCode, expiredAt));
@@ -107,5 +110,15 @@ public class EmailService {
             verifiedEmails.add(email);  // 인증 성공한 이메일 저장
         }
         return isValid;
+    }
+
+    // 중복 확인 완료 표시 메서드
+    public void setEmailChecked(String email) {
+        checkedEmails.add(email);
+    }
+
+    // 중복 확인 여부 확인 메서드
+    public boolean isEmailChecked(String email) {
+        return checkedEmails.contains(email);
     }
 }

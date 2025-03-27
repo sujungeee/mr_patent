@@ -9,15 +9,17 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import lombok.RequiredArgsConstructor;
+import com.d208.mr_patent_backend.global.jwt.JwtTokenProvider;
+import com.d208.mr_patent_backend.global.jwt.JwtAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -31,15 +33,23 @@ public class SecurityConfig {
 
         http
                 .authorizeHttpRequests((authorize) -> authorize
+                        .requestMatchers("**").permitAll()
                         .requestMatchers("/api/user").permitAll()
                         .requestMatchers("/api/user/expert").permitAll()
                         .requestMatchers("/api/user/check-email").permitAll()
                         .requestMatchers("/api/email/**").permitAll()
-                        .requestMatchers(HttpMethod.PATCH, "/api/user/expert/*").hasRole("ADMIN")
+                        .requestMatchers("/api/user/login").permitAll()
+                        .requestMatchers(HttpMethod.PATCH,"/api/expert-approve/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
-                .cors(cors -> cors.disable());
+                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),
+                        UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }

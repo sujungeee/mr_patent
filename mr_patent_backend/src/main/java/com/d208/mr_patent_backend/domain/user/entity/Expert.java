@@ -2,11 +2,13 @@ package com.d208.mr_patent_backend.domain.user.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+
+import com.d208.mr_patent_backend.domain.category.entity.ExpertCategory;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "expert")
@@ -17,18 +19,15 @@ public class Expert {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "expert_id", columnDefinition = "INT UNSIGNED")
+    @Column(name = "expert_id")
     private Integer expertId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "expert_name", length = 25, nullable = false)
-    private String expertName;
-
     @Column(name = "expert_identification", length = 15, nullable = false)
-    private String expertIdentification = "0";
+    private String expertIdentification;
 
     @Column(name = "expert_description", length = 500, nullable = false)
     private String expertDescription;
@@ -45,9 +44,6 @@ public class Expert {
     @Column(name = "expert_license", length = 255, nullable = false)
     private String expertLicense;
 
-    @Column(name = "expert_license_number", length = 30, nullable = false)
-    private String expertLicenseNumber;
-
     @Column(name = "expert_status", nullable = false)
     private Integer expertStatus = 0;  // 기본값: 미승인
 
@@ -56,6 +52,9 @@ public class Expert {
 
     @Column(name = "expert_updated_at")
     private LocalDateTime expertUpdatedAt;
+
+    @OneToMany(mappedBy = "expert", cascade = CascadeType.ALL)
+    private List<ExpertCategory> expertCategory = new ArrayList<>();
 
     @PrePersist
     public void prePersist() {

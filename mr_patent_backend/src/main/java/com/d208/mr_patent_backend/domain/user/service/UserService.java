@@ -6,11 +6,24 @@ import com.d208.mr_patent_backend.domain.user.entity.User;
 import com.d208.mr_patent_backend.domain.user.entity.Expert;
 import com.d208.mr_patent_backend.domain.user.repository.UserRepository;
 import com.d208.mr_patent_backend.domain.user.repository.ExpertRepository;
+import com.d208.mr_patent_backend.domain.category.entity.ExpertCategory;
+import com.d208.mr_patent_backend.domain.category.entity.Category;
+import com.d208.mr_patent_backend.domain.category.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import com.d208.mr_patent_backend.global.jwt.TokenInfo;
+import com.d208.mr_patent_backend.global.jwt.JwtTokenProvider;
+import com.d208.mr_patent_backend.domain.user.dto.LoginRequestDTO;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -19,8 +32,10 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final ExpertRepository expertRepository;
+    private final CategoryRepository categoryRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Transactional
     public void signUpUser(UserSignupRequestDTO requestDto) {
@@ -40,7 +55,7 @@ public class UserService {
         User user = new User();
         user.setUserEmail(requestDto.getUserEmail());
         user.setUserPw(passwordEncoder.encode(requestDto.getUserPw()));
-        user.setUserNickname(requestDto.getUserNickname());
+        user.setUserName(requestDto.getUserName());
         user.setUserImage(requestDto.getUserImage());
         user.setUserRole(requestDto.getUserRole());
 
@@ -51,9 +66,9 @@ public class UserService {
     public void signUpExpert(ExpertSignupRequestDTO requestDto) {
         String email = requestDto.getUserEmail();
 
-        // 이메일 중복 체크
-        if (userRepository.existsByUserEmail(requestDto.getUserEmail())) {
-            throw new RuntimeException("이미 존재하는 이메일입니다.");
+        // 이메일 중복 체크 확인
+        if (!emailService.isEmailChecked(email)) {
+            throw new RuntimeException("이메일 중복 확인이 필요합니다.");
         }
 
         // 이메일 인증 확인
@@ -65,7 +80,7 @@ public class UserService {
         User user = new User();
         user.setUserEmail(requestDto.getUserEmail());
         user.setUserPw(passwordEncoder.encode(requestDto.getUserPw()));
-        user.setUserNickname(requestDto.getUserNickname());
+        user.setUserName(requestDto.getUserName());
         user.setUserImage(requestDto.getUserImage());
         user.setUserRole(requestDto.getUserRole());
 
@@ -74,14 +89,30 @@ public class UserService {
         // Expert 엔티티 생성 및 저장
         Expert expert = new Expert();
         expert.setUser(user);
-        expert.setExpertName(requestDto.getExpertName());
         expert.setExpertIdentification(requestDto.getExpertIdentification());
         expert.setExpertDescription(requestDto.getExpertDescription());
         expert.setExpertAddress(requestDto.getExpertAddress());
         expert.setExpertPhone(requestDto.getExpertPhone());
-        expert.setExpertGetDate(requestDto.getExpertGetDate());
         expert.setExpertLicense(requestDto.getExpertLicense());
-        expert.setExpertLicenseNumber(requestDto.getExpertLicenseNumber());
+        expert.setExpertGetDate(requestDto.getExpertGetDate());
+
+        // ExpertCategory 설정
+        if (requestDto.getExpertCategory() != null && !requestDto.getExpertCategory().isEmpty()) {
+            for (ExpertCategory categoryDto : requestDto.getExpertCategory()) {
+                Integer categoryId = categoryDto.getCategory().getCategoryId();
+                Category category = categoryRepository.findById(categoryId)
+                        .orElseThrow(() -> new RuntimeException("존재하지 않는 카테고리입니다: " + categoryId));
+
+                // 새로운 ExpertCategory 객체 생성
+                ExpertCategory newExpertCategory = new ExpertCategory();
+                newExpertCategory.setExpert(expert);
+                newExpertCategory.setCategory(category);
+
+                // 양방향 관계 설정
+                expert.getExpertCategory().add(newExpertCategory);
+                category.getExpertCategory().add(newExpertCategory);
+            }
+        }
 
         expertRepository.save(expert);
     }
@@ -107,8 +138,43 @@ public class UserService {
         userRepository.save(user);
     }
 
-    // 이메일 중복 체크 메서드 추가
+    // 이메일 중복 체크
     public boolean checkEmailDuplicate(String email) {
         return userRepository.existsByUserEmail(email);
+    }
+
+    @Transactional
+    public TokenInfo login(LoginRequestDTO requestDto) {
+        // 이메일로 사용자 찾기
+        User user = userRepository.findByUserEmail(requestDto.getUserEmail())
+                .orElseThrow(() -> new RuntimeException("가입되지 않은 이메일입니다."));
+
+        // 비밀번호 확인
+        if (!passwordEncoder.matches(requestDto.getUserPw(), user.getUserPw())) {
+            throw new RuntimeException("비밀번호가 일치하지 않습니다.");
+        }
+
+        // 권한 설정
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        if (user.getUserRole() == 1) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_EXPERT"));
+        } else if (user.getUserRole() == 2) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        } else {
+            authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+        }
+
+        // 인증 객체 생성
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                user.getUserEmail(), "", authorities);
+
+        // 토큰 생성
+        TokenInfo tokenInfo = jwtTokenProvider.generateToken(authentication);
+
+        // Refresh Token 저장
+        user.setUserRefreshToken(tokenInfo.getRefreshToken());
+        userRepository.save(user);
+
+        return tokenInfo;
     }
 }
