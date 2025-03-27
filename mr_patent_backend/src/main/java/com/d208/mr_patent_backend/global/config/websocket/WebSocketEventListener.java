@@ -53,7 +53,6 @@ public class WebSocketEventListener {
                 // 3. 상태 전송
                 messagingTemplate.convertAndSend("/sub/chat/room/" + roomId, Map.of(
                         "type", "STATUS",
-                        "message",   userId + "님이 입장하였습니다.",
                         "status", totalStatus
                 ));
                 System.out.println("📤 상태 메시지 전송 완료");
@@ -68,6 +67,7 @@ public class WebSocketEventListener {
         chatRoomRepository.findBySessionId(sessionId).ifPresentOrElse(room -> {
             System.out.println("🧾 [DISCONNECT 처리] roomId = " + room.getRoomId() + ", userId = " + room.getUserId());
 
+            String roomId = room.getRoomId();
             // 1. status -1 처리
             int updatedStatus = Math.max(0, room.getStatus() - 1);
             room.setStatus(updatedStatus);
@@ -75,14 +75,20 @@ public class WebSocketEventListener {
             chatRoomRepository.save(room);
             System.out.println("💾 status 업데이트 완료: " + updatedStatus);
 
+            int totalStatus = chatRoomRepository.findByRoomId(roomId).stream()
+                    .mapToInt(ChatRoom::getStatus)
+                    .sum();
+
             // 2. STOMP 상태 전송
             messagingTemplate.convertAndSend("/sub/chat/room/" + room.getRoomId(),
-                    ChatRoomDto.builder()
-                            .roomId(room.getRoomId())
-                            .status(updatedStatus)
-                            .build());
+                    Map.of(
+                            "type", "STATUS",
+                            "status", totalStatus
+                    ));
 
             System.out.println("📤 상태 메시지 전송 완료");
+
+
 
         }, () -> {
             System.out.println("❗ [DISCONNECT 처리 실패] sessionId로 채팅방을 찾을 수 없습니다: " + sessionId);
