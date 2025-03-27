@@ -64,7 +64,6 @@ public class ChatRoomService {
 
 
     // userId에 따른 채팅방 목록 조회
-    // 여기서 내용이 비어있으면 조회되지 않게 해야함 아직 구현안함!!!!!
     public List<ChatListDto> getChatRoomsByUserId(Integer userId) {
         List<ChatRoom> chatRooms = chatRoomRepository.findByUserIdAndLastMessageIsNotNull(userId);
 
