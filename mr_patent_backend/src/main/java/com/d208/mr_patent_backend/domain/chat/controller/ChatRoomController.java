@@ -1,8 +1,12 @@
 package com.d208.mr_patent_backend.domain.chat.controller;
 
 import com.d208.mr_patent_backend.domain.chat.dto.ChatListDto;
+import com.d208.mr_patent_backend.domain.chat.dto.ChatMessageDto;
 import com.d208.mr_patent_backend.domain.chat.dto.ChatRoomCreateRequest;
 import com.d208.mr_patent_backend.domain.chat.service.ChatRoomService;
+
+
+import com.d208.mr_patent_backend.domain.chat.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +21,7 @@ import java.util.Map;
 public class ChatRoomController {
 
     private final ChatRoomService chatRoomService;
+    private final ChatService chatService;
 
 
     // 채팅방 목록 조회
@@ -35,6 +40,16 @@ public class ChatRoomController {
         Map<String, Object> response = new HashMap<>();
         response.put("data", roomId);
         return ResponseEntity.ok(response);
+    }
 
+    @GetMapping("/message/{roomId}")
+    public ResponseEntity<List<ChatMessageDto>> getMessages(
+            @PathVariable String roomId,
+            @RequestParam(required = false) Long lastMessageId // 파라미터 없어도 괜찮음(첫 대화 불러오기 때문에)
+    ) {
+        int size = 10;
+
+        List<ChatMessageDto> messages = chatService.getMessages(roomId, lastMessageId, size);
+        return ResponseEntity.ok(messages);
     }
 }

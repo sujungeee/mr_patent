@@ -1,6 +1,5 @@
 package com.d208.mr_patent_backend.domain.chat.dto;
-
-
+import com.d208.mr_patent_backend.domain.chat.entity.ChatMessage;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -19,4 +18,17 @@ public class ChatMessageDto {
     private LocalDateTime timestamp;   // 보낸 시간
     private boolean isRead;            // 읽음 여부
     private String type;                //메세지 타입
+
+    public static ChatMessageDto fromEntity(ChatMessage entity) {
+        return ChatMessageDto.builder()
+                .chatId(entity.getChatId())
+                .roomId(entity.getRoomId())
+                .userId(entity.getUserId())
+                .receiverId(entity.getReceiverId())
+                .message(entity.getMessage())
+                .timestamp(entity.getTimestamp())
+                .isRead(entity.isRead())
+                .type(entity.getType())
+                .build();
+    }
 }

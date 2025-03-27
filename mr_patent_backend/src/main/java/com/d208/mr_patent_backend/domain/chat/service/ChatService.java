@@ -5,10 +5,15 @@ import com.d208.mr_patent_backend.domain.chat.entity.ChatMessage;
 import com.d208.mr_patent_backend.domain.chat.repository.ChatMessageRepository;
 import com.d208.mr_patent_backend.domain.chat.repository.ChatRoomRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ChatService {
@@ -62,4 +67,23 @@ public class ChatService {
         System.out.println("채팅방 메타데이터 업데이트 완료");
     }
 
+    public List<ChatMessageDto> getMessages(String roomId, Long lastMessageId, int size) {
+        Pageable pageable = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "chatId"));
+
+        if (lastMessageId == null) {
+            // 처음 입장: 최신 메시지부터 size개 조회
+            return chatMessageRepository
+                    .findByRoomIdOrderByChatIdDesc(roomId, pageable)
+                    .stream()   //stream 형태로 변환( map 하기 위해서 )
+                    .map(ChatMessageDto::fromEntity) //엔티티 -> dto 변환
+                    .collect(Collectors.toList());  // collect 이용해서 다시 list로 합침
+        } else {
+            // 이전 메시지 불러오기 (무한스크롤)
+            return chatMessageRepository
+                    .findByRoomIdAndChatIdLessThanOrderByChatIdDesc(roomId, lastMessageId, pageable)
+                    .stream()
+                    .map(ChatMessageDto::fromEntity)
+                    .collect(Collectors.toList());
+        }
+    }
 }
