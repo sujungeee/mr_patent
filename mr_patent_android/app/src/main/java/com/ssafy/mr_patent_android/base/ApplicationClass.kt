@@ -7,6 +7,7 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.ACCESS_TOKEN
 import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.sharedPreferences
+import com.ssafy.mr_patent_android.data.remote.NetworkUtil
 import com.ssafy.mr_patent_android.util.SharedPreferencesUtil
 import okhttp3.Cookie
 import okhttp3.Interceptor
@@ -24,7 +25,7 @@ import java.util.concurrent.TimeUnit
 
 // 앱이 실행될때 1번만 실행이 됩니다.
 class ApplicationClass : Application() {
-    val API_URL = ""
+    val API_URL = "https://dasdasda"
 
     companion object {
         lateinit var sharedPreferences: SharedPreferencesUtil
@@ -44,7 +45,7 @@ class ApplicationClass : Application() {
 
     override fun onCreate() {
         super.onCreate()
-
+        instance = this
         sharedPreferences = SharedPreferencesUtil(applicationContext)
 
         initRetrofitInstance()
@@ -56,7 +57,7 @@ class ApplicationClass : Application() {
             .connectTimeout(5000, TimeUnit.MILLISECONDS)
             .addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
             .addNetworkInterceptor(XAccessTokenInterceptor())
-            .authenticator(ReissueInterceptor())
+            .authenticator(ReissueInterceptor(instance.applicationContext))
             .build()
 
         retrofit = Retrofit.Builder()
@@ -81,15 +82,5 @@ class XAccessTokenInterceptor : Interceptor {
             builder.addHeader("ACCESS-TOKEN", jwtToken)
         }
         return chain.proceed(builder.build())
-    }
-}
-
-
-object NetworkUtil {
-    fun getErrorResponse(errorBody: ResponseBody): ErrorResponse? {
-        return ApplicationClass.retrofit.responseBodyConverter<ErrorResponse>(
-            ErrorResponse::class.java,
-            ErrorResponse::class.java.annotations
-        ).convert(errorBody)
     }
 }

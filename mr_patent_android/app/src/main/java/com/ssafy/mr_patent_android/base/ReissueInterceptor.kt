@@ -1,5 +1,6 @@
 package com.ssafy.mr_patent_android.base
 
+import android.content.Context
 import android.content.Intent
 import android.util.Log
 import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.authService
@@ -13,8 +14,7 @@ import okhttp3.Route
 private const val TAG = "ReissueInterceptor"
 
 
-class ReissueInterceptor : Authenticator {
-    val context = ApplicationClass.instance.applicationContext
+class ReissueInterceptor(val context: Context) : Authenticator {
     val intent= Intent(context, LoginActivity::class.java)
 
     override fun authenticate(route: Route?, response: Response): Request? {
