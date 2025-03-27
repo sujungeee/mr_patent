@@ -11,24 +11,15 @@ import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.ssafy.mr_patent_android.R
+import com.ssafy.mr_patent_android.base.BaseFragment
 import com.ssafy.mr_patent_android.databinding.FragmentEmailVerifyBinding
 
-class EmailVerifyFragment : Fragment() {
-    lateinit var binding: FragmentEmailVerifyBinding
+class EmailVerifyFragment : BaseFragment<FragmentEmailVerifyBinding>(FragmentEmailVerifyBinding::bind, R.layout.fragment_email_verify) {
     val viewModel : EmailVerifyViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        binding = FragmentEmailVerifyBinding.inflate(inflater, container, false)
-        // Inflate the layout for this fragment
-        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -47,7 +38,7 @@ class EmailVerifyFragment : Fragment() {
         binding.btnSendCode.setOnClickListener {
             // 코드 전송
             if(binding.etEmail.text.toString().isBlank() || !android.util.Patterns.EMAIL_ADDRESS.matcher(binding.etEmail.text.toString()).matches()) {
-                Toast.makeText(requireContext(), "이메일을 확인해주세요.", Toast.LENGTH_SHORT).show()
+                showCustomToast("이메일을 확인해주세요.")
             } else {
                 viewModel.setCodeState(true)
                 viewModel.sendCode((binding.etEmail.text.toString()))
@@ -57,7 +48,6 @@ class EmailVerifyFragment : Fragment() {
         binding.btnVerifyEmail.setOnClickListener {
             // 코드 확인
             viewModel.emailVerify(binding.etEmail.text.toString(), binding.etPwd.text.toString())
-            findNavController().navigate(EmailVerifyFragmentDirections.actionEmailVerifyFragment2ToPwdChangeFragment(binding.etEmail.text.toString(), binding.etPwd.text.toString().toInt()))
 
         }
     }
@@ -69,7 +59,7 @@ class EmailVerifyFragment : Fragment() {
                 startTimer()
                 binding.btnSendCode.isEnabled = false
                 binding.etPwd.isEnabled = true
-                Toast.makeText(requireContext(), "코드 전송 성공", Toast.LENGTH_SHORT).show()
+                showCustomToast("코드 전송 성공")
 
                 binding.etPwd.addTextChangedListener {
                     val isEnable = binding.etPwd.text.toString().length == 6
@@ -86,12 +76,12 @@ class EmailVerifyFragment : Fragment() {
         viewModel.emailVerifyState.observe(viewLifecycleOwner, {
             if(it) {
                 // 이메일 인증 성공
-                Toast.makeText(requireContext(), "이메일 인증 성공", Toast.LENGTH_SHORT).show()
-                findNavController().navigate(R.id.nav_pwdChangeFragment)
+                showCustomToast("이메일 인증 성공")
+                findNavController().navigate(EmailVerifyFragmentDirections.actionEmailVerifyFragment2ToPwdChangeFragment(binding.etEmail.text.toString(), binding.etPwd.text.toString().toInt()))
             } else {
                 // 이메일 인증 실패
-                Toast.makeText(requireContext(), "이메일 인증 실패", Toast.LENGTH_SHORT).show()
-            }
+                showCustomToast("이메일 인증 실패")
+                }
         })
     }
 
