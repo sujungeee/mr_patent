@@ -53,13 +53,13 @@
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewPagerPreview"
         android:layout_width="match_parent"
-        android:layout_height="350dp"
+        android:layout_height="300dp"
         android:visibility="gone"/>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/chat_bottom_sheet_menu"
         android:layout_width="match_parent"
-        android:layout_height="350dp"
+        android:layout_height="300dp"
 >
 
         <ImageButton
