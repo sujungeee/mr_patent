@@ -1,6 +1,7 @@
 package com.d208.mr_patent_backend.domain.user.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.d208.mr_patent_backend.domain.user.service.EmailService;
 import com.d208.mr_patent_backend.domain.user.service.UserService;
+import com.d208.mr_patent_backend.domain.user.dto.EmailAvailableResponseDTO;
 import com.d208.mr_patent_backend.domain.user.dto.EmailVerificationResponseDTO;
 
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,25 @@ import java.util.Map;
 public class EmailController {
 
     private final EmailService emailService;
+    private final UserService userService;
+
+    @GetMapping("/check")
+    public ResponseEntity<Map<String, EmailAvailableResponseDTO>> checkEmailDuplicate(@RequestParam String email) {
+        try {
+            boolean isDuplicate = userService.checkEmailDuplicate(email);
+            Map<String, EmailAvailableResponseDTO> response = new HashMap<>();
+            response.put("data", EmailAvailableResponseDTO.of(!isDuplicate));  // DB에 없으면 available true
+
+            if (!isDuplicate) {  // DB에 없는 경우에만 체크 표시
+                emailService.setEmailChecked(email);
+            }
+
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            log.error("이메일 중복 체크 실패: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
 
     @PostMapping("/request")
     public ResponseEntity<String> sendAuthCode(@RequestParam String email) {

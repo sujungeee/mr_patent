@@ -149,6 +149,15 @@ public class UserService {
         User user = userRepository.findByUserEmail(requestDto.getUserEmail())
                 .orElseThrow(() -> new RuntimeException("가입되지 않은 이메일입니다."));
 
+        // 변리사인 경우 승인 상태 확인
+        if (user.getUserRole() == 1) {
+            Expert expert = expertRepository.findByUser(user)
+                    .orElseThrow(() -> new RuntimeException("변리사 정보를 찾을 수 없습니다."));
+            if (expert.getExpertStatus() == 0) {
+                throw new RuntimeException("아직 승인되지 않은 변리사입니다.");
+            }
+        }
+
         // 비밀번호 확인
         if (!passwordEncoder.matches(requestDto.getUserPw(), user.getUserPw())) {
             throw new RuntimeException("비밀번호가 일치하지 않습니다.");
@@ -190,5 +199,38 @@ public class UserService {
         // Refresh Token 제거
         user.setUserRefreshToken(null);
         userRepository.save(user);
+    }
+
+    @Transactional
+    public TokenInfo reissue(String refreshToken) {
+        // 리프레시 토큰 검증
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
+            throw new RuntimeException("유효하지 않은 리프레시 토큰입니다.");
+        }
+
+        // DB에서 리프레시 토큰으로 사용자 찾기
+        User user = userRepository.findByUserRefreshToken(refreshToken)
+                .orElseThrow(() -> new RuntimeException("토큰에 해당하는 사용자가 없습니다."));
+
+        // 권한 설정
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        if (user.getUserRole() == 1) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_EXPERT"));
+        } else if (user.getUserRole() == 2) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        } else {
+            authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+        }
+
+        // 새로운 토큰 생성
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                user.getUserEmail(), "", authorities);
+        TokenInfo tokenInfo = jwtTokenProvider.generateToken(authentication);
+
+        // 리프레시 토큰 업데이트
+        user.setUserRefreshToken(tokenInfo.getRefreshToken());
+        userRepository.save(user);
+
+        return tokenInfo;
     }
 }
