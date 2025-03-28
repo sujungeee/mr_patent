@@ -177,4 +177,18 @@ public class UserService {
 
         return tokenInfo;
     }
+
+    @Transactional
+    public void logout(String accessToken) {
+        // 토큰에서 사용자 이메일 추출
+        String userEmail = jwtTokenProvider.getUserEmail(accessToken);
+
+        // 사용자 찾기
+        User user = userRepository.findByUserEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        // Refresh Token 제거
+        user.setUserRefreshToken(null);
+        userRepository.save(user);
+    }
 }

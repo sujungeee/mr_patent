@@ -102,4 +102,9 @@ public class JwtTokenProvider {
             return e.getClaims();
         }
     }
+
+    public String getUserEmail(String token) {
+        Claims claims = parseClaims(token);
+        return claims.getSubject();
+    }
 }
