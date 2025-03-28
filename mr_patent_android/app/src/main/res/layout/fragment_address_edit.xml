@@ -4,7 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".ui.mypage.AddressChangeFragment">
+    android:id="@+id/fragment_address_edit"
+    tools:context=".ui.address.AddressEditFragment">
 
     <TextView
         android:id="@+id/tv_before"
