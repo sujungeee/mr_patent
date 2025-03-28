@@ -23,4 +23,6 @@
     <string name="quiz_result">10개의 단어 중 %d개 정답</string>
     <string name="quiz_ment">아쉬워요. \n조금만 더 힘내서 도전해볼까요?</string>
     <string name="home_intro">안녕하세요 <u>%s</u> 님, \n특허씨와 함께\n아이디어를 실현해보세요!</string>
+
+    <string name="api_key">AIzaSyDHAbGFLMIVr5neZktJWGoPcJlUFN4gKAE</string>
 </resources>
