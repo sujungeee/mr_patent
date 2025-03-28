@@ -17,7 +17,8 @@
     <string name="tv_patent_exp">본 발명은 더블버블빨대에 관한 것으로, 보다 상세하게는 상부와 하부로 배치되는 더블더블을 적층하도록 하여 공간 활용도를 높임과 동시에, 본 발명은 더블버블빨대에 관한 것으로, 보다 상세하게는 상부와 하부로 배치되는 더블더블을 적층하도록 하여 높임과</string>
 
     <!-- format string -->
-    <string name="tv_date_test">검사 시간: %s</string>
+    <string name="tv_date_test">검사 일시: %s</string>
+    <string name="tv_date_create">생성 일시: %s</string>
     <string name="tv_similiarity_test_result">유사도 검사: %s</string>
     <string name="tv_version_recent">최근 버전: %s</string>
     <string name="quiz_result">10개의 단어 중 %d개 정답</string>

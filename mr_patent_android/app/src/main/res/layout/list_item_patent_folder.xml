@@ -3,43 +3,68 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="120dp"
-    android:padding="12dp"
+    android:layout_height="92dp"
+    android:id="@+id/dialog_list_item_patent_folder"
     android:background="@drawable/rounded_background">
 
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/folder"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/cl_list_item_patent_folder"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:padding="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.06"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
 
-    <TextView
-        android:id="@+id/tv_folder_name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:fontFamily="@font/pretendard_semibold"
-        android:text="폴더 1"
-        android:textColor="@color/black"
-        android:textSize="18sp"
+        <ImageView
+            android:id="@+id/iv_folder"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:src="@drawable/folder"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.04"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintWidth_percent="0.16" />
+
+        <TextView
+            android:id="@+id/tv_folder_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/pretendard_semibold"
+            android:text="폴더 1"
+            android:textColor="@color/black"
+            android:textSize="18sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.1"
+            app:layout_constraintStart_toEndOf="@+id/iv_folder"
+            app:layout_constraintTop_toTopOf="@+id/iv_folder"
+            app:layout_constraintVertical_bias="0.28"/>
+
+        <TextView
+            android:id="@+id/tv_folder_recent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/tv_date_create"
+            android:textColor="@color/mr_gray_dark"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/tv_folder_name"
+            app:layout_constraintTop_toBottomOf="@+id/tv_folder_name"
+            app:layout_constraintVertical_bias="0.2"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <View
+        android:id="@+id/v_line_1"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="@color/mr_gray_lighter"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/imageView"
-        app:layout_constraintTop_toTopOf="@+id/imageView"
-        app:layout_constraintBottom_toTopOf="@id/tv_folder_recent"
-        app:layout_constraintHorizontal_bias="0.1" />
-
-    <TextView
-        android:id="@+id/tv_folder_recent"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/tv_version_recent"
-        android:textColor="@color/mr_gray_dark"
-        app:layout_constraintBottom_toBottomOf="@+id/imageView"
-        app:layout_constraintStart_toStartOf="@+id/tv_folder_name"
-        app:layout_constraintTop_toBottomOf="@+id/tv_folder_name" />
+        app:layout_constraintTop_toBottomOf="@id/cl_list_item_patent_folder"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
