@@ -21,7 +21,6 @@ class AddressSearchFragment : BaseFragment<FragmentAddressSearchBinding>(
 
     private lateinit var placesClient: PlacesClient
     private var addressList: MutableList<AddressDto> = mutableListOf()
-    private lateinit var addressAdapter: AddressAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
