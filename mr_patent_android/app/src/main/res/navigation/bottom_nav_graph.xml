@@ -128,11 +128,11 @@
         tools:layout="@layout/fragment_profile_edit">
         <action
             android:id="@+id/action_profileEditFragment_to_addressChangeFragment"
-            app:destination="@id/addressChangeFragment" />
+            app:destination="@id/passwordEditFragment" />
     </fragment>
     <fragment
-        android:id="@+id/addressChangeFragment"
-        android:name="com.ssafy.mr_patent_android.ui.mypage.AddressChangeFragment"
-        android:label="fragment_address_edit"
-        tools:layout="@layout/fragment_address_edit" />
+        android:id="@+id/passwordEditFragment"
+        android:name="com.ssafy.mr_patent_android.ui.mypage.PasswordEditFragment"
+        android:label="fragment_password_edit"
+        tools:layout="@layout/fragment_password_edit" />
 </navigation>

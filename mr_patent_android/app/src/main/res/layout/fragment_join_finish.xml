@@ -4,7 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".ui.join.JoinApplicationFragment">
+    android:id="@+id/fragment_join_finish"
+    tools:context=".ui.join.JoinFinishFragment">
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/h1_guideline"
@@ -54,7 +55,7 @@
         app:layout_constraintBottom_toBottomOf="@id/h2_guideline"/>
 
     <TextView
-        android:id="@+id/tv_join_complete"
+        android:id="@+id/tv_join_finish"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:fontFamily="@font/pretendard_semibold"
@@ -68,6 +69,7 @@
         app:layout_constraintEnd_toEndOf="@id/v2_guideline" />
 
     <TextView
+        android:id="@+id/tv_join_finish_exp"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:fontFamily="@font/pretendard_semibold"
@@ -78,7 +80,7 @@
         android:layout_marginTop="4dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tv_join_complete" />
+        app:layout_constraintTop_toBottomOf="@+id/tv_join_finish" />
 
 
     <Button
@@ -89,7 +91,7 @@
         android:backgroundTint="@color/mr_blue"
         android:fontFamily="@font/pretendard_semibold"
         android:text="확  인"
-        android:textSize="18sp"
+        android:textSize="16sp"
         app:layout_constraintTop_toTopOf="@id/h3_guideline"
         app:layout_constraintBottom_toBottomOf="parent" />
 
