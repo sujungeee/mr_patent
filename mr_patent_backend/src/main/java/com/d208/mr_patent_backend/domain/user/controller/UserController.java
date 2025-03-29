@@ -46,7 +46,7 @@ public class UserController {
     public ResponseEntity<String> signUpExpert(@Valid @RequestBody ExpertSignupRequestDTO requestDto) {
         try {
             userService.signUpExpert(requestDto);
-            return ResponseEntity.ok("변리사 회원가입이 완료되었습니다.");
+            return ResponseEntity.ok("변리사 회원가입 요청을 보냈습니다.");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

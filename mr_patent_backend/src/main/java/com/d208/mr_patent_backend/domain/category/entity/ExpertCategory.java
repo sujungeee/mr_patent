@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Column;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -22,7 +23,8 @@ import lombok.Setter;
 public class ExpertCategory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer expertCategoryId;
+    @Column(name = "expert_category_id")
+    private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "expert_id")

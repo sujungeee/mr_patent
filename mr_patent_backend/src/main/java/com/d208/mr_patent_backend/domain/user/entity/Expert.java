@@ -53,7 +53,7 @@ public class Expert {
     @Column(name = "expert_updated_at")
     private LocalDateTime expertUpdatedAt;
 
-    @OneToMany(mappedBy = "expert", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "expert", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ExpertCategory> expertCategory = new ArrayList<>();
 
     @PrePersist
@@ -64,5 +64,11 @@ public class Expert {
     @PreUpdate
     public void preUpdate() {
         this.expertUpdatedAt = LocalDateTime.now();
+    }
+
+    // 연관관계 편의 메서드
+    public void addExpertCategory(ExpertCategory expertCategory) {
+        this.expertCategory.add(expertCategory);
+        expertCategory.setExpert(this);
     }
 }

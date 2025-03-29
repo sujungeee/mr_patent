@@ -7,7 +7,6 @@ import lombok.Setter;
 import java.time.LocalDate;
 import java.util.List;
 
-import com.d208.mr_patent_backend.domain.category.entity.ExpertCategory;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
@@ -30,7 +29,7 @@ public class ExpertSignupRequestDTO {
     private String userName;
 
     private String userImage;
-    private Integer userRole = 1;
+    private Integer userRole;
 
     @NotBlank(message = "주민등록번호는 필수 입력값입니다.")
     private String expertIdentification;
@@ -50,5 +49,5 @@ public class ExpertSignupRequestDTO {
     @NotBlank(message = "자격증은 필수 입력값입니다.")
     private String expertLicense;
 
-    private List<ExpertCategory> expertCategory;
+    private List<ExpertCategoryDTO> expertCategories;
 }

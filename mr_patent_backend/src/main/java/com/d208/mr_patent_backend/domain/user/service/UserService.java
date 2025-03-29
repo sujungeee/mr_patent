@@ -1,6 +1,7 @@
 package com.d208.mr_patent_backend.domain.user.service;
 
 import com.d208.mr_patent_backend.domain.user.dto.UserSignupRequestDTO;
+import com.d208.mr_patent_backend.domain.user.dto.ExpertCategoryDTO;
 import com.d208.mr_patent_backend.domain.user.dto.ExpertSignupRequestDTO;
 import com.d208.mr_patent_backend.domain.user.entity.User;
 import com.d208.mr_patent_backend.domain.user.entity.Expert;
@@ -97,20 +98,14 @@ public class UserService {
         expert.setExpertGetDate(requestDto.getExpertGetDate());
 
         // ExpertCategory 설정
-        if (requestDto.getExpertCategory() != null && !requestDto.getExpertCategory().isEmpty()) {
-            for (ExpertCategory categoryDto : requestDto.getExpertCategory()) {
-                Integer categoryId = categoryDto.getCategory().getCategoryId();
-                Category category = categoryRepository.findById(categoryId)
-                        .orElseThrow(() -> new RuntimeException("존재하지 않는 카테고리입니다: " + categoryId));
+        if (requestDto.getExpertCategories() != null && !requestDto.getExpertCategories().isEmpty()) {
+            for (ExpertCategoryDTO categoryDto : requestDto.getExpertCategories()) {
+                Category category = categoryRepository.findById(categoryDto.getCategoryId())
+                        .orElseThrow(() -> new RuntimeException("존재하지 않는 카테고리입니다: " + categoryDto.getCategoryId()));
 
-                // 새로운 ExpertCategory 객체 생성
                 ExpertCategory newExpertCategory = new ExpertCategory();
-                newExpertCategory.setExpert(expert);
                 newExpertCategory.setCategory(category);
-
-                // 양방향 관계 설정
-                expert.getExpertCategory().add(newExpertCategory);
-                category.getExpertCategory().add(newExpertCategory);
+                expert.addExpertCategory(newExpertCategory);
             }
         }
 

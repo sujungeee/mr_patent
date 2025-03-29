@@ -1,6 +1,7 @@
 package com.d208.mr_patent_backend.domain.user.controller;
 
 import com.d208.mr_patent_backend.domain.user.dto.ExpertResponseDTO;
+import com.d208.mr_patent_backend.domain.user.dto.ExpertDetailResponseDTO;
 import com.d208.mr_patent_backend.domain.user.service.ExpertService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,16 @@ public class ExpertController {
 
         Map<String, Object> response = new HashMap<>();
         response.put("data", experts);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{expertId}")
+    public ResponseEntity<Map<String, Object>> getExpertDetail(@PathVariable Integer expertId) {
+        ExpertDetailResponseDTO expert = expertService.getExpertDetail(expertId);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("data", expert);
 
         return ResponseEntity.ok(response);
     }
