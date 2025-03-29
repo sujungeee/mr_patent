@@ -38,7 +38,8 @@ def get_kobert_vector(text: str, max_length: int = 512) -> np.ndarray:
     
     inputs = tokenizer(text, return_tensors='pt', truncation=True, max_length=max_length, padding='max_length')
     with torch.no_grad():
-        outputs = model(**inputs)
+        # return_dict=True를 추가하여 속성으로 접근 가능한 객체 반환
+        outputs = model(**inputs, return_dict=True)
     
     return outputs.last_hidden_state[:, 0, :].numpy().flatten()
 
