@@ -1,59 +1,83 @@
 package com.ssafy.mr_patent_android.ui.patent
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
+import android.util.Log
 import android.view.View
-import android.view.ViewGroup
+import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.gson.annotations.SerializedName
 import com.ssafy.mr_patent_android.R
+import com.ssafy.mr_patent_android.base.BaseFragment
+import com.ssafy.mr_patent_android.data.model.dto.FolderDto
+import com.ssafy.mr_patent_android.data.model.response.PatentRecentResponse
+import com.ssafy.mr_patent_android.databinding.FragmentPatentBinding
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
+private const val TAG = "PatentFragment_Mr_Patent"
+class PatentFragment : BaseFragment<FragmentPatentBinding>(
+    FragmentPatentBinding::bind, R.layout.fragment_patent
+) {
 
-/**
- * A simple [Fragment] subclass.
- * Use the [PatentFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
-class PatentFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+    private val patentViewModel: PatentViewModel by activityViewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        initView()
+        initObserver()
+        // TODO: delete
+        initAdapter()
+    }
+
+    // TODO: delete
+    private fun initAdapter() {
+        val tmp = mutableListOf(
+            PatentRecentResponse.PatentDraft(1, "더블버블빨대", "본 발명은 더블버블빨대에 관한 것으로, 보다 상세하게는 상부와 하부로 배치되는 더블더블을 적층하도록 하여 공간 활용도를 높임과 동시에, 본 발명은 더블버블빨대에 관한 것으로, 보다 상세하게는 상부와 하부로 배치되는 더블더블을 적층하도록 하여 높임과···", "2024-03-28"),
+            PatentRecentResponse.PatentDraft(2, "다이아몬드빨대", "본 발명은 더블버블빨대에 관한 것으로, 보다 상세하게는 상부와 하부로 배치되는 더블더블을 적층하도록 하여 공간 활용도를 높임과 동시에, 본 발명은 더블버블빨대에 관한 것으로, 보다 상세하게는 상부와 하부로 배치되는 더블더블을 적층하도록 하여 높임과···", "2024-03-28"),
+        )
+        binding.rvRecentDrafts.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvRecentDrafts.adapter = PatentRecentAdapter(tmp) { position ->
+            patentViewModel.setDraftType("Update")
+            patentViewModel.setPatentDraftId(tmp[position].parentDraftId)
+            findNavController().navigate(R.id.patentFolderChoiceFragment)
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_patent, container, false)
+    private fun initView() {
+        patentViewModel.getRecentPatentList()
+
+        binding.clFileUpload.setOnClickListener {
+            patentViewModel.setDraftType("FileUpload")
+            findNavController().navigate(R.id.patentFolderChoiceFragment)
+        }
+
+        binding.clWrite.setOnClickListener {
+            patentViewModel.setDraftType("Write")
+            findNavController().navigate(R.id.patentFolderChoiceFragment)
+        }
+    }
+
+    private fun initObserver() {
+        patentViewModel.patentsRecent.observe(viewLifecycleOwner) {
+            binding.rvRecentDrafts.layoutManager = LinearLayoutManager(requireContext())
+            binding.rvRecentDrafts.adapter = PatentRecentAdapter(it) { position ->
+                patentViewModel.setDraftType("Update")
+                patentViewModel.setPatentDraftId(it[position].parentDraftId)
+                findNavController().navigate(R.id.patentFolderChoiceFragment)
+            }
+        }
     }
 
     companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment PatentFragment.
-         */
-        // TODO: Rename and change types and number of parameters
         @JvmStatic
-        fun newInstance(param1: String, param2: String) =
+        fun newInstance(key: String, value: String) =
             PatentFragment().apply {
                 arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+                    putString(key, value)
                 }
             }
     }

@@ -135,4 +135,63 @@
         android:name="com.ssafy.mr_patent_android.ui.mypage.PasswordEditFragment"
         android:label="fragment_password_edit"
         tools:layout="@layout/fragment_password_edit" />
+    <fragment
+        android:id="@+id/patentFragment"
+        android:name="com.ssafy.mr_patent_android.ui.patent.PatentFragment"
+        android:label="fragment_patent"
+        tools:layout="@layout/fragment_patent">
+        <action
+            android:id="@+id/action_patentFragment_to_patentFolderChoiceFragment2"
+            app:destination="@id/patentFolderChoiceFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/patentFolderChoiceFragment"
+        android:name="com.ssafy.mr_patent_android.ui.patent.PatentFolderChoiceFragment"
+        android:label="fragment_patent_folder_choice"
+        tools:layout="@layout/fragment_patent_folder_choice" >
+        <action
+            android:id="@+id/action_patentFolderChoiceFragment_to_patentContentFragment"
+            app:destination="@id/patentContentFragment" />
+        <action
+            android:id="@+id/action_patentFolderChoiceFragment_to_patentFragment"
+            app:destination="@id/patentFragment" />
+        <action
+            android:id="@+id/action_patentFolderChoiceFragment_to_fileUploadFragment"
+            app:destination="@id/fileUploadFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/fileUploadFragment"
+        android:name="com.ssafy.mr_patent_android.ui.patent.FileUploadFragment"
+        android:label="fragment_file_upload"
+        tools:layout="@layout/fragment_file_upload" >
+        <action
+            android:id="@+id/action_fileUploadFragment_to_patentContentFragment"
+            app:destination="@id/patentContentFragment" />
+        <action
+            android:id="@+id/action_fileUploadFragment_to_patentFolderChoiceFragment"
+            app:destination="@id/patentFolderChoiceFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/patentContentFragment"
+        android:name="com.ssafy.mr_patent_android.ui.patent.PatentContentFragment"
+        android:label="fragment_patent_content"
+        tools:layout="@layout/fragment_patent_content" >
+        <argument
+            android:name="id"
+            app:argType="integer" />
+        <action
+            android:id="@+id/action_patentContentFragment_to_similiarityTestFragment"
+            app:destination="@id/similiarityTestFragment" />
+        <action
+            android:id="@+id/action_patentContentFragment_to_patentFolderChoiceFragment"
+            app:destination="@id/patentFolderChoiceFragment" />
+        <action
+            android:id="@+id/action_patentContentFragment_to_fileUploadFragment"
+            app:destination="@id/fileUploadFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/similiarityTestFragment"
+        android:name="com.ssafy.mr_patent_android.ui.patent.SimiliarityTestFragment"
+        android:label="fragment_similiarity_test"
+        tools:layout="@layout/fragment_similiarity_test" />
 </navigation>

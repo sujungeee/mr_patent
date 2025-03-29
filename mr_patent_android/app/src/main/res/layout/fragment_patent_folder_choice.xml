@@ -4,23 +4,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/fragment_patent_folder_choice"
     tools:context=".ui.patent.PatentFolderChoiceFragment">
 
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/h1_guideline"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.9" />
-
     <TextView
+        style="@style/customBeforeFontStyle"
         android:id="@+id/tv_before"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:fontFamily="@font/pretendard_semibold"
-        android:text="← 이전"
-        android:textColor="@color/mr_blue"
-        android:textSize="20sp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -43,36 +35,24 @@
     <ImageView
         android:id="@+id/iv_folder_add"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:src="@drawable/folder_add"
         app:layout_constraintBottom_toBottomOf="@+id/tv_folder_choice"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.92"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/tv_folder_choice" />
+        app:layout_constraintTop_toTopOf="@+id/tv_folder_choice"
+        app:layout_constraintHeight_percent="0.036"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_folder_items"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:padding="8dp"
-        app:layout_constraintBottom_toTopOf="@id/h1_guideline"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_percent="0.8"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tv_folder_choice"
-        app:layout_constraintWidth_percent="0.86"
-        app:layout_constraintHeight_percent="0.7" />
-
-    <Button
-        android:id="@+id/btn_next"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="20dp"
-        android:backgroundTint="@color/mr_blue"
-        android:fontFamily="@font/pretendard_semibold"
-        android:text="다  음"
-        android:textSize="18sp"
-        app:layout_constraintTop_toTopOf="@id/h1_guideline"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintWidth_percent="0.86" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
