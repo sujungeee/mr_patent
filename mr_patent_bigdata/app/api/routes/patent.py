@@ -2,6 +2,8 @@ import os
 import uuid
 import re
 import pickle
+import multiprocessing as mp
+from functools import partial
 from fastapi import APIRouter, BackgroundTasks, HTTPException, status
 from typing import Optional, List, Dict, Any
 from datetime import datetime
@@ -18,6 +20,13 @@ router = APIRouter(prefix="/api/patents", tags=["patents"])
 # 추출된 데이터 저장을 위한 디렉토리
 DATA_DIR = "temp_data"
 os.makedirs(DATA_DIR, exist_ok=True)
+
+# EC2 서버 최적화 설정 (4코어 Xeon)
+# SERVER_PROCESSES = 3  # 시스템용으로 1코어 남김
+# SERVER_BATCH_SIZE = 3000  # 메모리 고려 배치 크기
+SERVER_PROCESSES = min(6, mp.cpu_count() - 1)  # 로컬 PC 테스트용
+SERVER_BATCH_SIZE = 5000  # 로컬 PC 테스트용 (메모리가 충분한 경우)
+
 
 def save_extracted_data(patents: List[Dict[str, Any]], filename: str = "extracted_patents.pkl") -> str:
     """추출된 특허 데이터를 파일로 저장"""
@@ -37,6 +46,58 @@ def load_extracted_data(filename: str = "extracted_patents.pkl") -> List[Dict[st
         patents = pickle.load(f)
     logger.info(f"저장된 특허 데이터 {len(patents)}개 로드 완료")
     return patents
+
+def process_patent_batch(batch, start_idx):
+    """특허 데이터 배치 처리 함수 (병렬 처리용)"""
+    results = []
+    for i, patent_data in enumerate(batch):
+        # 벡터 생성
+        tfidf_vector, kobert_vector = generate_vectors(patent_data)
+        
+        # 결과 저장
+        results.append({
+            'index': start_idx + i,
+            'patent_data': patent_data,
+            'tfidf_vector': tfidf_vector,
+            'kobert_vector': kobert_vector
+        })
+    return results
+
+def parallel_process_patents(all_patents, batch_size=None, num_processes=None):
+    """병렬 처리로 특허 데이터 벡터화"""
+    # EC2 서버에 최적화된 기본값 사용
+    if batch_size is None:
+        batch_size = SERVER_BATCH_SIZE
+    
+    if num_processes is None:
+        num_processes = SERVER_PROCESSES
+    
+    logger.info(f"병렬 처리 시작: {num_processes}개 프로세스, 배치 크기 {batch_size}")
+    
+    # 데이터를 여러 배치로 나누기
+    batches = []
+    for i in range(0, len(all_patents), batch_size):
+        end = min(i + batch_size, len(all_patents))
+        batches.append(all_patents[i:end])
+    
+    # 배치 시작 인덱스 계산
+    start_indices = [i for i in range(0, len(all_patents), batch_size)]
+    
+    # 병렬 처리 풀 생성 및 실행
+    with mp.Pool(processes=num_processes) as pool:
+        process_func = partial(process_patent_batch)
+        all_results = pool.starmap(process_func, zip(batches, start_indices))
+    
+    # 결과 병합
+    flattened_results = []
+    for batch_result in all_results:
+        flattened_results.extend(batch_result)
+    
+    # 인덱스로 결과 정렬
+    flattened_results.sort(key=lambda x: x['index'])
+    
+    logger.info(f"병렬 처리 완료: {len(flattened_results)}개 특허 처리됨")
+    return flattened_results
 
 async def process_patent_files(rtf_directory: str, task_id: str):
     """특허 데이터 처리 및 저장"""
@@ -105,6 +166,7 @@ async def process_patent_files(rtf_directory: str, task_id: str):
         logger.info("TF-IDF 벡터라이저 학습 시작")
         corpus = prepare_corpus(all_patents)
         fit_tfidf_vectorizer(corpus)
+        logger.info("TF-IDF 벡터라이저 학습 완료")
         
         # 작업 상태 업데이트
         await database.execute(
@@ -114,24 +176,36 @@ async def process_patent_files(rtf_directory: str, task_id: str):
             )
         )
         
-        # 3단계: 벡터화 및 저장
-        total_patents = len(all_patents)
-        logger.info(f"총 {total_patents}개 특허 벡터화 및 저장 시작")
+        # 3단계: 병렬 처리로 벡터화 수행
+        logger.info(f"총 {len(all_patents)}개 특허 병렬 벡터화 시작")
+        processed_results = parallel_process_patents(
+            all_patents, 
+            batch_size=SERVER_BATCH_SIZE,
+            num_processes=SERVER_PROCESSES
+        )
         
-        for i, patent_data in enumerate(all_patents):
+        # 벡터화 결과 데이터베이스에 저장
+        total_patents = len(processed_results)
+        for i, result in enumerate(processed_results):
             try:
-                # 벡터 생성
-                tfidf_vector, kobert_vector = generate_vectors(patent_data)
+                patent_data = result['patent_data']
+                tfidf_vector = result['tfidf_vector']
+                kobert_vector = result['kobert_vector']
+                
+                # 출원번호에서 "발명의명칭" 제거
+                app_number = patent_data.get("application_number", "")
+                if "발명의명칭" in app_number:
+                    app_number = app_number.replace("발명의명칭", "")
                 
                 # IPC 코드 길이 제한 (오류 방지)
                 ipc_code = patent_data.get("ipc_classification", "")
                 if ipc_code and len(ipc_code) > 95:
                     ipc_code = ipc_code[:95]
                 
-                # 데이터베이스에 저장 - patent_created_at, patent_updated_at 추가
+                # 데이터베이스에 저장
                 query = patent.insert().values(
                     patent_title=patent_data.get("title"),
-                    patent_application_number=patent_data.get("application_number"),
+                    patent_application_number=app_number,
                     patent_ipc=ipc_code,
                     patent_summary=patent_data.get("summary"),
                     patent_claim=patent_data.get("claims"),
@@ -143,8 +217,8 @@ async def process_patent_files(rtf_directory: str, task_id: str):
                 
                 await database.execute(query)
                 
-                # 작업 상태 업데이트
-                if i % 100 == 0 or i == total_patents - 1:
+                # 작업 상태 업데이트 (매 1000개마다)
+                if i % 1000 == 0 or i == total_patents - 1:
                     progress = 60 + int((i / total_patents) * 40)
                     await database.execute(
                         task_status.update().where(task_status.c.task_id == task_id).values(
@@ -155,7 +229,6 @@ async def process_patent_files(rtf_directory: str, task_id: str):
                     logger.info(f"진행률: {progress}%, {i+1}/{total_patents} 처리 완료")
             except Exception as e:
                 logger.error(f"데이터 저장 중 오류 발생: {e}, 특허 번호: {patent_data.get('application_number')}")
-                # 개별 특허에서 오류 발생시 건너뛰고 다음 특허 처리
                 continue
         
         # 작업 완료
@@ -214,27 +287,40 @@ async def resume_data_processing(rtf_directory: str, task_id: str, start_index: 
         logger.info("TF-IDF 벡터라이저 학습 시작")
         corpus = prepare_corpus(all_patents)
         fit_tfidf_vectorizer(corpus)
+        logger.info("TF-IDF 벡터라이저 학습 완료")
         
-        # 저장만 재개 (시작 인덱스부터)
-        total_patents = len(all_patents)
-        logger.info(f"총 {total_patents}개 특허 중 {start_index}번째부터 저장 시작")
+        # 병렬 처리로 벡터화 (시작 인덱스부터)
+        patents_to_process = all_patents[start_index:]
+        logger.info(f"총 {len(patents_to_process)}개 특허 병렬 벡터화 시작 (인덱스 {start_index}부터)")
         
-        for i in range(start_index, total_patents):
+        processed_results = parallel_process_patents(
+            patents_to_process, 
+            batch_size=SERVER_BATCH_SIZE,
+            num_processes=SERVER_PROCESSES
+        )
+        
+        # 벡터화 결과 데이터베이스에 저장
+        total_patents = len(processed_results)
+        for i, result in enumerate(processed_results):
             try:
-                patent_data = all_patents[i]
+                patent_data = result['patent_data']
+                tfidf_vector = result['tfidf_vector']
+                kobert_vector = result['kobert_vector']
                 
-                # 벡터 생성
-                tfidf_vector, kobert_vector = generate_vectors(patent_data)
+                # 출원번호에서 "발명의명칭" 제거
+                app_number = patent_data.get("application_number", "")
+                if "발명의명칭" in app_number:
+                    app_number = app_number.replace("발명의명칭", "")
                 
-                # IPC 코드 길이 제한 (오류 방지)
+                # IPC 코드 길이 제한
                 ipc_code = patent_data.get("ipc_classification", "")
                 if ipc_code and len(ipc_code) > 95:
                     ipc_code = ipc_code[:95]
                 
-                # 데이터베이스에 저장 - patent_created_at, patent_updated_at 추가
+                # 데이터베이스에 저장
                 query = patent.insert().values(
                     patent_title=patent_data.get("title"),
-                    patent_application_number=patent_data.get("application_number"),
+                    patent_application_number=app_number,
                     patent_ipc=ipc_code,
                     patent_summary=patent_data.get("summary"),
                     patent_claim=patent_data.get("claims"),
@@ -246,9 +332,9 @@ async def resume_data_processing(rtf_directory: str, task_id: str, start_index: 
                 
                 await database.execute(query)
                 
-                # 작업 상태 업데이트
-                if i % 100 == 0 or i == total_patents - 1:
-                    progress = 60 + int(((i - start_index) / (total_patents - start_index)) * 40)
+                # 작업 상태 업데이트 (매 1000개마다)
+                if i % 1000 == 0 or i == total_patents - 1:
+                    progress = 60 + int((i / total_patents) * 40)
                     await database.execute(
                         task_status.update().where(task_status.c.task_id == task_id).values(
                             progress=progress,
@@ -258,7 +344,6 @@ async def resume_data_processing(rtf_directory: str, task_id: str, start_index: 
                     logger.info(f"진행률: {progress}%, {i+1}/{total_patents} 처리 완료")
             except Exception as e:
                 logger.error(f"데이터 저장 중 오류 발생: {e}, 특허 번호: {patent_data.get('application_number')}")
-                # 개별 특허에서 오류 발생시 건너뛰고 다음 특허 처리
                 continue
         
         # 작업 완료
@@ -269,7 +354,7 @@ async def resume_data_processing(rtf_directory: str, task_id: str, start_index: 
             )
         )
         
-        logger.info(f"특허 데이터 저장 재개 완료: {total_patents - start_index}개의 특허 저장")
+        logger.info(f"특허 데이터 저장 재개 완료: {total_patents}개의 특허 저장")
         
     except Exception as e:
         logger.error(f"데이터 저장 재개 중 오류 발생: {e}")
@@ -281,7 +366,7 @@ async def resume_data_processing(rtf_directory: str, task_id: str, start_index: 
         raise
 
 async def process_saved_data(task_id: str, filename: str):
-    """저장된 특허 데이터를 벡터화하고 데이터베이스에 저장"""
+    """저장된 특허 데이터를 벡터화하고 데이터베이스에 저장 (병렬 처리 적용)"""
     try:        
         # 저장된 데이터 로드
         all_patents = load_extracted_data(filename)
@@ -295,6 +380,7 @@ async def process_saved_data(task_id: str, filename: str):
         logger.info("TF-IDF 벡터라이저 학습 시작")
         corpus = prepare_corpus(all_patents)
         fit_tfidf_vectorizer(corpus)
+        logger.info("TF-IDF 벡터라이저 학습 완료")
         
         # 작업 상태 업데이트
         await database.execute(
@@ -304,14 +390,21 @@ async def process_saved_data(task_id: str, filename: str):
             )
         )
         
-        # 벡터화 및 저장
-        total_patents = len(all_patents)
-        logger.info(f"총 {total_patents}개 특허 벡터화 및 저장 시작")
+        # 병렬 처리로 벡터화 수행
+        logger.info(f"총 {len(all_patents)}개 특허 병렬 벡터화 시작")
+        processed_results = parallel_process_patents(
+            all_patents,
+            batch_size=SERVER_BATCH_SIZE,
+            num_processes=SERVER_PROCESSES
+        )
         
-        for i, patent_data in enumerate(all_patents):
+        # 벡터화 결과 데이터베이스에 저장
+        total_patents = len(processed_results)
+        for i, result in enumerate(processed_results):
             try:
-                # 벡터 생성
-                tfidf_vector, kobert_vector = generate_vectors(patent_data)
+                patent_data = result['patent_data']
+                tfidf_vector = result['tfidf_vector']
+                kobert_vector = result['kobert_vector']
                 
                 # IPC 코드 길이 제한
                 ipc_code = patent_data.get("ipc_classification", "")
@@ -333,8 +426,8 @@ async def process_saved_data(task_id: str, filename: str):
                 
                 await database.execute(query)
                 
-                # 작업 상태 업데이트
-                if i % 100 == 0 or i == total_patents - 1:
+                # 작업 상태 업데이트 (매 1000개마다)
+                if i % 1000 == 0 or i == total_patents - 1:
                     progress = 60 + int((i / total_patents) * 40)
                     await database.execute(
                         task_status.update().where(task_status.c.task_id == task_id).values(
@@ -345,7 +438,6 @@ async def process_saved_data(task_id: str, filename: str):
                     logger.info(f"진행률: {progress}%, {i+1}/{total_patents} 처리 완료")
             except Exception as e:
                 logger.error(f"데이터 저장 중 오류 발생: {e}, 특허 번호: {patent_data.get('application_number')}")
-                # 개별 특허에서 오류 발생시 건너뛰고 다음 특허 처리
                 continue
         
         # 작업 완료
