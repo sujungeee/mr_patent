@@ -31,6 +31,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 
+import java.time.LocalDateTime;
+
 @RestController
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
@@ -123,6 +125,91 @@ public class UserController {
         Map<String, Object> response = new HashMap<>();
         Map<String, String> data = new HashMap<>();
         data.put("message", "회원 탈퇴가 완료되었습니다.");
+        response.put("data", data);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/me/pw")
+    public ResponseEntity<Map<String, Object>> updatePassword(@RequestBody Map<String, String> request) {
+        String currentPassword = request.get("current_password");
+        String newPassword = request.get("new_password");
+
+        if (currentPassword == null || currentPassword.trim().isEmpty()) {
+            throw new RuntimeException("현재 비밀번호는 필수 입력값입니다.");
+        }
+        if (newPassword == null || newPassword.trim().isEmpty()) {
+            throw new RuntimeException("새 비밀번호는 필수 입력값입니다.");
+        }
+
+        userService.updatePassword(currentPassword, newPassword);
+
+        Map<String, Object> response = new HashMap<>();
+        Map<String, Object> data = new HashMap<>();
+        data.put("message", "비밀번호가 성공적으로 변경되었습니다.");
+        data.put("user_updated_at", LocalDateTime.now());
+        response.put("data", data);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/password/forgot")
+    public ResponseEntity<Map<String, Object>> forgotPassword(@RequestBody Map<String, String> request) {
+        String email = request.get("user_email");
+        if (email == null || email.trim().isEmpty()) {
+            throw new RuntimeException("이메일은 필수 입력값입니다.");
+        }
+
+        userService.sendPasswordResetEmail(email);
+
+        Map<String, Object> response = new HashMap<>();
+        Map<String, String> data = new HashMap<>();
+        data.put("message", "비밀번호 재설정 이메일이 전송되었습니다.");
+        response.put("data", data);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/password/verification")
+    public ResponseEntity<Map<String, Object>> verifyPasswordCode(@RequestBody Map<String, String> request) {
+        String email = request.get("user_email");
+        String authCode = request.get("verification_code");
+
+        if (email == null || email.trim().isEmpty()) {
+            throw new RuntimeException("이메일은 필수 입력값입니다.");
+        }
+        if (authCode == null || authCode.trim().isEmpty()) {
+            throw new RuntimeException("인증 코드는 필수 입력값입니다.");
+        }
+
+        userService.verifyPasswordCode(email, authCode);
+
+        Map<String, Object> response = new HashMap<>();
+        Map<String, String> data = new HashMap<>();
+        data.put("message", "이메일 인증이 완료되었습니다.");
+        response.put("data", data);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/password/reset")
+    public ResponseEntity<Map<String, Object>> resetPassword(@RequestBody Map<String, String> request) {
+        String email = request.get("user_email");
+        String newPassword = request.get("new_password");
+
+        if (email == null || email.trim().isEmpty()) {
+            throw new RuntimeException("이메일은 필수 입력값입니다.");
+        }
+        if (newPassword == null || newPassword.trim().isEmpty()) {
+            throw new RuntimeException("새 비밀번호는 필수 입력값입니다.");
+        }
+
+        // 이메일 인증 여부 확인 후 비밀번호 변경
+        userService.resetPassword(email, newPassword);
+
+        Map<String, Object> response = new HashMap<>();
+        Map<String, String> data = new HashMap<>();
+        data.put("message", "비밀번호가 성공적으로 재설정되었습니다.");
         response.put("data", data);
 
         return ResponseEntity.ok(response);

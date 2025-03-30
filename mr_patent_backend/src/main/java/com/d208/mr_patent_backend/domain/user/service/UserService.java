@@ -349,4 +349,68 @@ public class UserService {
         // User 삭제
         userRepository.delete(user);
     }
+
+    @Transactional
+    public void sendPasswordResetEmail(String email) {
+        // 사용자 존재 여부 확인
+        if (!userRepository.existsByUserEmail(email)) {
+            throw new RuntimeException("등록되지 않은 이메일입니다.");
+        }
+
+        emailService.sendPasswordResetEmail(email);
+    }
+
+    @Transactional
+    public void verifyPasswordCode(String email, String authCode) {
+        // 인증 코드 확인
+        if (!emailService.verifyAuthCode(email, authCode)) {
+            throw new RuntimeException("인증 코드가 유효하지 않습니다.");
+        }
+    }
+
+    @Transactional
+    public void resetPassword(String email, String newPassword) {
+        // 이메일 인증 여부 확인
+        if (!emailService.isVerifiedEmail(email)) {
+            throw new RuntimeException("이메일 인증이 필요합니다.");
+        }
+
+        User user = userRepository.findByUserEmail(email)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        // 새 비밀번호로 업데이트
+        user.setUserPw(passwordEncoder.encode(newPassword));
+        user.setUserUpdatedAt(LocalDateTime.now());
+
+        userRepository.save(user);
+
+        // 인증 완료 후 인증 정보 삭제
+        emailService.removeVerifiedEmail(email);
+    }
+
+    @Transactional
+    public void updatePassword(String currentPassword, String newPassword) {
+        // SecurityContext에서 현재 인증된 사용자의 이메일 가져오기
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+
+        User user = userRepository.findByUserEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        // 현재 비밀번호 확인
+        if (!passwordEncoder.matches(currentPassword, user.getUserPw())) {
+            throw new RuntimeException("현재 비밀번호가 일치하지 않습니다.");
+        }
+
+        // 새 비밀번호가 현재 비밀번호와 같은지 확인
+        if (currentPassword.equals(newPassword)) {
+            throw new RuntimeException("새 비밀번호는 현재 비밀번호와 달라야 합니다.");
+        }
+
+        // 새 비밀번호로 업데이트
+        user.setUserPw(passwordEncoder.encode(newPassword));
+        user.setUserUpdatedAt(LocalDateTime.now());
+
+        userRepository.save(user);
+    }
 }

@@ -121,4 +121,44 @@ public class EmailService {
     public boolean isEmailChecked(String email) {
         return checkedEmails.contains(email);
     }
+
+    public void sendPasswordResetEmail(String email) {
+        String authCode = createAuthCode();
+        LocalDateTime expiredAt = LocalDateTime.now().plusMinutes(3);
+
+        try {
+            MimeMessage message = emailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setTo(email);
+            helper.setSubject("MR.Patent 비밀번호 재설정");
+            helper.setText(createPasswordResetEmailContent(authCode), true);
+
+            emailSender.send(message);
+            authCodeMap.put(email, new AuthCode(authCode, expiredAt));
+
+            log.info("비밀번호 재설정 메일 발송 완료: {}", email);
+        } catch (MessagingException e) {
+            log.error("메일 발송 실패: {}", e.getMessage());
+            throw new RuntimeException("메일 발송에 실패했습니다.");
+        }
+    }
+
+    private String createPasswordResetEmailContent(String authCode) {
+        return String.format(
+                "<div style='margin:20px;'>" +
+                        "<h1>MR.Patent 비밀번호 재설정</h1>" +
+                        "<p>안녕하세요. MR.Patent 비밀번호 재설정을 위한 인증번호입니다.</p>" +
+                        "<p>아래의 인증 번호를 입력해주세요.</p>" +
+                        "<div style='font-size:130%%'>" +
+                        "인증번호: <strong>%s</strong>" +
+                        "</div><br>" +
+                        "<p>감사합니다.</p>" +
+                        "</div>",
+                authCode
+        );
+    }
+
+    public void removeVerifiedEmail(String email) {
+        verifiedEmails.remove(email);
+    }
 }
