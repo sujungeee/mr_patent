@@ -97,7 +97,7 @@
     </fragment>
     <fragment
         android:id="@+id/patentAttorneyListFragment"
-        android:name="com.ssafy.mr_patent_android.ui.patent_attorney.ExpertListFragment"
+        android:name="com.ssafy.mr_patent_android.ui.expert.ExpertListFragment"
         android:label="fragment_patent_attorney_list"
         tools:layout="@layout/fragment_expert_list">
 
@@ -107,7 +107,7 @@
     </fragment>
     <fragment
         android:id="@+id/patentAttorneyFragment"
-        android:name="com.ssafy.mr_patent_android.ui.patent_attorney.ExpertFragment"
+        android:name="com.ssafy.mr_patent_android.ui.expert.ExpertFragment"
         android:label="fragment_patent_attorney"
         tools:layout="@layout/fragment_expert">
         <argument

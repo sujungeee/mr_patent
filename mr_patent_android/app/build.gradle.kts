@@ -82,11 +82,13 @@ dependencies {
     // Saved state module for ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-savedstate:$lifecycle_version")
 
-
+    //Jetpack Navigation
     implementation("androidx.navigation:navigation-fragment-ktx:2.8.9")
     implementation("androidx.navigation:navigation-ui-ktx:2.8.9")
 
     //Glide
     implementation ("com.github.bumptech.glide:glide:4.16.0")
 
+    //STOMP
+    implementation("com.github.NaikSoftware:StompProtocolAndroid:2.0.5")
 }
