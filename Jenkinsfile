@@ -38,26 +38,27 @@ pipeline {
         stage('Deploy') {
             steps {
                 echo '====== 백엔드 배포 시작 ======'
-                // 백업 디렉토리 생성
-                sh 'mkdir -p ${DOCKER_COMPOSE_DIR}/backups'
-                
-                // 빌드 디렉토리 생성 및 JAR 파일 복사
-                sh 'mkdir -p ${DOCKER_COMPOSE_DIR}/build/libs/'
-                sh 'cp -f mr_patent_backend/build/libs/*.jar ${DOCKER_COMPOSE_DIR}/build/libs/ || true'
+                // JAR 파일 복사
+                sh 'mkdir -p /home/ubuntu/mr_patent/build/libs/'
+                sh 'cp -f mr_patent_backend/build/libs/*.jar /home/ubuntu/mr_patent/build/libs/'
                 
                 // 백업 생성
-                sh 'cp -f ${DOCKER_COMPOSE_DIR}/build/libs/*.jar ${DOCKER_COMPOSE_DIR}/backups/backup-$(date +%Y%m%d%H%M%S)-${BRANCH_NAME}.jar || true'
+                sh 'mkdir -p /home/ubuntu/mr_patent/backups'
+                sh 'cp -f /home/ubuntu/mr_patent/build/libs/*.jar /home/ubuntu/mr_patent/backups/backup-$(date +%Y%m%d%H%M%S)-${BRANCH_NAME}.jar || true'
                 
-                // 도커 컨테이너 재시작
-                sh '''
-                    cd ${DOCKER_COMPOSE_DIR} && 
-                    docker-compose stop backend || true
-                    docker-compose rm -f backend || true
-                    docker-compose build backend || true
-                    docker-compose up -d backend || true
-                    docker image prune -f || true
-                '''
-                
+                // SSH를 통한 원격 Docker 명령 실행
+                sshagent(['jenkins-ssh-key']) {
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no ubuntu@localhost "
+                            cd /home/ubuntu/mr_patent && 
+                            docker-compose stop backend && 
+                            docker-compose rm -f backend && 
+                            docker-compose build backend && 
+                            docker-compose up -d backend && 
+                            docker image prune -f
+                        "
+                    '''
+                }
                 echo '====== 백엔드 배포 완료 ======'
             }
         }
