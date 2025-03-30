@@ -1,59 +1,113 @@
 package com.ssafy.mr_patent_android.ui.patent
 
+import android.app.Dialog
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
+import android.util.Log
 import android.view.View
-import android.view.ViewGroup
+import android.view.WindowManager
+import android.widget.Button
+import android.widget.EditText
+import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.ssafy.mr_patent_android.R
+import com.ssafy.mr_patent_android.base.BaseFragment
+import com.ssafy.mr_patent_android.data.model.dto.FolderDto
+import com.ssafy.mr_patent_android.databinding.FragmentPatentFolderChoiceBinding
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [PatentFolderChoiceFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
-class PatentFolderChoiceFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+private const val TAG = "PatentFolderChoiceFragment_Mr_Patent"
+class PatentFolderChoiceFragment : BaseFragment<FragmentPatentFolderChoiceBinding>(
+    FragmentPatentFolderChoiceBinding::bind, R.layout.fragment_patent_folder_choice
+) {
+    private val patentViewModel : PatentViewModel by activityViewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        initView()
+        initObserver()
+        // TODO: delete
+        initAdapter()
+    }
+
+    // TODO: delete
+    private fun initAdapter() {
+        val tmp = mutableListOf(
+            FolderDto.Folder(1, "폴더 1", "2024-03-28"),
+            FolderDto.Folder(2, "폴더 2", "2024-03-27"),
+            FolderDto.Folder(3, "폴더 3", "2024-03-26")
+        )
+        binding.rvFolderItems.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvFolderItems.adapter = FolderAdapter(tmp) { position ->
+            patentViewModel.setFolderId(tmp[position].userPatentFolderId)
+            when(patentViewModel.draftType.value) {
+                "FileUpload" -> findNavController().navigate(R.id.fileUploadFragment)
+                "Write" -> findNavController().navigate(R.id.patentContentFragment)
+                "Update" -> findNavController().navigate(R.id.patentContentFragment)
+            }
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_patent_folder_choice, container, false)
+    private fun initView() {
+        patentViewModel.getFolderList()
+
+        binding.tvBefore.setOnClickListener {
+            findNavController().popBackStack()
+        }
+
+        binding.ivFolderAdd.setOnClickListener {
+            setDialogFolderAdd()
+        }
+    }
+
+    private fun initObserver() {
+        patentViewModel.folders.observe(viewLifecycleOwner) {
+            binding.rvFolderItems.layoutManager = LinearLayoutManager(requireContext())
+            binding.rvFolderItems.adapter = FolderAdapter(it) { position ->
+                patentViewModel.setFolderId(it[position].userPatentFolderId)
+                when(patentViewModel.draftType.value) {
+                    "FileUpload" -> findNavController().navigate(R.id.fileUploadFragment)
+                    "Write" -> findNavController().navigate(R.id.patentContentFragment)
+                    "Update" -> findNavController().navigate(R.id.patentContentFragment)
+                }
+            }
+        }
+    }
+
+    private fun setDialogFolderAdd() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_folder_add, null)
+        val dialogBuilder = Dialog(requireContext())
+        dialogBuilder.setContentView(dialogView)
+        dialogBuilder.create()
+        dialogBuilder.window?.apply {
+            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            setLayout(
+                ((context.resources.displayMetrics.widthPixels) * 0.8).toInt(),
+                WindowManager.LayoutParams.WRAP_CONTENT
+            )
+        }
+        dialogBuilder.show()
+
+        val btnFolderAdd = dialogView.findViewById<Button>(R.id.btn_folder_add)
+        val etFolderName = dialogView.findViewById<EditText>(R.id.et_folder_name)
+
+        btnFolderAdd.setOnClickListener {
+            patentViewModel.addFolder(etFolderName.text.toString())
+        }
     }
 
     companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment PatentFolderChoiceFragment.
-         */
-        // TODO: Rename and change types and number of parameters
         @JvmStatic
-        fun newInstance(param1: String, param2: String) =
+        fun newInstance(key: String, value: String) =
             PatentFolderChoiceFragment().apply {
                 arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+                    putString(key, value)
                 }
             }
     }

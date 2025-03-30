@@ -5,7 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".ui.mypage.AddressSearchFragment">
+    android:id="@+id/fragment_address_search"
+    tools:context=".ui.address.AddressSearchFragment">
 
     <TextView
         android:id="@+id/tv_before"
@@ -36,13 +37,11 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.12" />
 
-
     <EditText
         android:id="@+id/et_address_search"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="@drawable/rounded_background_stroke"
-        android:drawableEnd="@drawable/search"
         android:drawablePadding="4dp"
         android:padding="8dp"
         android:paddingStart="10dp"
@@ -56,8 +55,18 @@
         app:layout_constraintWidth_percent="0.86"
         app:layout_constraintVertical_bias="0.03"/>
 
+    <ImageView
+        android:id="@+id/iv_address_search"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/search"
+        app:layout_constraintBottom_toBottomOf="@+id/et_address_search"
+        app:layout_constraintEnd_toEndOf="@+id/et_address_search"
+        app:layout_constraintStart_toStartOf="@+id/et_address_search"
+        app:layout_constraintTop_toTopOf="@+id/et_address_search"
+        app:layout_constraintHorizontal_bias="0.96"/>
+
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:visibility="gone"
         android:id="@+id/cl_address_info"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -149,11 +158,24 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <TextView
+        android:visibility="gone"
+        android:id="@+id/tv_address_none"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="해당하는 주소가 존재하지 않습니다"
+        android:textColor="@color/mr_gray_dark"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/et_address_search"
+        app:layout_constraintTop_toBottomOf="@+id/et_address_search"
+        app:layout_constraintVertical_bias="0.08"/>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_address_list"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:padding="12dp"
+        android:padding="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

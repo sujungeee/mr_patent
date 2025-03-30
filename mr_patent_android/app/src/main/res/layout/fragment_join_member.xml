@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/fragment_join_member"
     tools:context=".ui.join.JoinMemberFragment">
 
     <androidx.constraintlayout.widget.Guideline
@@ -42,13 +43,10 @@
         app:layout_constraintGuide_percent="0.93" />
 
     <TextView
+        style="@style/customBeforeFontStyle"
         android:id="@+id/tv_before"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:fontFamily="@font/pretendard_semibold"
-        android:text="← 이전"
-        android:textSize="20sp"
-        android:textColor="@color/mr_blue"
         app:layout_constraintTop_toTopOf="@id/h1_guideline"
         app:layout_constraintStart_toStartOf="@id/v1_guideline"/>
 
@@ -78,7 +76,7 @@
             android:hint="이메일을 입력해주세요"
             android:paddingStart="8dp"
             android:textSize="14sp"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="6dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tv_email" />
@@ -121,8 +119,8 @@
         app:layout_constraintEnd_toEndOf="@id/v2_guideline">
 
         <Button
-            android:id="@+id/btn_verification_send"
             android:visibility="gone"
+            android:id="@+id/btn_verification_send"
             android:layout_width="wrap_content"
             android:layout_height="36dp"
             android:backgroundTint="@color/mr_blue"
@@ -130,6 +128,20 @@
             android:textSize="12dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:visibility="invisible"
+            android:id="@+id/tv_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/mr_red"
+            android:textSize="13sp"
+            app:layout_constraintBottom_toBottomOf="@+id/btn_verify"
+            app:layout_constraintEnd_toStartOf="@+id/btn_verify"
+            app:layout_constraintStart_toStartOf="@+id/et_code"
+            app:layout_constraintTop_toTopOf="@+id/btn_verify"
+            app:layout_constraintHorizontal_bias="0.96"
+            app:layout_constraintVertical_bias="0.6"/>
 
         <TextView
             android:id="@+id/tv_verify"
@@ -149,7 +161,8 @@
             android:hint="인증 번호를 입력해주세요."
             android:paddingStart="8dp"
             android:textSize="14sp"
-            android:layout_marginTop="4dp"
+            android:maxLength="6"
+            android:layout_marginTop="6dp"
             app:layout_constraintTop_toBottomOf="@id/tv_verify" />
 
         <Button
@@ -157,7 +170,7 @@
             android:layout_width="96dp"
             android:layout_height="36dp"
             android:layout_marginEnd="4dp"
-            android:backgroundTint="@color/mr_blue"
+            android:backgroundTint="@color/selector_btn_color"
             android:text="인증하기"
             android:textSize="12dp"
             app:layout_constraintBottom_toBottomOf="@+id/et_code"
@@ -200,13 +213,13 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <EditText
-            android:id="@+id/et_description"
+            android:id="@+id/et_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="한글/영어 포함 4~12자로 적어주세요."
             android:paddingStart="8dp"
             android:textSize="14sp"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="6dp"
             app:layout_constraintTop_toBottomOf="@id/tv_nickname"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
@@ -234,10 +247,10 @@
             app:layout_constraintStart_toStartOf="parent" />
 
         <EditText
-            android:id="@+id/et_password"
+            android:id="@+id/et_pw"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="6dp"
             android:hint="한글/영어/특수문자 포함 8~16자로 입력해주세요."
             android:inputType="textPassword"
             android:maxLength="16"
@@ -250,14 +263,14 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <Button
-        android:id="@+id/btn_register"
+        android:id="@+id/btn_join"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="20dp"
         android:backgroundTint="@color/mr_blue"
         android:fontFamily="@font/pretendard_semibold"
         android:text="회원가입"
-        android:textSize="18sp"
+        android:textSize="16sp"
         app:layout_constraintTop_toTopOf="@id/h3_guideline"
         app:layout_constraintBottom_toBottomOf="parent" />
 

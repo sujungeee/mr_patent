@@ -16,4 +16,11 @@
         <item name="android:fontFamily">@font/pretendard_semibold</item>
         <item name="android:textSize">23sp</item>
     </style>
+
+    <style name="customBeforeFontStyle" parent="Widget.AppCompat.TextView">
+        <item name="android:fontFamily">@font/pretendard_semibold</item>
+        <item name="android:text">← 이전</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">@color/mr_blue</item>
+    </style>
 </resources>
