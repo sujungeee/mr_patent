@@ -1,0 +1,90 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE_FASTAPI = 'mr_patent-fastapi'
+        NETWORK_NAME = 'app-network'
+    }
+
+    stages {
+        stage('Git Clone') {
+            steps {
+                script {
+                    try {
+                        echo '====== Git Clone 시작 ======'
+                        git branch: 'master',
+                            url: '깃랩 저장소 URL',
+                            credentialsId: 'gitlab-credentials'
+                        echo '====== Git Clone 성공 ======'
+                    } catch (Exception e) {
+                        echo '====== Git Clone 실패 ======'
+                        error "Git clone failed: ${e.message}"
+                    }
+                }
+            }
+        }
+
+        stage('Docker Build & Push') {
+            steps {
+                script {
+                    try {
+                        echo '====== Docker Build 시작 ======'
+                        dir('fastapi') {
+                            sh """
+                                docker build -t ${DOCKER_IMAGE_FASTAPI}:${BUILD_NUMBER} -f Dockerfile .
+                            """
+                        }
+                        echo '====== Docker Build 완료 ======'
+                    } catch (Exception e) {
+                        echo '====== Docker Build 실패 ======'
+                        error "Docker build failed: ${e.message}"
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to Server') {
+            steps {
+                script {
+                    try {
+                        echo '====== 서버 배포 시작 ======'
+                        sh '''
+                            # 기존 FastAPI 컨테이너 중지 및 제거
+                            docker stop mr_patent_fastapi || true
+                            docker rm mr_patent_fastapi || true
+                            
+                            # 새 FastAPI 컨테이너 실행
+                            docker run -d --name mr_patent_fastapi \
+                                --network app-network \
+                                -p 8000:8000 \
+                                -e ELASTICSEARCH_HOST=elasticsearch \
+                                -e ELASTICSEARCH_PORT=9200 \
+                                ${DOCKER_IMAGE_FASTAPI}:${BUILD_NUMBER}
+                                
+                            # 사용하지 않는 이미지 정리
+                            docker image prune -f
+                        '''
+                        echo '====== 서버 배포 성공 ======'
+                    } catch (Exception e) {
+                        echo '====== 서버 배포 실패 ======'
+                        error "Deployment failed: ${e.message}"
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo '====== 파이프라인 종료 ======'
+            cleanWs()
+        }
+        failure {
+            echo '====== 파이프라인 실패 ======'
+            sh "docker rmi ${DOCKER_IMAGE_FASTAPI}:${BUILD_NUMBER} || true"
+        }
+        success {
+            echo '====== 파이프라인 성공 ======'
+        }
+    }
+}
