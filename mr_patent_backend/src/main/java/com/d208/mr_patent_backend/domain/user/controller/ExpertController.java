@@ -28,7 +28,8 @@ public class ExpertController {
     }
 
     @GetMapping("/{expertId}")
-    public ResponseEntity<Map<String, Object>> getExpertDetail(@PathVariable Integer expertId) {
+    public ResponseEntity<Map<String, Object>> getExpertDetail(
+            @PathVariable Integer expertId) {
         ExpertDetailResponseDTO expert = expertService.getExpertDetail(expertId);
 
         Map<String, Object> response = new HashMap<>();

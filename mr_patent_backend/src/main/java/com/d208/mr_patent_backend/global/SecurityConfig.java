@@ -8,7 +8,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import com.d208.mr_patent_backend.global.jwt.JwtTokenProvider;
@@ -33,13 +32,13 @@ public class SecurityConfig {
 
         http
                 .authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers("**").permitAll()
                         .requestMatchers("/api/user").permitAll()
-                        .requestMatchers("/api/user/expert").permitAll()
-                        .requestMatchers("/api/user/check-email").permitAll()
-                        .requestMatchers("/api/email/**").permitAll()
                         .requestMatchers("/api/user/login").permitAll()
-                        .requestMatchers(HttpMethod.PATCH,"/api/expert-approve/**").hasRole("ADMIN")
+                        .requestMatchers("/api/user/expert").permitAll()
+                        .requestMatchers("/api/email/**").permitAll()
+                        .requestMatchers("/api/expert-approve/**").hasRole("ADMIN")
+                        .requestMatchers("/api/expert/**").authenticated()
+                        .requestMatchers("/api/user/me").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),

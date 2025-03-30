@@ -19,10 +19,13 @@ import jakarta.validation.Valid;
 
 import com.d208.mr_patent_backend.domain.user.dto.LoginRequestDTO;
 import com.d208.mr_patent_backend.domain.user.dto.TokenRequestDTO;
-import com.d208.mr_patent_backend.domain.user.service.EmailService;
+import com.d208.mr_patent_backend.domain.user.dto.UserInfoResponseDTO;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @RestController
 @RequestMapping("/api/user")
@@ -46,7 +49,7 @@ public class UserController {
     public ResponseEntity<String> signUpExpert(@Valid @RequestBody ExpertSignupRequestDTO requestDto) {
         try {
             userService.signUpExpert(requestDto);
-            return ResponseEntity.ok("변리사 회원가입 요청을 보냈습니다.");
+            return ResponseEntity.ok("변리사 회원가입이 완료되었습니다.");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -86,5 +89,15 @@ public class UserController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<Map<String, Object>> getUserInfo() {
+        UserInfoResponseDTO userInfo = userService.getUserInfo();
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("data", userInfo);
+
+        return ResponseEntity.ok(response);
     }
 }

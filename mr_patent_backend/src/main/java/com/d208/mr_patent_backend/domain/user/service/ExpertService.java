@@ -17,8 +17,7 @@ public class ExpertService {
     private final ExpertRepository expertRepository;
 
     public List<ExpertResponseDTO> getApprovedExperts() {
-        List<Expert> experts = expertRepository.findByExpertStatus(1); // 승인된 변리사만 조회
-
+        List<Expert> experts = expertRepository.findByExpertStatus(1);
         return experts.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
@@ -47,7 +46,6 @@ public class ExpertService {
         Expert expert = expertRepository.findById(expertId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 변리사입니다."));
 
-        // 승인된 변리사인지 확인
         if (expert.getExpertStatus() != 1) {
             throw new RuntimeException("승인되지 않은 변리사입니다.");
         }

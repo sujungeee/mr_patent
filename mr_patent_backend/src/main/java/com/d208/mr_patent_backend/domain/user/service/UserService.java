@@ -22,9 +22,12 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import com.d208.mr_patent_backend.global.jwt.TokenInfo;
 import com.d208.mr_patent_backend.global.jwt.JwtTokenProvider;
 import com.d208.mr_patent_backend.domain.user.dto.LoginRequestDTO;
+import com.d208.mr_patent_backend.domain.user.dto.UserInfoResponseDTO;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -227,5 +230,42 @@ public class UserService {
         userRepository.save(user);
 
         return tokenInfo;
+    }
+
+    @Transactional(readOnly = true)
+    public UserInfoResponseDTO getUserInfo() {
+        // SecurityContext에서 현재 인증된 사용자의 이메일 가져오기
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+
+        // 사용자 찾기
+        User user = userRepository.findByUserEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        UserInfoResponseDTO.UserInfoResponseDTOBuilder builder = UserInfoResponseDTO.builder()
+                .userId(user.getUserId())
+                .userEmail(user.getUserEmail())
+                .userName(user.getUserName())
+                .userImage(user.getUserImage())
+                .userRole(user.getUserRole());
+
+        // 변리사인 경우 추가 정보 조회
+        if (user.getUserRole() == 1) {
+            Expert expert = expertRepository.findByUser(user)
+                    .orElseThrow(() -> new RuntimeException("변리사 정보를 찾을 수 없습니다."));
+
+            List<String> categories = expert.getExpertCategory().stream()
+                    .map(ec -> ec.getCategory().getCategoryName())
+                    .collect(Collectors.toList());
+
+            builder
+                    .expertDescription(expert.getExpertDescription())
+                    .expertAddress(expert.getExpertAddress())
+                    .expertPhone(expert.getExpertPhone())
+                    .expertGetDate(expert.getExpertGetDate())
+                    .categories(categories);
+        }
+
+        return builder.build();
     }
 }
