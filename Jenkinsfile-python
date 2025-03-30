@@ -1,6 +1,10 @@
 pipeline {
     agent any
     
+    environment {
+        DOCKER_COMPOSE_DIR = '/home/ubuntu/mr_patent'
+    }
+    
     stages {
         stage('Checkout') {
             steps {
@@ -10,10 +14,40 @@ pipeline {
         
         stage('Build FastAPI') {
             steps {
+                echo '====== FastAPI 빌드 시작 ======'
                 dir('mr_patent_bigdata') {
+                    sh 'ls -la || true'
+                    echo '====== FastAPI 빌드 완료 ======'
                 }
             }
         }
         
+        stage('Deploy FastAPI') {
+            steps {
+                echo '====== FastAPI 배포 시작 ======'
+                sh '''
+                    cd ${DOCKER_COMPOSE_DIR} && 
+                    docker-compose stop fastapi || true
+                    docker-compose rm -f fastapi || true
+                    docker-compose build fastapi || true
+                    docker-compose up -d fastapi || true
+                    docker image prune -f || true
+                '''
+                echo '====== FastAPI 배포 완료 ======'
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo '====== 파이프라인 종료 ======'
+            cleanWs()
+        }
+        failure {
+            echo '====== 파이프라인 실패 ======'
+        }
+        success {
+            echo '====== 파이프라인 성공 ======'
+        }
     }
 }
