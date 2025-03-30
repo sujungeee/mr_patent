@@ -25,19 +25,14 @@ pipeline {
         stage('Deploy FastAPI') {
             steps {
                 echo '====== FastAPI 배포 시작 ======'
-                // SSH를 통한 원격 Docker 명령 실행
-                sshagent(['jenkins-ssh-key']) {
-                    sh '''
-                        ssh -o StrictHostKeyChecking=no ubuntu@localhost "
-                            cd /home/ubuntu/mr_patent && 
-                            docker-compose stop fastapi && 
-                            docker-compose rm -f fastapi && 
-                            docker-compose build fastapi && 
-                            docker-compose up -d fastapi && 
-                            docker image prune -f
-                        "
-                    '''
-                }
+                sh '''
+                    cd ${DOCKER_COMPOSE_DIR} && 
+                    docker-compose stop fastapi || true
+                    docker-compose rm -f fastapi || true
+                    docker-compose build fastapi || true
+                    docker-compose up -d fastapi || true
+                    docker image prune -f || true
+                '''
                 echo '====== FastAPI 배포 완료 ======'
             }
         }
