@@ -5,6 +5,7 @@ from typing import Dict, Any, List
 from datetime import datetime, timezone
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
+import json  # JSON 직렬화를 위해 추가
 
 from app.core.database import database
 from app.services.vectorizer import get_tfidf_vector, get_kobert_vector
@@ -278,7 +279,7 @@ async def perform_fitness_check(user_patent_folder_id: int, patent_draft_id: int
         query=fitness_query,
         values={
             "folder_id": user_patent_folder_id,
-            "good_content": fitness_results,
+            "good_content": json.dumps(fitness_results),  # 딕셔너리를 JSON으로 직렬화
             "is_corrected": 1 if is_corrected else 0,
             "created_at": now,
             "updated_at": now
@@ -484,7 +485,7 @@ async def fetch_patent_public(patent_id: int, application_number: str):
                 "pdf_path": pdf_path,
                 "pdf_name": pdf_name,
                 "content": content,
-                "api_response": patent_info,
+                "api_response": json.dumps(patent_info),  # 딕셔너리를 JSON으로 직렬화
                 "is_processed": 1,
                 "retrieved_at": now,
                 "created_at": now,
@@ -578,7 +579,7 @@ async def perform_detailed_comparison(user_patent_folder_id: int, similarity_pat
                 "public_id": patent_public_id,
                 "similarity_id": similarity_patent_id,
                 "result": comparison_result,
-                "context": context_data,
+                "context": json.dumps(context_data),  # 딕셔너리를 JSON으로 직렬화
                 "score": total_score,
                 "created_at": now,
                 "updated_at": now
