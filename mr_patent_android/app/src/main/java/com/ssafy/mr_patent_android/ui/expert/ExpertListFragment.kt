@@ -1,4 +1,4 @@
-package com.ssafy.mr_patent_android.ui.patent_attorney
+package com.ssafy.mr_patent_android.ui.expert
 
 import android.os.Bundle
 import android.util.Log
@@ -9,11 +9,8 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.ssafy.mr_patent_android.R
 import com.ssafy.mr_patent_android.base.BaseFragment
-import com.ssafy.mr_patent_android.data.model.dto.UserDto
 import com.ssafy.mr_patent_android.databinding.FragmentExpertListBinding
 import com.ssafy.mr_patent_android.ui.home.HomeFragment.Companion.categoryMap
-import com.ssafy.mr_patent_android.ui.login.EmailVerifyFragmentDirections
-import kotlin.math.log
 
 private const val TAG = "ExpertListFragment"
 
@@ -60,11 +57,13 @@ class ExpertListFragment : BaseFragment<FragmentExpertListBinding>(
             object : AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(
                     parent: AdapterView<*>,
-                    view: View,
+                    view: View?,
                     position: Int,
                     id: Long
                 ) {
-                    if (viewModel.expertList.value.isNullOrEmpty()) return
+                    if (viewModel.expertList.value.isNullOrEmpty()) {
+                        Log.d(TAG, "onItemSelected: expertList is null")
+                    }
                     else {
                         val expertList = viewModel.expertList.value!!
 
