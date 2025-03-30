@@ -20,12 +20,16 @@ import jakarta.validation.Valid;
 import com.d208.mr_patent_backend.domain.user.dto.LoginRequestDTO;
 import com.d208.mr_patent_backend.domain.user.dto.TokenRequestDTO;
 import com.d208.mr_patent_backend.domain.user.dto.UserInfoResponseDTO;
+import com.d208.mr_patent_backend.domain.user.dto.UserUpdateRequestDTO;
+import com.d208.mr_patent_backend.domain.user.dto.UserUpdateResponseDTO;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 
 @RestController
 @RequestMapping("/api/user")
@@ -97,6 +101,29 @@ public class UserController {
 
         Map<String, Object> response = new HashMap<>();
         response.put("data", userInfo);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/me")
+    public ResponseEntity<Map<String, Object>> updateUserInfo(
+            @Valid @RequestBody UserUpdateRequestDTO requestDto) {
+        UserUpdateResponseDTO responseDto = userService.updateUserInfo(requestDto);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("data", responseDto);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<Map<String, Object>> deleteUser() {
+        userService.deleteUser();
+
+        Map<String, Object> response = new HashMap<>();
+        Map<String, String> data = new HashMap<>();
+        data.put("message", "회원 탈퇴가 완료되었습니다.");
+        response.put("data", data);
 
         return ResponseEntity.ok(response);
     }

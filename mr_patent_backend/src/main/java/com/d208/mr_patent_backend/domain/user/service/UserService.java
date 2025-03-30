@@ -24,6 +24,9 @@ import com.d208.mr_patent_backend.global.jwt.JwtTokenProvider;
 import com.d208.mr_patent_backend.domain.user.dto.LoginRequestDTO;
 import com.d208.mr_patent_backend.domain.user.dto.UserInfoResponseDTO;
 import org.springframework.security.core.context.SecurityContextHolder;
+import com.d208.mr_patent_backend.domain.user.dto.UserUpdateRequestDTO;
+import com.d208.mr_patent_backend.domain.user.dto.UserUpdateResponseDTO;
+import java.time.LocalDateTime;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -267,5 +270,83 @@ public class UserService {
         }
 
         return builder.build();
+    }
+
+    @Transactional
+    public UserUpdateResponseDTO updateUserInfo(UserUpdateRequestDTO requestDto) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+
+        User user = userRepository.findByUserEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        // null이 아닌 값만 업데이트
+        if (requestDto.getUserName() != null) {
+            user.setUserName(requestDto.getUserName());
+        }
+        if (requestDto.getUserImage() != null) {
+            user.setUserImage(requestDto.getUserImage());
+        }
+        user.setUserUpdatedAt(LocalDateTime.now());
+
+        // 변리사인 경우 추가 정보 업데이트
+        if (user.getUserRole() == 1) {
+            Expert expert = expertRepository.findByUser(user)
+                    .orElseThrow(() -> new RuntimeException("변리사 정보를 찾을 수 없습니다."));
+
+            if (requestDto.getExpertDescription() != null) {
+                expert.setExpertDescription(requestDto.getExpertDescription());
+            }
+            if (requestDto.getExpertAddress() != null) {
+                expert.setExpertAddress(requestDto.getExpertAddress());
+            }
+            if (requestDto.getExpertPhone() != null) {
+                expert.setExpertPhone(requestDto.getExpertPhone());
+            }
+
+            // 카테고리 정보가 포함된 경우에만 카테고리 업데이트
+            if (requestDto.getExpertCategories() != null && !requestDto.getExpertCategories().isEmpty()) {
+                expert.getExpertCategory().clear();
+                for (ExpertCategoryDTO categoryDto : requestDto.getExpertCategories()) {
+                    Category category = categoryRepository.findById(categoryDto.getCategoryId())
+                            .orElseThrow(() -> new RuntimeException("존재하지 않는 카테고리입니다: " + categoryDto.getCategoryId()));
+
+                    ExpertCategory newExpertCategory = new ExpertCategory();
+                    newExpertCategory.setCategory(category);
+                    expert.addExpertCategory(newExpertCategory);
+                }
+            }
+
+            expertRepository.save(expert);
+        }
+
+        userRepository.save(user);
+
+        return UserUpdateResponseDTO.builder()
+                .message("회원정보가 성공적으로 수정되었습니다.")
+                .userUpdatedAt(user.getUserUpdatedAt())
+                .build();
+    }
+
+    @Transactional
+    public void deleteUser() {
+        // SecurityContext에서 현재 인증된 사용자의 이메일 가져오기
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+
+        User user = userRepository.findByUserEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        // 변리사인 경우 Expert 정보도 삭제
+        if (user.getUserRole() == 1) {
+            Expert expert = expertRepository.findByUser(user)
+                    .orElseThrow(() -> new RuntimeException("변리사 정보를 찾을 수 없습니다."));
+
+            // ExpertCategory는 cascade로 자동 삭제됨
+            expertRepository.delete(expert);
+        }
+
+        // User 삭제
+        userRepository.delete(user);
     }
 }
