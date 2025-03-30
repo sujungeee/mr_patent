@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.database import database
-from app.api.routes import patent, task, folders, drafts, similarity, admin
+from app.api.routes import patent, task, folders, drafts, similarity, admin, patent_public, comparison, reports
 from app.core.logging import logger
 from app.services.vectorizer import load_vectorizer
 
@@ -25,6 +25,9 @@ app.include_router(folders.router)
 app.include_router(drafts.router)
 app.include_router(similarity.router)
 app.include_router(admin.router)
+app.include_router(patent_public.router)
+app.include_router(comparison.router)
+app.include_router(reports.router)
 
 # 이벤트 핸들러
 @app.on_event("startup")

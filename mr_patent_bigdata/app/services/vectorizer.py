@@ -20,6 +20,33 @@ tfidf_vectorizer = TfidfVectorizer(max_features=1000)
 tokenizer = KoBERTTokenizer.from_pretrained('skt/kobert-base-v1')
 model = BertModel.from_pretrained('skt/kobert-base-v1', return_dict=False)
 
+def train_and_save_vectorizer(corpus, filename=VECTORIZER_PATH):
+    """특허 말뭉치로 TF-IDF 벡터라이저 학습 및 저장"""
+    global tfidf_vectorizer
+    
+    # 벡터라이저 학습
+    tfidf_vectorizer.fit(corpus)
+    
+    # 학습된 벡터라이저 저장
+    with open(filename, "wb") as f:
+        pickle.dump(tfidf_vectorizer, f)
+    
+    print(f"TF-IDF 벡터라이저 학습 완료 (어휘 크기: {len(tfidf_vectorizer.vocabulary_)})")
+    return tfidf_vectorizer
+
+def load_vectorizer(filename=VECTORIZER_PATH):
+    """저장된 TF-IDF 벡터라이저 로드"""
+    global tfidf_vectorizer
+    
+    try:
+        with open(filename, "rb") as f:
+            tfidf_vectorizer = pickle.load(f)
+        print(f"TF-IDF 벡터라이저 로드 완료 (어휘 크기: {len(tfidf_vectorizer.vocabulary_)})")
+    except FileNotFoundError:
+        print("저장된 벡터라이저가 없습니다. 먼저 학습을 진행하세요.")
+    
+    return tfidf_vectorizer
+
 def fit_tfidf_vectorizer(corpus: List[str]) -> None:
     """TF-IDF 벡터라이저 학습"""
     global tfidf_vectorizer
