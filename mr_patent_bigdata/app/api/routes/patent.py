@@ -40,7 +40,7 @@ def load_extracted_data(filename: str = "extracted_patents.pkl") -> List[Dict[st
 
 async def process_patent_files(rtf_directory: str, task_id: str):
     """특허 데이터 처리 및 저장"""
-    try:
+    try:        
         # 작업 상태 초기화
         rtf_files = [f for f in os.listdir(rtf_directory) if f.endswith(".rtf")]
         total_files = len(rtf_files)
@@ -100,7 +100,6 @@ async def process_patent_files(rtf_directory: str, task_id: str):
         # 추출된 데이터 저장 (나중에 재개할 수 있도록)
         save_filename = f"patents_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pkl"
         save_path = save_extracted_data(all_patents, save_filename)
-        # 중복 로그 제거: logger.info 라인 삭제함
         
         # 2단계: TF-IDF 벡터라이저 학습
         logger.info("TF-IDF 벡터라이저 학습 시작")
@@ -131,7 +130,6 @@ async def process_patent_files(rtf_directory: str, task_id: str):
                 
                 # 데이터베이스에 저장 - patent_created_at, patent_updated_at 추가
                 query = patent.insert().values(
-                    cluster_id=0,  # 기본 클러스터 ID 값 추가
                     patent_title=patent_data.get("title"),
                     patent_application_number=patent_data.get("application_number"),
                     patent_ipc=ipc_code,
@@ -139,8 +137,8 @@ async def process_patent_files(rtf_directory: str, task_id: str):
                     patent_claim=patent_data.get("claims"),
                     patent_tfidf_vector=tfidf_vector.tobytes(),
                     patent_kobert_vector=kobert_vector.tobytes(),
-                    patent_created_at=datetime.utcnow(),  # 현재 시간 추가
-                    patent_updated_at=datetime.utcnow()   # 현재 시간 추가
+                    patent_created_at=datetime.utcnow(),
+                    patent_updated_at=datetime.utcnow()
                 )
                 
                 await database.execute(query)
@@ -181,7 +179,7 @@ async def process_patent_files(rtf_directory: str, task_id: str):
 
 async def resume_data_processing(rtf_directory: str, task_id: str, start_index: int = 0):
     """벡터화된 특허 데이터의 저장 작업만 재개합니다."""
-    try:
+    try:        
         # 작업 상태 초기화
         rtf_files = [f for f in os.listdir(rtf_directory) if f.endswith(".rtf")]
         total_files = len(rtf_files)
@@ -235,7 +233,6 @@ async def resume_data_processing(rtf_directory: str, task_id: str, start_index: 
                 
                 # 데이터베이스에 저장 - patent_created_at, patent_updated_at 추가
                 query = patent.insert().values(
-                    cluster_id=0,  # 기본 클러스터 ID 값 추가
                     patent_title=patent_data.get("title"),
                     patent_application_number=patent_data.get("application_number"),
                     patent_ipc=ipc_code,
@@ -243,8 +240,8 @@ async def resume_data_processing(rtf_directory: str, task_id: str, start_index: 
                     patent_claim=patent_data.get("claims"),
                     patent_tfidf_vector=tfidf_vector.tobytes(),
                     patent_kobert_vector=kobert_vector.tobytes(),
-                    patent_created_at=datetime.utcnow(),  # 현재 시간 추가
-                    patent_updated_at=datetime.utcnow()   # 현재 시간 추가
+                    patent_created_at=datetime.utcnow(),
+                    patent_updated_at=datetime.utcnow()
                 )
                 
                 await database.execute(query)
@@ -285,7 +282,7 @@ async def resume_data_processing(rtf_directory: str, task_id: str, start_index: 
 
 async def process_saved_data(task_id: str, filename: str):
     """저장된 특허 데이터를 벡터화하고 데이터베이스에 저장"""
-    try:
+    try:        
         # 저장된 데이터 로드
         all_patents = load_extracted_data(filename)
         
@@ -318,7 +315,6 @@ async def process_saved_data(task_id: str, filename: str):
                 
                 # 데이터베이스에 저장
                 query = patent.insert().values(
-                    cluster_id=0,  # 기본 클러스터 ID 값 추가
                     patent_title=patent_data.get("title"),
                     patent_application_number=patent_data.get("application_number"),
                     patent_ipc=ipc_code,
@@ -326,8 +322,8 @@ async def process_saved_data(task_id: str, filename: str):
                     patent_claim=patent_data.get("claims"),
                     patent_tfidf_vector=tfidf_vector.tobytes(),
                     patent_kobert_vector=kobert_vector.tobytes(),
-                    patent_created_at=datetime.utcnow(),  # 현재 시간 추가
-                    patent_updated_at=datetime.utcnow()   # 현재 시간 추가
+                    patent_created_at=datetime.utcnow(),
+                    patent_updated_at=datetime.utcnow()
                 )
                 
                 await database.execute(query)

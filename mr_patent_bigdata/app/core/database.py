@@ -44,17 +44,6 @@ expert = Table(
     Column("expert_category", String(50), nullable=True)
 )
 
-# 군집 테이블
-cluster = Table(
-    "cluster",
-    metadata,
-    Column("cluster_id", Integer, primary_key=True, autoincrement=True),
-    Column("cluster_centroid_vector", LargeBinary, nullable=False),
-    Column("cluster_description", String(100), nullable=True),
-    Column("cluster_created_at", TIMESTAMP, nullable=False, default=datetime.utcnow),
-    Column("cluster_updated_at", TIMESTAMP, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
-)
-
 # 회원 특허 주제 테이블
 user_patent_topic = Table(
     "user_patent_topic",
@@ -71,7 +60,6 @@ patent = Table(
     "patent",
     metadata,
     Column("patent_id", Integer, primary_key=True, autoincrement=True),
-    Column("cluster_id", Integer, ForeignKey("cluster.cluster_id"), nullable=False),
     Column("patent_title", String(100), nullable=False),
     Column("patent_application_number", String(20), nullable=False),
     Column("patent_ipc", String(100), nullable=False),
