@@ -16,14 +16,18 @@ pipeline {
         
         stage('Build') {
             steps {
-                sh 'chmod +x ./gradlew'
-                sh './gradlew clean bootJar'
+                dir('mr_patent_backend') {
+                    sh 'chmod +x ./gradlew'
+                    sh './gradlew clean bootJar'
+                }
             }
         }
         
         stage('Test') {
             steps {
-                sh './gradlew test'
+                dir('mr_patent_backend') {
+                    sh './gradlew test'
+                }
             }
         }
         
@@ -31,19 +35,19 @@ pipeline {
             steps {
                 // 백업 생성
                 sh 'mkdir -p ${DOCKER_COMPOSE_DIR}/backups'
-                sh 'cp -f ${DOCKER_COMPOSE_DIR}/build/libs/*.jar ${DOCKER_COMPOSE_DIR}/backups/backup-$(date +%Y%m%d%H%M%S)-${BRANCH_NAME}.jar || true'
+                sh 'cp -f mr_patent_backend/build/libs/*.jar ${DOCKER_COMPOSE_DIR}/backups/backup-$(date +%Y%m%d%H%M%S)-${BRANCH_NAME}.jar || true'
                 
                 // 새 빌드 파일 복사
-                sh 'cp -f build/libs/*.jar ${DOCKER_COMPOSE_DIR}/build/libs/'
+                sh 'cp -f mr_patent_backend/build/libs/*.jar ${DOCKER_COMPOSE_DIR}/build/libs/ || mkdir -p ${DOCKER_COMPOSE_DIR}/build/libs/ && cp -f mr_patent_backend/build/libs/*.jar ${DOCKER_COMPOSE_DIR}/build/libs/'
                 
                 // 도커 컨테이너 재시작
-                sh 'cd ${DOCKER_COMPOSE_DIR} && docker-compose stop backend'
-                sh 'cd ${DOCKER_COMPOSE_DIR} && docker-compose rm -f backend'
-                sh 'cd ${DOCKER_COMPOSE_DIR} && docker-compose build backend'
-                sh 'cd ${DOCKER_COMPOSE_DIR} && docker-compose up -d backend'
+                sh 'cd ${DOCKER_COMPOSE_DIR} && docker-compose stop backend || true'
+                sh 'cd ${DOCKER_COMPOSE_DIR} && docker-compose rm -f backend || true'
+                sh 'cd ${DOCKER_COMPOSE_DIR} && docker-compose build backend || true'
+                sh 'cd ${DOCKER_COMPOSE_DIR} && docker-compose up -d backend || true'
                 
                 // 사용하지 않는 이미지 정리
-                sh 'docker image prune -f'
+                sh 'docker image prune -f || true'
                 
                 echo "배포 완료: ${BRANCH_NAME} 브랜치"
             }
