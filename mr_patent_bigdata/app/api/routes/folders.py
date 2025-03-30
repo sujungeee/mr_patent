@@ -1,16 +1,17 @@
-# app/api/routes/folders.py - 폴더 관련 API
-
 from fastapi import APIRouter, HTTPException, Depends, Query
-from typing import List, Optional
-from datetime import datetime
-import sqlalchemy
+from typing import List, Optional, Dict, Any
+from datetime import datetime, timezone
 
 from app.core.database import database
 from app.schemas.patent import FolderCreate, FolderResponse, PatentDraftResponse
 
 router = APIRouter(prefix="/api", tags=["folders"])
 
-@router.get("/folders/{user_id}", response_model=List[FolderResponse])
+def get_current_timestamp():
+    """현재 시간을 ISO 8601 형식으로 변환 (UTC)"""
+    return datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
+
+@router.get("/folders/{user_id}", response_model=Dict[str, Any])
 async def get_user_folders(user_id: int):
     """사용자의 모든 특허 폴더 목록 조회"""
     query = """
@@ -25,25 +26,39 @@ async def get_user_folders(user_id: int):
     )
     
     if not folders:
-        return []
+        return {
+            "data": {"folders": []},
+            "timestamp": get_current_timestamp()
+        }
     
-    return [dict(folder) for folder in folders]
+    result = []
+    for folder in folders:
+        result.append({
+            "user_patent_folder_id": folder["user_patent_folder_id"],
+            "user_patent_folder_title": folder["user_patent_folder_title"],
+            "created_at": folder["user_patent_folder_created_at"].isoformat() + 'Z'
+        })
+    
+    return {
+        "data": {"folders": result},
+        "timestamp": get_current_timestamp()
+    }
 
-@router.post("/folder", response_model=FolderResponse)
+@router.post("/folder", response_model=Dict[str, Any])
 async def create_folder(folder: FolderCreate):
     """새 특허 폴더 생성"""
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     
     query = """
     INSERT INTO user_patent_folder (
         user_id, 
-        user_patent_folder_name, 
+        user_patent_folder_title, 
         user_patent_folder_created_at, 
         user_patent_folder_updated_at
     ) 
     VALUES (
         :user_id, 
-        :folder_name, 
+        :folder_title, 
         :created_at, 
         :updated_at
     )
@@ -51,7 +66,7 @@ async def create_folder(folder: FolderCreate):
     
     values = {
         "user_id": folder.user_id,
-        "folder_name": folder.user_patent_folder_name,
+        "folder_title": folder.user_patent_folder_title,
         "created_at": now,
         "updated_at": now
     }
@@ -59,24 +74,25 @@ async def create_folder(folder: FolderCreate):
     try:
         folder_id = await database.execute(query=query, values=values)
         
-        # 생성된 폴더 정보 조회
-        get_query = """
-        SELECT * FROM user_patent_folder 
-        WHERE user_patent_folder_id = :folder_id
-        """
-        created_folder = await database.fetch_one(
-            query=get_query, 
-            values={"folder_id": folder_id}
-        )
-        
-        return dict(created_folder)
+        return {
+            "data": {
+                "user_patent_folder_id": folder_id,
+                "user_patent_folder_title": folder.user_patent_folder_title,
+                "created_at": now.isoformat().replace('+00:00', 'Z')
+            },
+            "timestamp": get_current_timestamp()
+        }
     except Exception as e:
         raise HTTPException(
-            status_code=500,
-            detail=f"폴더 생성 중 오류가 발생했습니다: {str(e)}"
+            status_code=400,
+            detail={
+                "code": "INVALID_INPUT",
+                "message": "폴더 생성 중 오류가 발생했습니다.",
+                "timestamp": get_current_timestamp()
+            }
         )
 
-@router.get("/folder/{folder_id}/patents", response_model=List[PatentDraftResponse])
+@router.get("/folder/{folder_id}/patents", response_model=Dict[str, Any])
 async def get_folder_patents(folder_id: int):
     """특정 폴더에 속한 특허 초안 목록 조회"""
     # 폴더 존재 확인
@@ -92,7 +108,11 @@ async def get_folder_patents(folder_id: int):
     if not folder:
         raise HTTPException(
             status_code=404,
-            detail="지정한 폴더를 찾을 수 없습니다."
+            detail={
+                "code": "FOLDER_NOT_FOUND",
+                "message": "지정한 폴더를 찾을 수 없습니다.",
+                "timestamp": get_current_timestamp()
+            }
         )
     
     # 폴더 내 특허 초안 조회
@@ -108,11 +128,25 @@ async def get_folder_patents(folder_id: int):
     )
     
     if not patents:
-        return []
+        return {
+            "data": {"patents": []},
+            "timestamp": get_current_timestamp()
+        }
     
-    return [dict(patent) for patent in patents]
+    result = []
+    for patent in patents:
+        result.append({
+            "patent_draft_id": patent["patent_draft_id"],
+            "patent_draft_title": patent["patent_draft_title"],
+            "created_at": patent["patent_draft_created_at"].isoformat() + 'Z'
+        })
+    
+    return {
+        "data": {"patents": result},
+        "timestamp": get_current_timestamp()
+    }
 
-@router.delete("/folder/{folder_id}")
+@router.delete("/folder/{folder_id}", response_model=Dict[str, str])
 async def delete_folder(folder_id: int):
     """폴더 및 폴더 내 모든 특허 초안 삭제"""
     # 트랜잭션 시작
@@ -131,10 +165,10 @@ async def delete_folder(folder_id: int):
         
         if not folder:
             await transaction.rollback()
-            raise HTTPException(
-                status_code=404,
-                detail="지정한 폴더를 찾을 수 없습니다."
-            )
+            return {
+                "status": False,
+                "error": "폴더를 찾을 수 없습니다."
+            }
         
         # 폴더 내 특허 초안 삭제
         delete_drafts_query = """
@@ -159,13 +193,12 @@ async def delete_folder(folder_id: int):
         await transaction.commit()
         
         return {
-            "status": True,
             "message": "폴더가 성공적으로 삭제되었습니다."
         }
         
     except Exception as e:
         await transaction.rollback()
-        raise HTTPException(
-            status_code=500,
-            detail=f"폴더 삭제 중 오류가 발생했습니다: {str(e)}"
-        )
+        return {
+            "status": False,
+            "error": "폴더 삭제에 실패했습니다."
+        }

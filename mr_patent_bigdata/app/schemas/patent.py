@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 
 class ProcessRequest(BaseModel):
@@ -22,7 +22,7 @@ class ResumeResponse(BaseModel):
     directory: str
 
 class FolderBase(BaseModel):
-    user_patent_folder_name: str
+    user_patent_folder_title: str
 
 class FolderCreate(FolderBase):
     user_id: int
@@ -37,18 +37,19 @@ class FolderResponse(FolderBase):
         orm_mode = True
         
 class PatentDraftBase(BaseModel):
-    patent_draft_title: Optional[str] = None
-    patent_draft_technical_field: Optional[str] = None
-    patent_draft_background: Optional[str] = None
-    patent_draft_problem: Optional[str] = None
-    patent_draft_solution: Optional[str] = None
-    patent_draft_effect: Optional[str] = None
-    patent_draft_detailed: Optional[str] = None
-    patent_draft_summary: Optional[str] = None
-    patent_draft_claim: Optional[str] = None
+    patent_draft_title: str
+    patent_draft_technical_field: str = ""
+    patent_draft_background: str = ""
+    patent_draft_problem: str = ""
+    patent_draft_solution: str = ""
+    patent_draft_effect: str = "" 
+    patent_draft_detailed: str = ""
+    patent_draft_summary: str = ""
+    patent_draft_claim: str = ""
 
 class PatentDraftCreate(PatentDraftBase):
-    user_patent_folder_id: int
+    patent_draft_id: Optional[int] = None
+    user_patent_folder_id: Optional[int] = None
     
 class PatentDraftResponse(PatentDraftBase):
     patent_draft_id: int

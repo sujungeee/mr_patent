@@ -1,15 +1,18 @@
-# app/api/routes/drafts.py - 특허 초안 관련 API
-
 from fastapi import APIRouter, HTTPException, Depends, Query
-from typing import List, Optional
-from datetime import datetime
+from typing import List, Optional, Dict, Any
+from datetime import datetime, timezone
 
 from app.core.database import database
 from app.schemas.patent import PatentDraftCreate, PatentDraftResponse
+from app.services.vectorizer import get_tfidf_vector, get_kobert_vector
 
 router = APIRouter(prefix="/api", tags=["drafts"])
 
-@router.get("/draft/{patent_draft_id}", response_model=PatentDraftResponse)
+def get_current_timestamp():
+    """현재 시간을 ISO 8601 형식으로 변환 (UTC)"""
+    return datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
+
+@router.get("/draft/{patent_draft_id}", response_model=Dict[str, Any])
 async def get_patent_draft(patent_draft_id: int):
     """특정 ID의 특허 초안 조회"""
     query = """
@@ -25,17 +28,30 @@ async def get_patent_draft(patent_draft_id: int):
     if not draft:
         raise HTTPException(
             status_code=404,
-            detail="해당 ID의 특허 초안을 찾을 수 없습니다."
+            detail={
+                "code": "DRAFT_NOT_FOUND",
+                "message": "해당 ID의 특허 초안을 찾을 수 없습니다.",
+                "timestamp": get_current_timestamp()
+            }
         )
     
     # 바이너리 벡터 필드 제외
     draft_dict = {k: v for k, v in dict(draft).items() if not k.endswith('_vector')}
     
-    return draft_dict
+    # 날짜/시간 필드 변환
+    if "patent_draft_created_at" in draft_dict:
+        draft_dict["created_at"] = draft_dict.pop("patent_draft_created_at").isoformat() + 'Z'
+    if "patent_draft_updated_at" in draft_dict:
+        draft_dict["updated_at"] = draft_dict.pop("patent_draft_updated_at").isoformat() + 'Z'
+    
+    return {
+        "data": draft_dict,
+        "timestamp": get_current_timestamp()
+    }
 
-@router.post("/topic/{user_patent_topic_id}/draft", response_model=PatentDraftResponse)
+@router.post("/folder/{user_patent_folder_id}/draft", response_model=Dict[str, Any])
 async def create_or_update_draft(
-    user_patent_topic_id: int,
+    user_patent_folder_id: int,
     draft: PatentDraftCreate
 ):
     """특허 초안 저장 또는 수정"""
@@ -46,139 +62,137 @@ async def create_or_update_draft(
     """
     folder = await database.fetch_one(
         query=folder_query, 
-        values={"folder_id": draft.user_patent_folder_id}
+        values={"folder_id": user_patent_folder_id}
     )
     
     if not folder:
         raise HTTPException(
             status_code=404,
-            detail="지정한 폴더를 찾을 수 없습니다."
+            detail={
+                "code": "FOLDER_NOT_FOUND",
+                "message": "지정한 폴더를 찾을 수 없습니다.",
+                "timestamp": get_current_timestamp()
+            }
         )
     
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
+    
+    # 각 필드에 대한 벡터 생성
+    vector_fields = {}
+    for field in ["title", "technical_field", "background", "problem", 
+                  "solution", "effect", "detailed", "summary", "claim"]:
+        text = getattr(draft, f"patent_draft_{field}")
+        if text:
+            tfidf_vector = get_tfidf_vector(text)
+            kobert_vector = get_kobert_vector(text)
+            
+            vector_fields[f"patent_draft_{field}_tfidf_vector"] = tfidf_vector.tobytes()
+            vector_fields[f"patent_draft_{field}_kobert_vector"] = kobert_vector.tobytes()
     
     # 초안이 이미 존재하는지 확인
     existing_draft_query = """
     SELECT * FROM patent_draft
     WHERE user_patent_folder_id = :folder_id
-    AND patent_draft_id = :topic_id
+    AND patent_draft_id = :draft_id
     """
-    existing_draft = await database.fetch_one(
-        query=existing_draft_query,
-        values={
-            "folder_id": draft.user_patent_folder_id,
-            "topic_id": user_patent_topic_id
-        }
-    )
+    
+    draft_id = getattr(draft, "patent_draft_id", None)
+    existing_draft = None
+    
+    if draft_id:
+        existing_draft = await database.fetch_one(
+            query=existing_draft_query,
+            values={
+                "folder_id": user_patent_folder_id,
+                "draft_id": draft_id
+            }
+        )
     
     if existing_draft:
         # 초안 업데이트
-        update_query = """
+        update_fields = ", ".join([
+            f"patent_draft_{field} = :{field}" 
+            for field in ["title", "technical_field", "background", "problem", 
+                         "solution", "effect", "detailed", "summary", "claim"]
+        ])
+        update_fields += ", patent_draft_updated_at = :updated_at"
+        
+        # 벡터 필드 추가
+        for field_name in vector_fields.keys():
+            update_fields += f", {field_name} = :{field_name.split('patent_draft_')[1]}"
+        
+        update_query = f"""
         UPDATE patent_draft
-        SET 
-            patent_draft_title = :title,
-            patent_draft_technical_field = :technical_field,
-            patent_draft_background = :background,
-            patent_draft_problem = :problem,
-            patent_draft_solution = :solution,
-            patent_draft_effect = :effect,
-            patent_draft_detailed = :detailed,
-            patent_draft_summary = :summary,
-            patent_draft_claim = :claim,
-            patent_draft_updated_at = :updated_at
+        SET {update_fields}
         WHERE patent_draft_id = :draft_id
         """
         
-        values = {
-            "title": draft.patent_draft_title,
-            "technical_field": draft.patent_draft_technical_field,
-            "background": draft.patent_draft_background,
-            "problem": draft.patent_draft_problem,
-            "solution": draft.patent_draft_solution,
-            "effect": draft.patent_draft_effect,
-            "detailed": draft.patent_draft_detailed,
-            "summary": draft.patent_draft_summary,
-            "claim": draft.patent_draft_claim,
+        values = {field.split("patent_draft_")[1]: value for field, value in draft.__dict__.items()}
+        values.update({
             "updated_at": now,
             "draft_id": existing_draft["patent_draft_id"]
-        }
+        })
+        # 벡터 값 추가
+        for field_name, vector_value in vector_fields.items():
+            values[field_name.split('patent_draft_')[1]] = vector_value
         
         await database.execute(query=update_query, values=values)
         
-        # 업데이트된 초안 조회
-        updated_draft = await database.fetch_one(
-            query="SELECT * FROM patent_draft WHERE patent_draft_id = :draft_id",
-            values={"draft_id": existing_draft["patent_draft_id"]}
-        )
-        
-        # 바이너리 벡터 필드 제외
-        draft_dict = {k: v for k, v in dict(updated_draft).items() if not k.endswith('_vector')}
-        return draft_dict
+        return {
+            "data": {
+                "patent_draft_id": existing_draft["patent_draft_id"],
+                "created_at": now.isoformat().replace('+00:00', 'Z')
+            },
+            "timestamp": get_current_timestamp()
+        }
     else:
         # 새 초안 생성
-        insert_query = """
+        field_names = ["user_patent_folder_id"]
+        field_names.extend([f"patent_draft_{field}" for field in [
+            "title", "technical_field", "background", "problem", 
+            "solution", "effect", "detailed", "summary", "claim"
+        ]])
+        field_names.extend(["patent_draft_created_at", "patent_draft_updated_at"])
+        # 벡터 필드 추가
+        field_names.extend(vector_fields.keys())
+        
+        placeholders = [f":{field.split('patent_draft_')[1] if 'patent_draft_' in field else field}" for field in field_names]
+        
+        insert_query = f"""
         INSERT INTO patent_draft (
-            user_patent_folder_id,
-            patent_draft_title,
-            patent_draft_technical_field,
-            patent_draft_background,
-            patent_draft_problem,
-            patent_draft_solution,
-            patent_draft_effect,
-            patent_draft_detailed,
-            patent_draft_summary,
-            patent_draft_claim,
-            patent_draft_created_at,
-            patent_draft_updated_at
+            {', '.join(field_names)}
         ) VALUES (
-            :folder_id,
-            :title,
-            :technical_field,
-            :background,
-            :problem,
-            :solution,
-            :effect,
-            :detailed,
-            :summary,
-            :claim,
-            :created_at,
-            :updated_at
+            {', '.join(placeholders)}
         )
         """
         
-        values = {
-            "folder_id": draft.user_patent_folder_id,
-            "title": draft.patent_draft_title,
-            "technical_field": draft.patent_draft_technical_field,
-            "background": draft.patent_draft_background,
-            "problem": draft.patent_draft_problem,
-            "solution": draft.patent_draft_solution,
-            "effect": draft.patent_draft_effect,
-            "detailed": draft.patent_draft_detailed,
-            "summary": draft.patent_draft_summary,
-            "claim": draft.patent_draft_claim,
+        values = {field.split("patent_draft_")[1]: value for field, value in draft.__dict__.items()}
+        values.update({
+            "user_patent_folder_id": user_patent_folder_id,
             "created_at": now,
             "updated_at": now
-        }
+        })
+        # 벡터 값 추가
+        for field_name, vector_value in vector_fields.items():
+            values[field_name.split('patent_draft_')[1]] = vector_value
         
         draft_id = await database.execute(query=insert_query, values=values)
         
-        # 생성된 초안 조회
-        created_draft = await database.fetch_one(
-            query="SELECT * FROM patent_draft WHERE patent_draft_id = :draft_id",
-            values={"draft_id": draft_id}
-        )
-        
-        # 바이너리 벡터 필드 제외
-        draft_dict = {k: v for k, v in dict(created_draft).items() if not k.endswith('_vector')}
-        return draft_dict
+        return {
+            "data": {
+                "patent_draft_id": draft_id,
+                "created_at": now.isoformat().replace('+00:00', 'Z')
+            },
+            "timestamp": get_current_timestamp()
+        }
 
-@router.get("/drafts/recent", response_model=List[PatentDraftResponse])
+@router.get("/drafts/recent", response_model=Dict[str, Any])
 async def get_recent_drafts(user_id: int, limit: int = 5):
     """사용자의 최근 특허 초안 목록 조회 (최대 5개)"""
     # 최근 초안 조회 (최대 limit 개수만큼)
     query = """
-    SELECT pd.* FROM patent_draft pd
+    SELECT pd.patent_draft_id, pd.patent_draft_title, pd.patent_draft_summary, pd.patent_draft_updated_at 
+    FROM patent_draft pd
     JOIN user_patent_folder upf ON pd.user_patent_folder_id = upf.user_patent_folder_id
     WHERE upf.user_id = :user_id
     ORDER BY pd.patent_draft_updated_at DESC
@@ -194,12 +208,21 @@ async def get_recent_drafts(user_id: int, limit: int = 5):
     )
     
     if not drafts:
-        return []
+        return {
+            "data": {"patent_drafts": []},
+            "timestamp": get_current_timestamp()
+        }
     
-    # 각 초안에서 바이너리 벡터 필드 제외
     result = []
     for draft in drafts:
-        draft_dict = {k: v for k, v in dict(draft).items() if not k.endswith('_vector')}
-        result.append(draft_dict)
+        result.append({
+            "patent_draft_id": draft["patent_draft_id"],
+            "patent_draft_title": draft["patent_draft_title"],
+            "patent_draft_summary": draft["patent_draft_summary"],
+            "updated_at": draft["patent_draft_updated_at"].isoformat() + 'Z'
+        })
     
-    return result
+    return {
+        "data": {"patent_drafts": result},
+        "timestamp": get_current_timestamp()
+    }
