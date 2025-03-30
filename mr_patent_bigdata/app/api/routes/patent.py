@@ -285,6 +285,11 @@ async def process_saved_data(task_id: str, filename: str):
     try:        
         # 저장된 데이터 로드
         all_patents = load_extracted_data(filename)
+
+        # 출원번호에서 "발명의명칭" 제거
+        for patent_data in all_patents:
+            if "application_number" in patent_data and "발명의명칭" in patent_data["application_number"]:
+                patent_data["application_number"] = patent_data["application_number"].replace("발명의명칭", "")
         
         # TF-IDF 벡터라이저 학습
         logger.info("TF-IDF 벡터라이저 학습 시작")
