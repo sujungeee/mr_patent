@@ -27,7 +27,7 @@
             app:layout_constraintHorizontal_bias="0.04"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintWidth_percent="0.16" />
+            app:layout_constraintWidth_percent="0.14" />
 
         <TextView
             android:id="@+id/tv_folder_name"
@@ -54,6 +54,33 @@
             app:layout_constraintStart_toStartOf="@+id/tv_folder_name"
             app:layout_constraintTop_toBottomOf="@+id/tv_folder_name"
             app:layout_constraintVertical_bias="0.2"/>
+
+        <ImageView
+            android:visibility="gone"
+            android:id="@+id/iv_folder_delete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/cancel"
+            app:layout_constraintBottom_toBottomOf="@+id/iv_folder"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.96"
+            app:layout_constraintStart_toEndOf="@+id/iv_folder"
+            app:layout_constraintTop_toTopOf="@+id/iv_folder"
+            app:layout_constraintVertical_bias="0.2"/>
+
+        <ImageView
+            android:visibility="gone"
+            android:id="@+id/iv_folder_edit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/modify"
+            app:layout_constraintBottom_toBottomOf="@+id/iv_folder"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.96"
+            app:layout_constraintStart_toEndOf="@+id/iv_folder"
+            app:layout_constraintTop_toTopOf="@+id/iv_folder"
+            app:layout_constraintVertical_bias="0.2"/>
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

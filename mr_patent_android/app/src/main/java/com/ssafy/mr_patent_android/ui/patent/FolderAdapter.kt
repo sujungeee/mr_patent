@@ -1,13 +1,14 @@
 package com.ssafy.mr_patent_android.ui.patent
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.ssafy.mr_patent_android.R
 import com.ssafy.mr_patent_android.data.model.dto.FolderDto
 import com.ssafy.mr_patent_android.databinding.ListItemPatentFolderBinding
 
-class FolderAdapter(var folders: MutableList<FolderDto.Folder>, val itemClickListener : ItemClickListener)
+class FolderAdapter(var editFlag: Boolean = false, var deleteFlag: Boolean = false, var folders: MutableList<FolderDto.Folder>, val itemClickListener : ItemClickListener)
     : RecyclerView.Adapter<FolderAdapter.FolderViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FolderViewHolder {
@@ -31,6 +32,26 @@ class FolderAdapter(var folders: MutableList<FolderDto.Folder>, val itemClickLis
             binding.tvFolderRecent.text = itemView.context.getString(R.string.tv_date_create, folders[position].createdAt)
             binding.clListItemPatentFolder.setOnClickListener {
                 itemClickListener.onItemClick(position)
+            }
+
+            binding.ivFolderEdit.setOnClickListener {
+                itemClickListener.onItemClick(position)
+            }
+
+            binding.ivFolderDelete.setOnClickListener {
+                itemClickListener.onItemClick(position)
+            }
+
+            if (editFlag) {
+                binding.ivFolderEdit.visibility = View.VISIBLE
+            } else {
+                binding.ivFolderEdit.visibility = View.GONE
+            }
+
+            if (deleteFlag) {
+                binding.ivFolderDelete.visibility = View.VISIBLE
+            } else {
+                binding.ivFolderDelete.visibility = View.GONE
             }
         }
     }
