@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from app.core.database import database
 from app.schemas.patent import PatentDraftCreate, PatentDraftResponse
 from app.services.vectorizer import get_tfidf_vector, get_kobert_vector
+import numpy as np
 
 router = APIRouter(prefix="/api", tags=["drafts"])
 
@@ -79,15 +80,26 @@ async def create_or_update_draft(
     
     # 각 필드에 대한 벡터 생성
     vector_fields = {}
-    for field in ["title", "technical_field", "background", "problem", 
-                  "solution", "effect", "detailed", "summary", "claim"]:
-        text = getattr(draft, f"patent_draft_{field}")
+    fields = ["title", "technical_field", "background", "problem", 
+              "solution", "effect", "detailed", "summary", "claim"]
+    
+    for field in fields:
+        text = getattr(draft, f"patent_draft_{field}", "")
         if text:
-            tfidf_vector = get_tfidf_vector(text)
-            kobert_vector = get_kobert_vector(text)
-            
-            vector_fields[f"patent_draft_{field}_tfidf_vector"] = tfidf_vector.tobytes()
-            vector_fields[f"patent_draft_{field}_kobert_vector"] = kobert_vector.tobytes()
+            try:
+                # 벡터 생성
+                tfidf_vector = get_tfidf_vector(text)
+                kobert_vector = get_kobert_vector(text)
+                
+                # 벡터 필드에 저장
+                vector_fields[f"patent_draft_{field}_tfidf_vector"] = tfidf_vector.tobytes()
+                vector_fields[f"patent_draft_{field}_kobert_vector"] = kobert_vector.tobytes()
+            except Exception as e:
+                # 벡터화 실패 시 로그 기록
+                print(f"벡터화 실패 ({field}): {str(e)}")
+                # 빈 벡터 할당
+                vector_fields[f"patent_draft_{field}_tfidf_vector"] = np.zeros(10).tobytes()
+                vector_fields[f"patent_draft_{field}_kobert_vector"] = np.zeros(768).tobytes()
     
     # 초안이 이미 존재하는지 확인
     existing_draft_query = """

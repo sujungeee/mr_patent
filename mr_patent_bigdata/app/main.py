@@ -3,8 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.database import database
-from app.api.routes import patent, task, folders, drafts
+from app.api.routes import patent, task, folders, drafts, similarity, admin
 from app.core.logging import logger
+from app.services.vectorizer import load_vectorizer
 
 app = FastAPI(title=settings.PROJECT_NAME)
 
@@ -22,12 +23,20 @@ app.include_router(patent.router)
 app.include_router(task.router)
 app.include_router(folders.router)
 app.include_router(drafts.router)
+app.include_router(similarity.router)
+app.include_router(admin.router)
 
 # 이벤트 핸들러
 @app.on_event("startup")
 async def startup():
     await database.connect()
     logger.info("데이터베이스 연결 성공")
+
+    # 벡터라이저 로드
+    try:
+        load_vectorizer()
+    except Exception as e:
+        print(f"벡터라이저 로드 실패: {e}")
 
 @app.on_event("shutdown")
 async def shutdown():
