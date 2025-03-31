@@ -1,5 +1,7 @@
 package com.d208.mr_patent_backend.domain.user.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,13 +14,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Tag(name = "변리사 승인 API", description = "승인 대기 변리사 조회 및 승인")
 @RestController
 @RequestMapping("/api/expert-approve")
 @RequiredArgsConstructor
 public class ExpertApproveController {
     private final ExpertApproveService expertApproveService;
 
-    // 승인 대기 중인 변리사 목록 조회
+    @Operation(summary = "승인 대기 변리사 조회")
     @GetMapping
     public ResponseEntity<Map<String, Object>> getPendingExperts() {
         List<ExpertApproveResponseDTO> experts = expertApproveService.getPendingExperts();
@@ -28,7 +31,7 @@ public class ExpertApproveController {
         return ResponseEntity.ok(response);
     }
 
-    // 변리사 승인/거절
+    @Operation(summary = "변리사 승인")
     @PatchMapping("/{expertId}")
     public ResponseEntity<Map<String, Object>> approveExpert(
             @PathVariable Integer expertId,

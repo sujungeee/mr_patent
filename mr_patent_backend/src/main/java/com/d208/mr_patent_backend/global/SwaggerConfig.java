@@ -28,8 +28,8 @@ public class SwaggerConfig {
     }
     private Info apiInfo() {
         return new Info()
-                .title("API Test") // API의 제목
-                .description("Let's practice Swagger UI") // API에 대한 설명
-                .version("1.0.0"); // API의 버전
+                .title("Mr.Patent")
+                .description("특출난 허동욱씨: 특허는 이렇게 내는 거야.")
+                .version("1.0.0");
     }
 }
