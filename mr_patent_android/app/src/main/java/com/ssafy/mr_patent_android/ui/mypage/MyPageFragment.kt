@@ -1,59 +1,92 @@
 package com.ssafy.mr_patent_android.ui.mypage
 
+import android.content.Intent
 import android.os.Bundle
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
+import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
 import com.ssafy.mr_patent_android.R
+import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.sharedPreferences
+import com.ssafy.mr_patent_android.base.BaseFragment
+import com.ssafy.mr_patent_android.databinding.FragmentMyPageBinding
+import com.ssafy.mr_patent_android.ui.login.LoginActivity
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [MyPageFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
-class MyPageFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+class MyPageFragment : BaseFragment<FragmentMyPageBinding>(
+    FragmentMyPageBinding::bind, R.layout.fragment_my_page
+) {
+    private val userLeaveViewModel : UserLeaveViewModel by activityViewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        initView()
+        initObserver()
+    }
+
+    private fun initView() {
+        binding.tvUserName.text = sharedPreferences.getUser().userName + "님"
+
+        // 나의 프로필(이미지)
+        // TODO
+
+        binding.tvProfileUpdate.setOnClickListener { // 프로필 수정
+
+        }
+
+        // 특허 분석 리포트
+        binding.tvPatentReports.setOnClickListener {
+            findNavController().navigate(R.id.patentFolderFragment)
+        }
+
+        // 알림 설정
+        // TODO
+
+        binding.tvSettingPasswordChange.setOnClickListener {
+            findNavController().navigate(R.id.pwdEditFragment)
+        }
+
+        binding.tvSettingLogout.setOnClickListener {
+            // 로그아웃
+            userLeaveViewModel.logout()
+            // TODO: delete
+            showCustomToast("로그아웃 되었습니다.")
+            sharedPreferences.clearToken()
+            val intent = Intent(requireContext(), LoginActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            startActivity(intent)
+            requireActivity().finish()
+        }
+
+        binding.tvSettingDelete.setOnClickListener {
+            findNavController().navigate(R.id.userDeleteFragment)
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_my_page, container, false)
+    private fun initObserver() {
+        userLeaveViewModel.toastMsg.observe(viewLifecycleOwner) {
+            if (it == "로그아웃 되었습니다.") {
+                showCustomToast(it)
+                sharedPreferences.clearToken()
+                val intent = Intent(requireContext(), LoginActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
+                startActivity(intent)
+                requireActivity().finish()
+            }
+        }
     }
 
     companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment MyPageFragment.
-         */
-        // TODO: Rename and change types and number of parameters
         @JvmStatic
-        fun newInstance(param1: String, param2: String) =
+        fun newInstance(key: String, value: String) =
             MyPageFragment().apply {
                 arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+                    putString(key, value)
                 }
             }
     }
