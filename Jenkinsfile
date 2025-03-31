@@ -4,13 +4,18 @@ pipeline {
     environment {
         DOCKER_COMPOSE_DIR = '/home/ubuntu/mr_patent'
         BACKEND_IMAGE = 'mr_patent-backend'
-        BRANCH_NAME = "${env.BRANCH_NAME ?: 'unknown'}"
+        BRANCH_NAME = "${env.BRANCH_NAME}"
     }
     
     stages {
         stage('Checkout') {
             steps {
                 checkout scm
+                // 빌드 시작 시 커밋 정보 저장
+                script {
+                    env.GIT_AUTHOR = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+                    env.GIT_EMAIL = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+                }
             }
         }
         
@@ -70,33 +75,27 @@ pipeline {
     }
     
     post {
-        always {
-            echo '====== 파이프라인 종료 ======'
-            cleanWs()
+        success {
+            echo '====== 파이프라인 성공 ======'
+            mattermostSend(
+                color: 'good',
+                message: "빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${env.GIT_AUTHOR}(${env.GIT_EMAIL})\n(<${env.BUILD_URL}|Details>)",
+                endpoint: 'https://meeting.ssafy.com/hooks/hgafhbr6n7fe7japbi7n5tw36o',
+                channel: 'Jenkins_Build_Result'
+            )
         }
         failure {
             echo '====== 파이프라인 실패 ======'
-            script {
-                def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
-                def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
-                mattermostSend(color: 'danger',
-                    message: "빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name})\n(<${env.BUILD_URL}|Details>)",
-                    endpoint: 'https://meeting.ssafy.com/hooks/hgafhbr6n7fe7japbi7n5tw36o',
-                    channel: 'Jenkins_Build_Result'
-                )
-            }
+            mattermostSend(
+                color: 'danger',
+                message: "빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${env.GIT_AUTHOR}(${env.GIT_EMAIL})\n(<${env.BUILD_URL}|Details>)",
+                endpoint: 'https://meeting.ssafy.com/hooks/hgafhbr6n7fe7japbi7n5tw36o',
+                channel: 'Jenkins_Build_Result'
+            )
         }
-        success {
-            echo '====== 파이프라인 성공 ======'
-            script {
-                def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
-                def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
-                mattermostSend(color: 'good',
-                    message: "빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name})\n(<${env.BUILD_URL}|Details>)",
-                    endpoint: 'https://meeting.ssafy.com/hooks/hgafhbr6n7fe7japbi7n5tw36o',
-                    channel: 'Jenkins_Build_Result'
-                )
-            }
+        always {
+            echo '====== 파이프라인 종료 ======'
+            cleanWs()
         }
     }
 }
