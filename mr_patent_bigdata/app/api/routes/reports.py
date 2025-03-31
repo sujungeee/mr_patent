@@ -15,17 +15,17 @@ def get_current_timestamp():
     """현재 시간을 ISO 8601 형식으로 변환 (UTC)"""
     return datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
 
-@router.get("/folder/{user_patent_topic_id}/reports", response_model=Dict[str, Any])
-async def get_folder_reports(user_patent_topic_id: int):
+@router.get("/folder/{user_patent_folder_id}/reports", response_model=Dict[str, Any])
+async def get_folder_reports(user_patent_folder_id: int):
     """폴더별 유사도 분석 리포트 목록 조회"""
     # 폴더의 유사도 분석 결과 목록 조회
     query = """
     SELECT s.similarity_id, pd.patent_draft_id, s.similarity_created_at,
            COUNT(sp.similarity_patent_id) as similar_patents_count
     FROM similarity s
-    JOIN patent_draft pd ON s.user_patent_folder_id = pd.user_patent_folder_id
+    JOIN patent_draft pd ON s.patent_draft_id = pd.patent_draft_id  # 연결 관계 변경
     LEFT JOIN similarity_patent sp ON s.similarity_id = sp.similarity_id
-    WHERE s.user_patent_folder_id = :folder_id
+    WHERE pd.user_patent_folder_id = :folder_id  # 쿼리 조건 변경
     GROUP BY s.similarity_id
     ORDER BY s.similarity_created_at DESC
     """

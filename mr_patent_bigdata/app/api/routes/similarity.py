@@ -1,5 +1,3 @@
-# app/api/routes/similarity.py
-
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from typing import Dict, Any, List
 from datetime import datetime, timezone
@@ -40,17 +38,15 @@ async def run_similarity_check(patent_draft_id: int, background_tasks: Backgroun
             }
         )
     
-    user_patent_folder_id = draft["user_patent_folder_id"]
-    
     # 2. similarity 엔티티 생성 (분석 상태 표시)
     now = datetime.now(timezone.utc)
     similarity_query = """
     INSERT INTO similarity (
-        user_patent_folder_id, 
+        patent_draft_id, 
         similarity_created_at, 
         similarity_updated_at
     ) VALUES (
-        :folder_id,
+        :draft_id,
         :created_at,
         :updated_at
     )
@@ -59,7 +55,7 @@ async def run_similarity_check(patent_draft_id: int, background_tasks: Backgroun
     similarity_id = await database.execute(
         query=similarity_query,
         values={
-            "folder_id": user_patent_folder_id,
+            "draft_id": patent_draft_id,
             "created_at": now,
             "updated_at": now
         }
@@ -68,8 +64,7 @@ async def run_similarity_check(patent_draft_id: int, background_tasks: Backgroun
     # 3. 백그라운드에서 분석 작업 실행
     background_tasks.add_task(
         process_full_similarity_analysis, 
-        patent_draft_id, 
-        user_patent_folder_id,
+        patent_draft_id,
         similarity_id
     )
     
@@ -82,20 +77,20 @@ async def run_similarity_check(patent_draft_id: int, background_tasks: Backgroun
         "timestamp": get_current_timestamp()
     }
 
-@router.get("/patent/fitness/{user_patent_id}", response_model=Dict[str, Any])
-async def get_fitness_result(user_patent_id: int):
+@router.get("/patent/fitness/{patent_draft_id}", response_model=Dict[str, Any])
+async def get_fitness_result(patent_draft_id: int):
     """특허 초안의 적합도 검사 결과 조회"""
     # 적합도 결과 조회
     fitness_query = """
     SELECT * FROM fitness 
-    WHERE user_patent_folder_id = :folder_id
+    WHERE patent_draft_id = :draft_id
     ORDER BY fitness_created_at DESC 
     LIMIT 1
     """
     
     fitness = await database.fetch_one(
         query=fitness_query,
-        values={"folder_id": user_patent_id}
+        values={"draft_id": patent_draft_id}
     )
     
     if not fitness:
@@ -117,20 +112,20 @@ async def get_fitness_result(user_patent_id: int):
         "timestamp": get_current_timestamp()
     }
 
-@router.get("/patent/similarity/{user_patent_id}", response_model=Dict[str, Any])
-async def get_similarity_result(user_patent_id: int):
+@router.get("/patent/similarity/{patent_draft_id}", response_model=Dict[str, Any])
+async def get_similarity_result(patent_draft_id: int):
     """특허 유사도 분석 결과 조회"""
     # 최신 유사도 분석 결과 조회
     similarity_query = """
     SELECT * FROM similarity 
-    WHERE user_patent_folder_id = :folder_id
+    WHERE patent_draft_id = :draft_id
     ORDER BY similarity_created_at DESC 
     LIMIT 1
     """
     
     similarity = await database.fetch_one(
         query=similarity_query,
-        values={"folder_id": user_patent_id}
+        values={"draft_id": patent_draft_id}
     )
     
     if not similarity:
@@ -175,14 +170,14 @@ async def get_similarity_result(user_patent_id: int):
     }
 
 # 백그라운드 처리 함수
-async def process_full_similarity_analysis(patent_draft_id: int, user_patent_folder_id: int, similarity_id: int):
+async def process_full_similarity_analysis(patent_draft_id: int, similarity_id: int):
     """적합도 검사, 유사도 분석, 상세 비교를 순차적으로 모두 수행"""
     try:
         # 1단계: 적합도 검사 수행
-        await perform_fitness_check(user_patent_folder_id, patent_draft_id)
+        await perform_fitness_check(patent_draft_id)
         
         # 2단계: 유사도 분석 수행
-        similar_patents = await perform_similarity_analysis(user_patent_folder_id, patent_draft_id, similarity_id)
+        similar_patents = await perform_similarity_analysis(patent_draft_id, similarity_id)
         
         # 3단계: 상위 3개 특허에 대한 공고전문 가져오기와 상세 비교
         top_patents = similar_patents[:3]  # 상위 3개만 선택
@@ -193,7 +188,7 @@ async def process_full_similarity_analysis(patent_draft_id: int, user_patent_fol
             if patent_public_id:
                 # 상세 비교 수행
                 await perform_detailed_comparison(
-                    user_patent_folder_id, 
+                    patent_draft_id, 
                     patent["similarity_patent_id"], 
                     patent_public_id
                 )
@@ -201,7 +196,7 @@ async def process_full_similarity_analysis(patent_draft_id: int, user_patent_fol
         # 오류 발생 시 로깅
         print(f"유사도 분석 중 오류 발생: {str(e)}")
 
-async def perform_fitness_check(user_patent_folder_id: int, patent_draft_id: int):
+async def perform_fitness_check(patent_draft_id: int):
     """특허 초안의 적합도 검사 수행"""
     # 특허 초안 조회
     draft_query = """
@@ -261,13 +256,13 @@ async def perform_fitness_check(user_patent_folder_id: int, patent_draft_id: int
     # DB에 적합도 결과 저장
     fitness_query = """
     INSERT INTO fitness (
-        user_patent_folder_id,
+        patent_draft_id,
         fitness_good_content,
         fitness_is_corrected,
         fitness_created_at,
         fitness_updated_at
     ) VALUES (
-        :folder_id,
+        :draft_id,
         :good_content,
         :is_corrected,
         :created_at,
@@ -278,7 +273,7 @@ async def perform_fitness_check(user_patent_folder_id: int, patent_draft_id: int
     await database.execute(
         query=fitness_query,
         values={
-            "folder_id": user_patent_folder_id,
+            "draft_id": patent_draft_id,
             "good_content": json.dumps(fitness_results),  # 딕셔너리를 JSON으로 직렬화
             "is_corrected": 1 if is_corrected else 0,
             "created_at": now,
@@ -288,7 +283,7 @@ async def perform_fitness_check(user_patent_folder_id: int, patent_draft_id: int
     
     return fitness_results
 
-async def perform_similarity_analysis(user_patent_folder_id: int, patent_draft_id: int, similarity_id: int):
+async def perform_similarity_analysis(patent_draft_id: int, similarity_id: int):
     """특허 초안과 유사한 특허 분석"""
     # 특허 초안 조회
     draft_query = """
@@ -499,7 +494,7 @@ async def fetch_patent_public(patent_id: int, application_number: str):
         print(f"공고전문 가져오기 중 오류: {str(e)}")
         return None
 
-async def perform_detailed_comparison(user_patent_folder_id: int, similarity_patent_id: int, patent_public_id: int):
+async def perform_detailed_comparison(patent_draft_id: int, similarity_patent_id: int, patent_public_id: int):
     """특허 초안과 공고전문의 상세 비교 수행"""
     try:
         now = datetime.now(timezone.utc)
@@ -507,11 +502,11 @@ async def perform_detailed_comparison(user_patent_folder_id: int, similarity_pat
         # 초안 정보 가져오기
         draft_query = """
         SELECT * FROM patent_draft 
-        WHERE user_patent_folder_id = :folder_id
+        WHERE patent_draft_id = :draft_id
         """
         draft = await database.fetch_one(
             query=draft_query,
-            values={"folder_id": user_patent_folder_id}
+            values={"draft_id": patent_draft_id}
         )
         
         # 공고전문 정보 가져오기
@@ -552,7 +547,7 @@ async def perform_detailed_comparison(user_patent_folder_id: int, similarity_pat
         # DB에 저장
         insert_query = """
         INSERT INTO detailed_comparison (
-            user_patent_folder_id,
+            patent_draft_id,
             patent_public_id,
             similarity_patent_id,
             detailed_comparison_result,
@@ -561,7 +556,7 @@ async def perform_detailed_comparison(user_patent_folder_id: int, similarity_pat
             detailed_comparison_created_at,
             detailed_comparison_updated_at
         ) VALUES (
-            :folder_id,
+            :draft_id,
             :public_id,
             :similarity_id,
             :result,
@@ -575,7 +570,7 @@ async def perform_detailed_comparison(user_patent_folder_id: int, similarity_pat
         await database.execute(
             query=insert_query,
             values={
-                "folder_id": user_patent_folder_id,
+                "draft_id": patent_draft_id,
                 "public_id": patent_public_id,
                 "similarity_id": similarity_patent_id,
                 "result": comparison_result,
@@ -609,13 +604,13 @@ def check_field_fitness(text: str, field_type: str) -> Dict[str, Any]:
         return {"pass": False, "message": f"{field_type} 내용이 비어있습니다."}
     
     min_length = {
-        "technical_field": 20,
-        "background": 50,
-        "problem": 30,
-        "solution": 50,
-        "effect": 30,
-        "claim": 50
-    }.get(field_type, 20)
+        "technical_field": 10,
+        "background": 10,
+        "problem": 10,
+        "solution": 10,
+        "effect": 10,
+        "claim": 10
+    }.get(field_type, 10)
     
     if len(text) < min_length:
         return {"pass": False, "message": f"{field_type} 내용이 너무 짧습니다."}

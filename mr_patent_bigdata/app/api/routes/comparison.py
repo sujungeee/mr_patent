@@ -12,8 +12,8 @@ def get_current_timestamp():
     """현재 시간을 ISO 8601 형식으로 변환 (UTC)"""
     return datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
 
-@router.get("/detailed-comparison/{user_patent_id}", response_model=Dict[str, Any])
-async def get_detailed_comparison(user_patent_id: int):
+@router.get("/detailed-comparison/{patent_draft_id}", response_model=Dict[str, Any])
+async def get_detailed_comparison(patent_draft_id: int):  # user_patent_id에서 변경
     """특허 초안과 유사한 특허들의 상세 비교 결과 조회"""
     # 해당 폴더의 상세 비교 결과 조회
     query = """
@@ -21,12 +21,12 @@ async def get_detailed_comparison(user_patent_id: int):
     FROM detailed_comparison dc
     JOIN similarity_patent sp ON dc.similarity_patent_id = sp.similarity_patent_id
     JOIN patent_public pp ON dc.patent_public_id = pp.patent_public_id
-    WHERE dc.user_patent_folder_id = :folder_id
+    WHERE dc.patent_draft_id = :draft_id  # user_patent_folder_id에서 변경
     """
     
     comparisons = await database.fetch_all(
         query=query,
-        values={"folder_id": user_patent_id}
+        values={"draft_id": patent_draft_id}  # folder_id에서 변경
     )
     
     if not comparisons:

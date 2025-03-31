@@ -44,15 +44,15 @@ expert = Table(
     Column("expert_category", String(50), nullable=True)
 )
 
-# 회원 특허 주제 테이블
-user_patent_topic = Table(
-    "user_patent_topic",
+# 회원 특허 폴더 테이블 (user_patent_topic에서 이름 변경)
+user_patent_folder = Table(
+    "user_patent_folder",
     metadata,
-    Column("user_patent_topic_id", Integer, primary_key=True, autoincrement=True),
+    Column("user_patent_folder_id", Integer, primary_key=True, autoincrement=True),
     Column("user_id", Integer, ForeignKey("user.user_id"), nullable=False),
-    Column("user_patent_topic_title", String(100), nullable=False),
-    Column("user_patent_topic_created_at", TIMESTAMP, nullable=False, default=datetime.utcnow),
-    Column("user_patent_topic_updated_at", TIMESTAMP, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    Column("user_patent_folder_title", String(100), nullable=False),
+    Column("user_patent_folder_created_at", TIMESTAMP, nullable=False, default=datetime.utcnow),
+    Column("user_patent_folder_updated_at", TIMESTAMP, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 )
 
 # 특허 테이블
@@ -71,41 +71,12 @@ patent = Table(
     Column("patent_updated_at", TIMESTAMP, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 )
 
-# 적합도 테이블
-fitness = Table(
-    "fitness",
-    metadata,
-    Column("fitness_id", Integer, primary_key=True, autoincrement=True),
-    Column("user_patent_topic_id", Integer, ForeignKey("user_patent_topic.user_patent_topic_id"), nullable=False),
-    Column("fitness_good_content", JSON, nullable=False),
-    Column("fitness_is_corrected", TINYINT, nullable=False, default=0),
-    Column("fitness_created_at", TIMESTAMP, nullable=False, default=datetime.utcnow),
-    Column("fitness_updated_at", TIMESTAMP, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
-)
-
-# 특허 공고전문 테이블
-patent_public = Table(
-    "patent_public",
-    metadata,
-    Column("patent_public_id", Integer, primary_key=True, autoincrement=True),
-    Column("patent_id", Integer, ForeignKey("patent.patent_id"), nullable=False),
-    Column("patent_public_number", String(20), nullable=False),
-    Column("patent_public_pdf_path", String(255), nullable=False),
-    Column("patent_public_pdf_name", String(100), nullable=False),
-    Column("patent_public_content", Text, nullable=False),
-    Column("patent_public_api_response", Text, nullable=False),
-    Column("patent_public_is_processed", TINYINT, nullable=False, default=0),
-    Column("patent_public_retrieved_at", TIMESTAMP, nullable=False, default=datetime.utcnow),
-    Column("patent_public_created_at", TIMESTAMP, nullable=False, default=datetime.utcnow),
-    Column("patent_public_updated_at", TIMESTAMP, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
-)
-
 # 특허 초안 테이블
 patent_draft = Table(
     "patent_draft",
     metadata,
     Column("patent_draft_id", Integer, primary_key=True, autoincrement=True),
-    Column("user_patent_topic_id", Integer, ForeignKey("user_patent_topic.user_patent_topic_id"), nullable=False),
+    Column("user_patent_folder_id", Integer, ForeignKey("user_patent_folder.user_patent_folder_id"), nullable=False),
     Column("patent_draft_title", String(50), nullable=False),
     Column("patent_draft_technical_field", Text, nullable=False),
     Column("patent_draft_background", Text, nullable=False),
@@ -137,12 +108,41 @@ patent_draft = Table(
     Column("patent_draft_updated_at", TIMESTAMP, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 )
 
-# 유사도 테이블
+# 적합도 테이블 - 수정됨
+fitness = Table(
+    "fitness",
+    metadata,
+    Column("fitness_id", Integer, primary_key=True, autoincrement=True),
+    Column("patent_draft_id", Integer, ForeignKey("patent_draft.patent_draft_id"), nullable=False),
+    Column("fitness_good_content", JSON, nullable=False),
+    Column("fitness_is_corrected", TINYINT, nullable=False, default=0),
+    Column("fitness_created_at", TIMESTAMP, nullable=False, default=datetime.utcnow),
+    Column("fitness_updated_at", TIMESTAMP, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+)
+
+# 특허 공고전문 테이블
+patent_public = Table(
+    "patent_public",
+    metadata,
+    Column("patent_public_id", Integer, primary_key=True, autoincrement=True),
+    Column("patent_id", Integer, ForeignKey("patent.patent_id"), nullable=False),
+    Column("patent_public_number", String(20), nullable=False),
+    Column("patent_public_pdf_path", String(255), nullable=False),
+    Column("patent_public_pdf_name", String(100), nullable=False),
+    Column("patent_public_content", Text, nullable=False),
+    Column("patent_public_api_response", Text, nullable=False),
+    Column("patent_public_is_processed", TINYINT, nullable=False, default=0),
+    Column("patent_public_retrieved_at", TIMESTAMP, nullable=False, default=datetime.utcnow),
+    Column("patent_public_created_at", TIMESTAMP, nullable=False, default=datetime.utcnow),
+    Column("patent_public_updated_at", TIMESTAMP, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+)
+
+# 유사도 테이블 - 수정됨
 similarity = Table(
     "similarity",
     metadata,
     Column("similarity_id", Integer, primary_key=True, autoincrement=True),
-    Column("user_patent_topic_id", Integer, ForeignKey("user_patent_topic.user_patent_topic_id"), nullable=False),
+    Column("patent_draft_id", Integer, ForeignKey("patent_draft.patent_draft_id"), nullable=False),
     Column("similarity_created_at", TIMESTAMP, nullable=False, default=datetime.utcnow),
     Column("similarity_updated_at", TIMESTAMP, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 )
@@ -162,12 +162,12 @@ similarity_patent = Table(
     Column("similarity_patent_updated_at", TIMESTAMP, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 )
 
-# 상세 비교 테이블
+# 상세 비교 테이블 - 수정됨
 detailed_comparison = Table(
     "detailed_comparison",
     metadata,
     Column("detailed_comparison_id", Integer, primary_key=True, autoincrement=True),
-    Column("user_patent_topic_id", Integer, ForeignKey("user_patent_topic.user_patent_topic_id"), nullable=False),
+    Column("patent_draft_id", Integer, ForeignKey("patent_draft.patent_draft_id"), nullable=False),
     Column("patent_public_id", Integer, ForeignKey("patent_public.patent_public_id"), nullable=False),
     Column("similarity_patent_id", Integer, ForeignKey("similarity_patent.similarity_patent_id"), nullable=False),
     Column("detailed_comparison_result", Text, nullable=False),
@@ -177,8 +177,7 @@ detailed_comparison = Table(
     Column("detailed_comparison_updated_at", TIMESTAMP, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 )
 
-# 별도 고려 필요.
-# 작업 상태 테이블 (원래 있던 테이블도 유지)
+# 작업 상태 테이블
 task_status = Table(
     "task_status",
     metadata,
