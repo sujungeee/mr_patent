@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKER_COMPOSE_DIR = '/home/ubuntu/mr_patent'
         BACKEND_IMAGE = 'mr_patent-backend'
-        BRANCH_NAME = "${env.BRANCH_NAME}"
+        BRANCH_NAME = "${env.BRANCH_NAME ?: 'unknown'}"
     }
     
     stages {
@@ -61,6 +61,12 @@ pipeline {
                 echo '====== 백엔드 배포 완료 ======'
             }
         }
+        
+        stage('Notification') {
+            steps {
+                echo 'jenkins notification!'
+            }
+        }
     }
     
     post {
@@ -70,9 +76,27 @@ pipeline {
         }
         failure {
             echo '====== 파이프라인 실패 ======'
+            script {
+                def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+                def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+                mattermostSend(color: 'danger',
+                    message: "빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name})\n(<${env.BUILD_URL}|Details>)",
+                    endpoint: 'https://meeting.ssafy.com/hooks/hgafhbr6n7fe7japbi7n5tw36o',
+                    channel: 'Jenkins_Build_Result'
+                )
+            }
         }
         success {
             echo '====== 파이프라인 성공 ======'
+            script {
+                def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+                def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+                mattermostSend(color: 'good',
+                    message: "빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name})\n(<${env.BUILD_URL}|Details>)",
+                    endpoint: 'https://meeting.ssafy.com/hooks/hgafhbr6n7fe7japbi7n5tw36o',
+                    channel: 'Jenkins_Build_Result'
+                )
+            }
         }
     }
 }
