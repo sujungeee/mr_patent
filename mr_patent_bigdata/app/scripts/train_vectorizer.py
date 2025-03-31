@@ -17,12 +17,11 @@ DATABASE_URL = settings.DATABASE_URL
 database = Database(DATABASE_URL)
 
 async def train_vectorizer_from_patents():
-    """기존 특허 데이터를 사용하여 TF-IDF 벡터라이저 학습"""
     await database.connect()
     
     # 특허 데이터 조회
     query = """
-    SELECT patent_title, patent_summary, patent_claim
+    SELECT patent_id, patent_title, patent_summary, patent_claim
     FROM patent
     """
     
@@ -32,24 +31,73 @@ async def train_vectorizer_from_patents():
         print("학습할 특허 데이터가 없습니다.")
         return
     
-    # 특허 텍스트 추출
-    patent_texts = []
+    print(f"총 {len(patents)}개 특허로 벡터라이저 학습 시작...")
+    
+    # 1. 전체 텍스트로 TF-IDF 벡터라이저 학습 (기존 방식 유지)
+    combined_texts = []
     for patent in patents:
         title = patent["patent_title"] or ""
         summary = patent["patent_summary"] or ""
         claim = patent["patent_claim"] or ""
-        
-        # 모든 텍스트 결합 (각 필드별 벡터라이저를 만들 수도 있음)
         combined_text = f"{title} {summary} {claim}"
         if combined_text.strip():
-            patent_texts.append(combined_text)
+            combined_texts.append(combined_text)
     
-    # 벡터라이저 학습 및 저장
-    print(f"총 {len(patent_texts)}개 특허로 벡터라이저 학습 시작...")
-    vectorizer = train_and_save_vectorizer(patent_texts)
+    vectorizer = train_and_save_vectorizer(combined_texts)
     print("벡터라이저 학습 및 저장 완료!")
     
+    # 2. 개별 특허에 대해 필드별 벡터 생성 및 저장
+    for patent in patents:
+        patent_id = patent["patent_id"]
+        title = patent["patent_title"] or ""
+        summary = patent["patent_summary"] or ""
+        claim = patent["patent_claim"] or ""
+        
+        # 각 필드별 벡터 생성
+        title_tfidf = get_tfidf_vector(title)
+        title_kobert = get_kobert_vector(title)
+        summary_tfidf = get_tfidf_vector(summary)
+        summary_kobert = get_kobert_vector(summary)
+        claim_tfidf = get_tfidf_vector(claim)
+        claim_kobert = get_kobert_vector(claim)
+        
+        # 기존 벡터도 유지 (호환성)
+        combined_text = f"{title} {summary} {claim}"
+        tfidf_vector = get_tfidf_vector(combined_text)
+        kobert_vector = get_kobert_vector(combined_text)
+        
+        # 필드별 벡터 업데이트
+        update_query = """
+        UPDATE patent SET
+            patent_title_tfidf_vector = :title_tfidf,
+            patent_title_kobert_vector = :title_kobert,
+            patent_summary_tfidf_vector = :summary_tfidf,
+            patent_summary_kobert_vector = :summary_kobert,
+            patent_claim_tfidf_vector = :claim_tfidf,
+            patent_claim_kobert_vector = :claim_kobert,
+            patent_tfidf_vector = :tfidf_vector,
+            patent_kobert_vector = :kobert_vector
+        WHERE patent_id = :patent_id
+        """
+        
+        await database.execute(
+            query=update_query,
+            values={
+                "title_tfidf": title_tfidf.tobytes(),
+                "title_kobert": title_kobert.tobytes(),
+                "summary_tfidf": summary_tfidf.tobytes(),
+                "summary_kobert": summary_kobert.tobytes(),
+                "claim_tfidf": claim_tfidf.tobytes(),
+                "claim_kobert": claim_kobert.tobytes(),
+                "tfidf_vector": tfidf_vector.tobytes(),
+                "kobert_vector": kobert_vector.tobytes(),
+                "patent_id": patent_id
+            }
+        )
+    
+    print("모든 특허의 필드별 벡터 업데이트 완료!")
     await database.disconnect()
+
 
 if __name__ == "__main__":
     asyncio.run(train_vectorizer_from_patents())

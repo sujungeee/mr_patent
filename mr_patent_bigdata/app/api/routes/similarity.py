@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import json  # JSON 직렬화를 위해 추가
+import re
 
 from app.core.database import database
 from app.services.vectorizer import get_tfidf_vector, get_kobert_vector
@@ -284,7 +285,7 @@ async def perform_fitness_check(patent_draft_id: int):
     return fitness_results
 
 async def perform_similarity_analysis(patent_draft_id: int, similarity_id: int):
-    """특허 초안과 유사한 특허 분석"""
+    """특허 초안과 유사한 특허 분석 - 필드별 벡터 비교 방식으로 개선"""
     # 특허 초안 조회
     draft_query = """
     SELECT * FROM patent_draft 
@@ -315,10 +316,14 @@ async def perform_similarity_analysis(patent_draft_id: int, similarity_id: int):
     now = datetime.now(timezone.utc)
     
     while True:
-        # 특허 배치 조회
+        # 특허 배치 조회 - 필드별 벡터 컬럼 포함
         patents_query = """
         SELECT patent_id, patent_title, patent_summary, patent_claim,
-               patent_application_number, patent_tfidf_vector, patent_kobert_vector
+               patent_application_number, 
+               patent_title_tfidf_vector, patent_title_kobert_vector,
+               patent_summary_tfidf_vector, patent_summary_kobert_vector,
+               patent_claim_tfidf_vector, patent_claim_kobert_vector,
+               patent_tfidf_vector, patent_kobert_vector
         FROM patent
         LIMIT :limit OFFSET :offset
         """
@@ -333,37 +338,46 @@ async def perform_similarity_analysis(patent_draft_id: int, similarity_id: int):
             
         # 각 특허와 유사도 계산
         for patent in patents:
-            # TF-IDF 벡터 변환
-            patent_tfidf_vector = np.frombuffer(patent["patent_tfidf_vector"])
-            # KoBERT 벡터 변환
-            patent_kobert_vector = np.frombuffer(patent["patent_kobert_vector"])
-            
-            # TF-IDF 기반 유사도 계산
-            title_tfidf_similarity = float(cosine_similarity([draft_title_tfidf], [patent_tfidf_vector])[0][0])
-            summary_tfidf_similarity = float(cosine_similarity([draft_summary_tfidf], [patent_tfidf_vector])[0][0])
-            claim_tfidf_similarity = float(cosine_similarity([draft_claim_tfidf], [patent_tfidf_vector])[0][0])
-            
-            # KoBERT 기반 유사도 계산
-            title_kobert_similarity = float(cosine_similarity([draft_title_kobert], [patent_kobert_vector])[0][0])
-            summary_kobert_similarity = float(cosine_similarity([draft_summary_kobert], [patent_kobert_vector])[0][0])
-            claim_kobert_similarity = float(cosine_similarity([draft_claim_kobert], [patent_kobert_vector])[0][0])
-            
-            # 가중치 적용 (TF-IDF 50%, KoBERT 50%)
-            title_similarity = 0.5 * title_tfidf_similarity + 0.5 * title_kobert_similarity
-            summary_similarity = 0.5 * summary_tfidf_similarity + 0.5 * summary_kobert_similarity
-            claim_similarity = 0.5 * claim_tfidf_similarity + 0.5 * claim_kobert_similarity
-            
-            # 필드별 가중치 적용한 전체 유사도
-            overall_similarity = (0.3 * title_similarity + 0.3 * summary_similarity + 0.4 * claim_similarity)
-            
-            top_similar_patents.append({
-                "patent_id": patent["patent_id"],
-                "patent_application_number": patent["patent_application_number"],
-                "title_similarity": title_similarity,
-                "summary_similarity": summary_similarity,
-                "claim_similarity": claim_similarity,
-                "overall_similarity": overall_similarity
-            })
+            try:
+                # 필드별 벡터 추출 (없을 경우 통합 벡터로 대체)
+                patent_title_tfidf = np.frombuffer(patent["patent_title_tfidf_vector"]) if patent["patent_title_tfidf_vector"] else np.frombuffer(patent["patent_tfidf_vector"])
+                patent_title_kobert = np.frombuffer(patent["patent_title_kobert_vector"]) if patent["patent_title_kobert_vector"] else np.frombuffer(patent["patent_kobert_vector"])
+                
+                patent_summary_tfidf = np.frombuffer(patent["patent_summary_tfidf_vector"]) if patent["patent_summary_tfidf_vector"] else np.frombuffer(patent["patent_tfidf_vector"])
+                patent_summary_kobert = np.frombuffer(patent["patent_summary_kobert_vector"]) if patent["patent_summary_kobert_vector"] else np.frombuffer(patent["patent_kobert_vector"])
+                
+                patent_claim_tfidf = np.frombuffer(patent["patent_claim_tfidf_vector"]) if patent["patent_claim_tfidf_vector"] else np.frombuffer(patent["patent_tfidf_vector"])
+                patent_claim_kobert = np.frombuffer(patent["patent_claim_kobert_vector"]) if patent["patent_claim_kobert_vector"] else np.frombuffer(patent["patent_kobert_vector"])
+                
+                # 필드별 유사도 계산 - 같은 필드끼리 비교
+                title_tfidf_similarity = float(cosine_similarity([draft_title_tfidf], [patent_title_tfidf])[0][0])
+                summary_tfidf_similarity = float(cosine_similarity([draft_summary_tfidf], [patent_summary_tfidf])[0][0])
+                claim_tfidf_similarity = float(cosine_similarity([draft_claim_tfidf], [patent_claim_tfidf])[0][0])
+                
+                title_kobert_similarity = float(cosine_similarity([draft_title_kobert], [patent_title_kobert])[0][0])
+                summary_kobert_similarity = float(cosine_similarity([draft_summary_kobert], [patent_summary_kobert])[0][0])
+                claim_kobert_similarity = float(cosine_similarity([draft_claim_kobert], [patent_claim_kobert])[0][0])
+                
+                # 가중치 적용 (TF-IDF 30%, KoBERT 70%) - KoBERT에 더 높은 가중치
+                title_similarity = 0.3 * title_tfidf_similarity + 0.7 * title_kobert_similarity
+                summary_similarity = 0.3 * summary_tfidf_similarity + 0.7 * summary_kobert_similarity
+                claim_similarity = 0.3 * claim_tfidf_similarity + 0.7 * claim_kobert_similarity
+                
+                # 필드별 가중치 적용한 전체 유사도
+                overall_similarity = (0.3 * title_similarity + 0.3 * summary_similarity + 0.4 * claim_similarity)
+                
+                top_similar_patents.append({
+                    "patent_id": patent["patent_id"],
+                    "patent_application_number": patent["patent_application_number"],
+                    "title_similarity": title_similarity,
+                    "summary_similarity": summary_similarity,
+                    "claim_similarity": claim_similarity,
+                    "overall_similarity": overall_similarity
+                })
+            except Exception as e:
+                print(f"특허 {patent['patent_id']} 유사도 계산 중 오류: {str(e)}")
+                # 오류 발생 시 다음 특허로 넘어감
+                continue
         
         offset += limit
     
@@ -599,10 +613,11 @@ def check_title_fitness(title: str) -> Dict[str, Any]:
     return {"pass": True, "message": "적합한 제목입니다."}
 
 def check_field_fitness(text: str, field_type: str) -> Dict[str, Any]:
-    """필드 적합도 검사"""
+    """필드 적합도 검사 - KoBERT를 활용한 문맥 평가 추가"""
     if not text:
         return {"pass": False, "message": f"{field_type} 내용이 비어있습니다."}
     
+    # 1. 기본 길이 검사
     min_length = {
         "technical_field": 10,
         "background": 10,
@@ -615,4 +630,57 @@ def check_field_fitness(text: str, field_type: str) -> Dict[str, Any]:
     if len(text) < min_length:
         return {"pass": False, "message": f"{field_type} 내용이 너무 짧습니다."}
     
+    # 2. 반복 패턴 검사
+    if detect_repetitive_patterns(text):
+        return {"pass": False, "message": f"{field_type} 내용에 의미 없는 반복 패턴이 있습니다."}
+    
+    # 3. 문맥 적합도 검사 (KoBERT 활용)
+    context_score = check_context_fitness(text, field_type)
+    if context_score < 0.3:  # 임계값 설정
+        return {"pass": False, "message": f"{field_type} 내용이 특허 문서에 적합하지 않습니다."}
+    
     return {"pass": True, "message": f"적합한 {field_type} 내용입니다."}
+
+def detect_repetitive_patterns(text: str) -> bool:
+    """반복적인 패턴 감지"""
+    # 동일 단어/문구가 3번 이상 연속 반복되는지 확인
+    words = text.split()
+    if len(words) >= 3:
+        for i in range(len(words) - 2):
+            if words[i] == words[i+1] == words[i+2]:
+                return True
+    
+    # 문자열 내 반복 패턴 감지 (예: 'stringstring')
+    pattern = r'(\w+)\1{2,}'  # 동일 패턴이 3번 이상 반복
+    if re.search(pattern, text):
+        return True
+    
+    return False
+
+def check_context_fitness(text: str, field_type: str) -> float:
+    """KoBERT 벡터를 활용한 문맥 적합도 검사"""
+    try:
+        # 텍스트의 KoBERT 벡터 추출
+        vector = get_kobert_vector(text)
+        
+        # 특허 필드별 예상 패턴 벡터 (실제로는 미리 계산된 벡터가 필요)
+        # 이 예시에서는 간단히 몇 가지 키워드로 적합한 벡터 생성
+        field_examples = {
+            "technical_field": "본 발명은 기술 분야에 관한 것으로, 특히 기술의 응용과 관련된다",
+            "background": "종래 기술에서는 다음과 같은 문제점이 있었다",
+            "problem": "본 발명이 해결하고자 하는 과제는",
+            "solution": "상기 과제를 해결하기 위한 본 발명의 구성은",
+            "effect": "본 발명에 따르면 다음과 같은 효과가 있다",
+            "claim": "청구항 1. 다음을 포함하는 장치:"
+        }
+        
+        example_text = field_examples.get(field_type, "특허 문서 텍스트")
+        example_vector = get_kobert_vector(example_text)
+        
+        # 코사인 유사도 계산
+        similarity = float(cosine_similarity([vector], [example_vector])[0][0])
+        return similarity
+        
+    except Exception as e:
+        print(f"문맥 적합도 검사 중 오류: {str(e)}")
+        return 0.0  # 오류 시 0점점 반환

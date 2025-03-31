@@ -22,9 +22,9 @@ DATA_DIR = "temp_data"
 os.makedirs(DATA_DIR, exist_ok=True)
 
 # EC2 서버 최적화 설정 (4코어 Xeon)
-# SERVER_PROCESSES = 3  # 시스템용으로 1코어 남김
+# SERVER_PROCESSES = 2  # 시스템용으로 1코어 +1 남김
 # SERVER_BATCH_SIZE = 3000  # 메모리 고려 배치 크기
-SERVER_PROCESSES = min(6, mp.cpu_count() - 1)  # 로컬 PC 테스트용
+SERVER_PROCESSES = min(6, mp.cpu_count() - 2)  # 로컬 PC 테스트용 +1
 SERVER_BATCH_SIZE = 5000  # 로컬 PC 테스트용 (메모리가 충분한 경우)
 
 
