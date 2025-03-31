@@ -57,7 +57,7 @@ pipeline {
                 color: 'good',
                 message: "빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${env.GIT_AUTHOR}(${env.GIT_EMAIL})\n(<${env.BUILD_URL}|Details>)",
                 endpoint: 'https://meeting.ssafy.com/hooks/hgafhbr6n7fe7japbi7n5tw36o',
-                channel: 'Jenkins_Build_Result'
+                channel: 'D208-GitLab-Build'
             )
         }
         failure {
@@ -66,7 +66,7 @@ pipeline {
                 color: 'danger',
                 message: "빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${env.GIT_AUTHOR}(${env.GIT_EMAIL})\n(<${env.BUILD_URL}|Details>)",
                 endpoint: 'https://meeting.ssafy.com/hooks/hgafhbr6n7fe7japbi7n5tw36o',
-                channel: 'Jenkins_Build_Result'
+                channel: 'D208-GitLab-Build'
             )
         }
         always {
