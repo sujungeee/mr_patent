@@ -91,9 +91,26 @@
         android:label="fragment_chat"
         tools:layout="@layout/fragment_chat">
         <argument
-            android:name="id"
+            android:name="user_id"
             android:defaultValue="-1"
             app:argType="integer" />
+        <argument
+            android:name="expert_id"
+            android:defaultValue="-1"
+            app:argType="integer" />
+        <argument
+            android:name="room_id"
+            android:defaultValue="-1"
+            app:argType="string" />
+        <argument
+            android:name="user_name"
+            android:defaultValue="-1"
+            app:argType="string" />
+
+        <argument
+            android:name="user_image"
+            android:defaultValue="-1"
+            app:argType="string" />
     </fragment>
     <fragment
         android:id="@+id/patentAttorneyListFragment"

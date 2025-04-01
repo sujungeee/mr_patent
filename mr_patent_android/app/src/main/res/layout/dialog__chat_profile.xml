@@ -4,7 +4,7 @@
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
-    android:padding="16dp"
+    android:padding="40dp"
     android:background="@drawable/rounded_background"
     android:gravity="center_horizontal">
 
@@ -40,6 +40,7 @@
         android:layout_height="wrap_content">
 
         <TextView
+            android:visibility="gone"
             android:id="@+id/tv_field_chemi"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -51,6 +52,7 @@
             android:background="@drawable/outlined_button"/>
 
         <TextView
+            android:visibility="gone"
             android:id="@+id/tv_field_mecha"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -61,6 +63,7 @@
             android:textColor="@color/mr_blue"
             android:background="@drawable/outlined_button"/>
         <TextView
+            android:visibility="gone"
             android:id="@+id/tv_field_life"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -71,6 +74,7 @@
             android:textColor="@color/mr_blue"
             android:background="@drawable/outlined_button"/>
         <TextView
+            android:visibility="gone"
             android:id="@+id/tv_field_elec"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

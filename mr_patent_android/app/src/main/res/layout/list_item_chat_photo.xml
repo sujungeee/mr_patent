@@ -38,15 +38,25 @@
             android:text="10:20"/>
         </LinearLayout>
         <!-- 사용자 메시지 -->
-        <androidx.recyclerview.widget.RecyclerView
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:background="@drawable/rounded_background"
             android:backgroundTint="@color/white"
-            android:id="@+id/rv_user_message_photo"
-            app:spanCount="2"
-            android:padding="10dp"
-            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-            android:layout_width="200dp"
-            android:layout_height="wrap_content"/>
+            android:padding="10dp">
+        <ImageView
+            android:id="@+id/iv_user_message_photo"
+            android:layout_width="150dp"
+            android:layout_height="match_parent"
+            android:maxWidth="200dp"
+            android:scaleType="fitCenter"
+            android:background="@drawable/rounded_background"
+            android:backgroundTint="@color/white"
+            android:src="@drawable/user_profile"/>
+
+        </LinearLayout>
+
     </LinearLayout>
 
     <!-- 상대방 메시지 레이아웃 (왼쪽 정렬) -->
@@ -69,7 +79,7 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:src="@drawable/user_profile"
-            android:background="@drawable/circle_shape"
+            android:background="@drawable/user_profile"
             android:backgroundTint="@color/mr_white"
             android:layout_gravity="center_vertical"/>
 
@@ -94,15 +104,22 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
 
-            <androidx.recyclerview.widget.RecyclerView
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:background="@drawable/rounded_background"
                 android:backgroundTint="@color/mr_blue"
-                android:id="@+id/rv_other_message_photo"
-                app:spanCount="2"
-                android:padding="10dp"
-                app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-                android:layout_width="200dp"
-                android:layout_height="wrap_content"/>
+                android:padding="10dp">
+                <ImageView
+                    android:id="@+id/iv_other_message_photo"
+                    android:layout_width="150dp"
+                    android:layout_height="match_parent"
+                    android:maxWidth="200dp"
+                    android:scaleType="fitCenter"
+                    android:background="@color/white"
+                    android:src="@drawable/user_profile"/>
+
+            </LinearLayout>
 
             <!-- 상대방 메시지 시간 -->
             <TextView
