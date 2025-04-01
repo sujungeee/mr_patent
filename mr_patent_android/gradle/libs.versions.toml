@@ -13,6 +13,7 @@ viewbinding = "8.8.0"
 navigationFragment = "2.8.9"
 places = "4.2.0"
 kotlinStdlib = "2.1.10"
+firebaseMessagingKtx = "24.1.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -27,6 +28,7 @@ androidx-viewbinding = { group = "androidx.databinding", name = "viewbinding", v
 androidx-navigation-fragment = { group = "androidx.navigation", name = "navigation-fragment", version.ref = "navigationFragment" }
 places = { group = "com.google.android.libraries.places", name = "places", version.ref = "places" }
 kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlinStdlib" }
+firebase-messaging-ktx = { group = "com.google.firebase", name = "firebase-messaging-ktx", version.ref = "firebaseMessagingKtx" }
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

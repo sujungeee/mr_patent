@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     id ("kotlin-kapt")
     id("androidx.navigation.safeargs.kotlin")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -51,6 +52,7 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.places)
+    implementation(libs.firebase.messaging.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -91,5 +93,15 @@ dependencies {
     implementation ("com.github.bumptech.glide:glide:4.16.0")
 
     //STOMP
-    implementation("com.github.NaikSoftware:StompProtocolAndroid:2.0.5")
+    implementation("com.github.NaikSoftware:StompProtocolAndroid:1.6.6")
+
+    //RxJava
+    implementation ("io.reactivex.rxjava2:rxjava:2.2.5")
+    implementation ("io.reactivex.rxjava2:rxandroid:2.1.0")
+
+    //Firebase
+    implementation("com.google.firebase:firebase-bom:33.11.0")
+
+    //sse
+    implementation("com.launchdarkly:okhttp-eventsource:4.1.0")
 }
