@@ -59,7 +59,7 @@ pipeline {
                     docker-compose stop backend || true
                     docker-compose rm -f backend || true
                     docker-compose build --no-cache backend
-                    docker-compose up -d --build backend
+                    docker-compose up -d --no-deps backend
                     docker image prune -f || true
                 '''
                 
