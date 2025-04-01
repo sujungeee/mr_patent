@@ -49,19 +49,43 @@ def load_extracted_data(filename: str = "extracted_patents.pkl") -> List[Dict[st
 
 def process_patent_batch(batch, start_idx):
     """특허 데이터 배치 처리 함수 (병렬 처리용)"""
+    # 각 워커 프로세스에서 벡터라이저 명시적 로드
+    import pickle
+    from app.services.vectorizer import load_vectorizer
+    
+    # 벡터라이저 명시적 로드
+    try:
+        vectorizer = load_vectorizer()
+    except Exception as e:
+        print(f"벡터라이저 로드 중 오류: {str(e)}")
+    
     results = []
     for i, patent_data in enumerate(batch):
-        # 벡터 생성
-        tfidf_vector, kobert_vector = generate_vectors(patent_data)
-        
-        # 결과 저장
-        results.append({
-            'index': start_idx + i,
-            'patent_data': patent_data,
-            'tfidf_vector': tfidf_vector,
-            'kobert_vector': kobert_vector
-        })
+        try:
+            # 벡터 생성
+            tfidf_vector, kobert_vector = generate_vectors(patent_data)
+            
+            # 결과 저장
+            results.append({
+                'index': start_idx + i,
+                'patent_data': patent_data,
+                'tfidf_vector': tfidf_vector,
+                'kobert_vector': kobert_vector
+            })
+        except Exception as e:
+            print(f"특허 {i} 처리 중 오류: {str(e)}")
+            # 오류 발생 시 영벡터 사용
+            import numpy as np
+            tfidf_vector = np.zeros(1000)
+            kobert_vector = np.zeros(768)
+            results.append({
+                'index': start_idx + i,
+                'patent_data': patent_data,
+                'tfidf_vector': tfidf_vector,
+                'kobert_vector': kobert_vector
+            })
     return results
+
 
 def parallel_process_patents(all_patents, batch_size=None, num_processes=None):
     """병렬 처리로 특허 데이터 벡터화"""
