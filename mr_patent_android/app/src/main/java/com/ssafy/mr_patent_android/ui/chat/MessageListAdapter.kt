@@ -1,15 +1,15 @@
 package com.ssafy.mr_patent_android.ui.chat
 
-import android.content.Context
-import android.os.Build
-import android.renderscript.ScriptGroup.Binding
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.ssafy.mr_patent_android.R
 import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.sharedPreferences
 import com.ssafy.mr_patent_android.data.model.dto.ChatMessageDto
+import com.ssafy.mr_patent_android.data.model.dto.UserDto
 import com.ssafy.mr_patent_android.databinding.ListItemChatDividerBinding
 import com.ssafy.mr_patent_android.databinding.ListItemChatFileBinding
 import com.ssafy.mr_patent_android.databinding.ListItemChatMessageBinding
@@ -17,14 +17,14 @@ import com.ssafy.mr_patent_android.databinding.ListItemChatPhotoBinding
 import java.text.SimpleDateFormat
 
 
-class MessageListAdapter(val messageList: List<ChatMessageDto>, val itemClickListener:ItemClickListener) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+private const val TAG = "MessageListAdapter"
+open class MessageListAdapter(var user:UserDto,var messageList: List<ChatMessageDto>, val itemClickListener:ItemClickListener) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        var binding: Any
-
-
+        Log.d(TAG, "onCreateViewHolder: ")
         if (viewType == MESSAGE_CONTENT) {
-            binding = ListItemChatMessageBinding.inflate(
+
+            val binding = ListItemChatMessageBinding.inflate(
                 LayoutInflater.from(parent.context),
                 parent,
                 false
@@ -32,7 +32,7 @@ class MessageListAdapter(val messageList: List<ChatMessageDto>, val itemClickLis
             return MessageViewHolder(binding)
         }
         else if (viewType == FILE_CONTENT) {
-            binding = ListItemChatFileBinding.inflate(
+            val binding = ListItemChatFileBinding.inflate(
                 LayoutInflater.from(parent.context),
                 parent,
                 false
@@ -40,7 +40,7 @@ class MessageListAdapter(val messageList: List<ChatMessageDto>, val itemClickLis
             return FileViewHolder(binding)
         }
         else if (viewType == PHOTO_CONTENT) {
-            binding = ListItemChatPhotoBinding.inflate(
+            val binding = ListItemChatPhotoBinding.inflate(
                 LayoutInflater.from(parent.context),
                 parent,
                 false
@@ -48,7 +48,7 @@ class MessageListAdapter(val messageList: List<ChatMessageDto>, val itemClickLis
             return PhotoViewHolder(binding)
         }
         else {
-            binding = ListItemChatDividerBinding.inflate(
+            val binding = ListItemChatDividerBinding.inflate(
                 LayoutInflater.from(parent.context),
                 parent,
                 false
@@ -58,6 +58,7 @@ class MessageListAdapter(val messageList: List<ChatMessageDto>, val itemClickLis
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        Log.d(TAG, "onBindViewHolder: ")
         when(holder){
             is MessageViewHolder -> holder.bind(position)
             is FileViewHolder -> holder.bind(position)
@@ -69,17 +70,19 @@ class MessageListAdapter(val messageList: List<ChatMessageDto>, val itemClickLis
     override fun getItemCount(): Int = messageList.size
 
     override fun getItemViewType(position: Int): Int {
-        return when {
-            messageList[position].messageType == "TEXT" -> MESSAGE_CONTENT
-            messageList[position].messageType == "PDF" || messageList[position].messageType=="DOC" -> FILE_CONTENT
-            messageList[position].messageType == "IMAGE" -> PHOTO_CONTENT
+        Log.d(TAG, "getItemViewType: ${messageList[position].messageType}")
+        return when (messageList[position].messageType) {
+            "TEXT" -> MESSAGE_CONTENT
+            "PDF", "DOC" -> FILE_CONTENT
+            "IMAGE" -> PHOTO_CONTENT
             else -> DIVIDER
         }
     }
 
     interface ItemClickListener {
-        fun onItemClick(id: Int)
-        fun onPhotoClick(id: Int)
+        fun onItemClick()
+        fun onFileClick(url: String)
+        fun onPhotoClick(url: String)
     }
 
     inner class MessageViewHolder(private val binding: ListItemChatMessageBinding) : RecyclerView.ViewHolder(binding.root) {
@@ -94,6 +97,13 @@ class MessageListAdapter(val messageList: List<ChatMessageDto>, val itemClickLis
                     binding.llUserMessageText.visibility = View.GONE
                     binding.tvOtherMessageText.text = it.message
                     binding.tvOtherMessageTime.text = it.timestamp
+                    binding.profileImageOtherText.setOnClickListener {
+                        itemClickListener.onItemClick()
+                    }
+                    binding.otherNameText.text = user.userName
+                    Glide.with(binding.root)
+                        .load(user.userImage)
+                        .into(binding.profileImageOtherText)
                 }
             }
 
@@ -104,10 +114,21 @@ class MessageListAdapter(val messageList: List<ChatMessageDto>, val itemClickLis
         fun bind(position: Int) {
             if (messageList[position].userId == sharedPreferences.getUser().userId) {
                 binding.llOtherMessageFile.visibility = View.GONE
-                binding.icUserMessageFile.tvFileName.text = messageList[position].files[0].fileName
+                binding.tvUserMessageTimeFile.text = messageList[position].timestamp
+                binding.icUserMessageFile.tvFileName.text = messageList[position].fileName
             } else {
                 binding.llUserMessageFile.visibility = View.GONE
-                binding.icOtherMessageFile.tvFileName.text = messageList[position].files[0].fileName
+                binding.tvOtherMessageTimePhoto.text = messageList[position].timestamp
+                binding.icOtherMessageFile.tvFileName.text = messageList[position].fileName
+                binding.profileImageOther.setOnClickListener {
+                    itemClickListener.onItemClick()
+                }
+                binding.otherName.text = user.userName
+                Glide.with(binding.root)
+                    .load(user.userImage)
+                    .fallback(R.drawable.user_profile)
+                    .error(R.drawable.image_load_error_icon)
+                    .into(binding.profileImageOther)
             }
         }
     }
@@ -116,15 +137,34 @@ class MessageListAdapter(val messageList: List<ChatMessageDto>, val itemClickLis
         fun bind(position: Int) {
             if (messageList[position].userId == sharedPreferences.getUser().userId) {
                 binding.llOtherMessagePhoto.visibility = View.GONE
-                binding.rvUserMessagePhoto.adapter = PhotoAdapter(messageList[position].files){
-                    itemClickListener.onPhotoClick(it)
+                binding.tvUserMessageTimePhoto.text = messageList[position].timestamp
+                Glide.with(binding.root)
+                    .load(messageList[position].fileUrl)
+                    .error(R.drawable.image_load_error_icon)
+                    .into(binding.ivUserMessagePhoto)
+
+                binding.ivUserMessagePhoto.setOnClickListener {
+                    messageList[position].fileUrl?.let { it1 -> itemClickListener.onPhotoClick(it1) }
                 }
             } else {
                 binding.llUserMessagePhoto.visibility = View.GONE
-                binding.llOtherMessagePhoto.visibility = View.GONE
-                binding.rvUserMessagePhoto.adapter = PhotoAdapter(messageList[position].files){
-                    itemClickListener.onPhotoClick(it)
+                binding.tvOtherMessageTimePhoto.text = messageList[position].timestamp
+                Glide.with(binding.root)
+                    .load(messageList[position].fileUrl)
+                    .error(R.drawable.image_load_error_icon)
+                    .into(binding.ivOtherMessagePhoto)
+                binding.ivOtherMessagePhoto.setOnClickListener {
+                    messageList[position].fileUrl?.let { it1 -> itemClickListener.onPhotoClick(it1) }
                 }
+                binding.profileImageOther.setOnClickListener {
+                    itemClickListener.onItemClick()
+                }
+                binding.otherName.text = user.userName
+                Glide.with(binding.root)
+                    .load(user.userImage)
+                    .fallback(R.drawable.user_profile)
+                    .error(R.drawable.image_load_error_icon)
+                    .into(binding.profileImageOther)
             }
 
         }
@@ -144,5 +184,10 @@ class MessageListAdapter(val messageList: List<ChatMessageDto>, val itemClickLis
         const val FILE_CONTENT = 1
         const val PHOTO_CONTENT = 2
         const val DIVIDER = 3
+    }
+
+    fun updateMessages(newMessages: List<ChatMessageDto>) {
+        messageList = newMessages
+        notifyDataSetChanged() // 변경 감지하여 RecyclerView 갱신
     }
 }
