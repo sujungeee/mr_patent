@@ -1,5 +1,6 @@
 package com.d208.mr_patent_backend.global;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -29,13 +30,12 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .sessionManagement((session) -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                );
+                )
 
-        http
                 .authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers("**").permitAll()
-//                        .requestMatchers("/swagger-ui/**").permitAll()
-//                        .requestMatchers("/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/**").permitAll()
+                        .requestMatchers("/swagger-ui/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**").permitAll()
 //                        .requestMatchers("/api/user").permitAll()
 //                        .requestMatchers("/api/user/expert").permitAll()
 //                        .requestMatchers("/api/user/login").permitAll()

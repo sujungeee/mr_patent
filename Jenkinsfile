@@ -58,7 +58,7 @@ pipeline {
                     cd ${DOCKER_COMPOSE_DIR} && 
                     docker-compose stop backend || true
                     docker-compose rm -f backend || true
-                    docker-compose build backend || true
+                    docker-compose build --no-cache backend || true
                     docker-compose up -d backend || true
                     docker image prune -f || true
                 '''

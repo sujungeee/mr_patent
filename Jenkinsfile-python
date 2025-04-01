@@ -35,7 +35,7 @@ pipeline {
                     cd ${DOCKER_COMPOSE_DIR} && 
                     docker-compose stop fastapi || true
                     docker-compose rm -f fastapi || true
-                    docker-compose build fastapi || true
+                    docker-compose build --no-cache fastapi || true
                     docker-compose up -d fastapi || true
                     docker image prune -f || true
                 '''
