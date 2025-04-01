@@ -62,9 +62,10 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintWidth_percent="0.9"
-        app:layout_constraintVertical_bias="0.2">
+        app:layout_constraintVertical_bias="0.18">
 
         <Button
+            android:id="@+id/btn_report_confirm"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="리포트 확인하기"
@@ -77,6 +78,7 @@
             app:layout_constraintBottom_toBottomOf="parent"/>
 
         <Button
+            android:id="@+id/btn_file_extraction"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="파일 추출하기"

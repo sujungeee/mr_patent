@@ -39,19 +39,19 @@ class JoinFinishFragment : BaseFragment<FragmentJoinFinishBinding>(
         if (joinViewModel.userRole.value == 0) {
             binding.tvJoinFinish.text = "가입 완료!"
             binding.tvJoinFinishExp.text = joinViewModel.userName.value + "님, 환영해요 😊"
-            joinViewModel.setUserRole(-1)
+            joinViewModel.reset()
         } else if (joinViewModel.userRole.value == 1) {
             binding.tvJoinFinish.text = "가입 신청 완료!"
             binding.tvJoinFinishExp.text = "관리자의 승인까지 최대 7일이 소요됩니다 😊"
-            joinViewModel.setUserRole(-1)
+            joinViewModel.reset()
         }
 
         binding.btnConfirm.setOnClickListener {
-            findNavController().navigate(R.id.nav_loginFragment)
+            findNavController().popBackStack(R.id.nav_loginFragment, false)
         }
 
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
-            findNavController().navigate(R.id.nav_loginFragment)
+            findNavController().popBackStack(R.id.nav_loginFragment, false)
         }
     }
 

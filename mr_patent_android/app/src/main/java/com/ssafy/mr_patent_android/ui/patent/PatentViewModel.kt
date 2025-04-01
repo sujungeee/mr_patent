@@ -38,8 +38,21 @@ class PatentViewModel : ViewModel() {
     val folderId: LiveData<Int>
         get() = _folderId
 
+    private val _editFlag = MutableLiveData<Boolean>()
+    val editFlag: LiveData<Boolean>
+        get() = _editFlag
+
+    private val _deleteFlag = MutableLiveData<Boolean>()
+    val deleteFlag: LiveData<Boolean>
+        get() = _deleteFlag
+
     fun setDraftType(draftType: String) {
         _draftType.value = draftType
+    }
+
+    // TODO: delete
+    fun setFolders(folders: MutableList<FolderDto.Folder>) {
+        _folders.value = folders
     }
 
     fun setPatentDraftId(patentId: Int) {
@@ -48,6 +61,14 @@ class PatentViewModel : ViewModel() {
 
     fun setFolderId(folderId: Int) {
         _folderId.value = folderId
+    }
+
+    fun setEditFlag(editFlag: Boolean) {
+        _editFlag.value = editFlag
+    }
+
+    fun setDeleteFlag(deleteFlag: Boolean) {
+        _deleteFlag.value = deleteFlag
     }
 
     fun getFolderList() {
@@ -111,6 +132,30 @@ class PatentViewModel : ViewModel() {
                         }
                     }
                 }
+            }.onFailure {
+
+            }
+        }
+    }
+
+    fun editFolder(folderId: Int, folderName: String) {
+        viewModelScope.launch {
+            runCatching {
+//                patentService.editFolder(folderId, folderName)
+            }.onSuccess {
+
+            }.onFailure {
+
+            }
+        }
+    }
+
+    fun deleteFolder(folderId: Int) {
+        viewModelScope.launch {
+            runCatching {
+//                patentService.deleteFolder(folderId)
+            }.onSuccess {
+
             }.onFailure {
 
             }

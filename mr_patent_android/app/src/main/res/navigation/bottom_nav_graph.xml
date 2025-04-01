@@ -27,11 +27,6 @@
             app:destination="@id/levelFragment" />
     </fragment>
     <fragment
-        android:id="@+id/nav_fragment_patent"
-        android:name="com.ssafy.mr_patent_android.ui.patent.PatentFragment"
-        android:label="fragment_patent"
-        tools:layout="@layout/fragment_patent" />
-    <fragment
         android:id="@+id/nav_fragment_chat"
         android:name="com.ssafy.mr_patent_android.ui.chat.ChatListFragment"
         android:label="fragment_chat_list"
@@ -44,7 +39,17 @@
         android:id="@+id/nav_fragment_mypage"
         android:name="com.ssafy.mr_patent_android.ui.mypage.MyPageFragment"
         android:label="fragment_my_page"
-        tools:layout="@layout/fragment_my_page" />
+        tools:layout="@layout/fragment_my_page" >
+        <action
+            android:id="@+id/action_nav_fragment_mypage_to_userDeleteFragment"
+            app:destination="@id/userDeleteFragment" />
+        <action
+            android:id="@+id/action_nav_fragment_mypage_to_pwdEditFragment"
+            app:destination="@id/pwdEditFragment" />
+        <action
+            android:id="@+id/action_nav_fragment_mypage_to_patentFolderFragment"
+            app:destination="@id/patentFolderFragment" />
+    </fragment>
     <fragment
         android:id="@+id/levelFragment"
         android:name="com.ssafy.mr_patent_android.ui.study.LevelFragment"
@@ -145,15 +150,15 @@
         tools:layout="@layout/fragment_profile_edit">
         <action
             android:id="@+id/action_profileEditFragment_to_addressChangeFragment"
-            app:destination="@id/passwordEditFragment" />
+            app:destination="@id/pwdEditFragment" />
     </fragment>
     <fragment
-        android:id="@+id/passwordEditFragment"
-        android:name="com.ssafy.mr_patent_android.ui.mypage.PasswordEditFragment"
-        android:label="fragment_password_edit"
-        tools:layout="@layout/fragment_password_edit" />
+        android:id="@+id/pwdEditFragment"
+        android:name="com.ssafy.mr_patent_android.ui.mypage.PwdEditFragment"
+        android:label="fragment_pwd_edit"
+        tools:layout="@layout/fragment_pwd_edit" />
     <fragment
-        android:id="@+id/patentFragment"
+        android:id="@+id/nav_fragment_patent"
         android:name="com.ssafy.mr_patent_android.ui.patent.PatentFragment"
         android:label="fragment_patent"
         tools:layout="@layout/fragment_patent">
@@ -171,7 +176,7 @@
             app:destination="@id/patentContentFragment" />
         <action
             android:id="@+id/action_patentFolderChoiceFragment_to_patentFragment"
-            app:destination="@id/patentFragment" />
+            app:destination="@id/nav_fragment_patent" />
         <action
             android:id="@+id/action_patentFolderChoiceFragment_to_fileUploadFragment"
             app:destination="@id/fileUploadFragment" />
@@ -196,6 +201,9 @@
         <argument
             android:name="id"
             app:argType="integer" />
+        <argument
+            android:name="mode"
+            app:argType="string" />
         <action
             android:id="@+id/action_patentContentFragment_to_similiarityTestFragment"
             app:destination="@id/similiarityTestFragment" />
@@ -205,10 +213,44 @@
         <action
             android:id="@+id/action_patentContentFragment_to_fileUploadFragment"
             app:destination="@id/fileUploadFragment" />
+        <action
+            android:id="@+id/action_patentContentFragment_to_reportResultFragment"
+            app:destination="@id/reportResultFragment" />
+        <action
+            android:id="@+id/action_patentContentFragment_to_patentAttorneyListFragment"
+            app:destination="@id/patentAttorneyListFragment" />
     </fragment>
     <fragment
         android:id="@+id/similiarityTestFragment"
         android:name="com.ssafy.mr_patent_android.ui.patent.SimiliarityTestFragment"
         android:label="fragment_similiarity_test"
         tools:layout="@layout/fragment_similiarity_test" />
+    <fragment
+        android:id="@+id/userDeleteFragment"
+        android:name="com.ssafy.mr_patent_android.ui.mypage.UserDeleteFragment"
+        android:label="fragment_user_delete"
+        tools:layout="@layout/fragment_user_delete" />
+    <fragment
+        android:id="@+id/patentFolderFragment"
+        android:name="com.ssafy.mr_patent_android.ui.mypage.PatentFolderFragment"
+        android:label="fragment_patent_folder"
+        tools:layout="@layout/fragment_patent_folder" >
+        <action
+            android:id="@+id/action_patentFolderFragment_to_patentFolderDetailFragment"
+            app:destination="@id/patentFolderDetailFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/patentFolderDetailFragment"
+        android:name="com.ssafy.mr_patent_android.ui.mypage.PatentFolderDetailFragment"
+        android:label="fragment_patent_folder_detail"
+        tools:layout="@layout/fragment_patent_folder_detail" >
+        <action
+            android:id="@+id/action_patentFolderDetailFragment_to_patentContentFragment"
+            app:destination="@id/patentContentFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/reportResultFragment"
+        android:name="com.ssafy.mr_patent_android.ui.mypage.ReportResultFragment"
+        android:label="fragment_report_result"
+        tools:layout="@layout/fragment_report_result" />
 </navigation>

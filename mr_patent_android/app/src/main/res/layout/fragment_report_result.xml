@@ -4,6 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/fragment_report_result"
     tools:context=".ui.mypage.ReportResultFragment">
 
     <androidx.constraintlayout.widget.Guideline
@@ -52,7 +53,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tv_spec_report"
-        app:layout_constraintWidth_percent="0.86"
+        app:layout_constraintWidth_percent="0.9"
         app:layout_constraintVertical_bias="0.05">
 
         <TextView
@@ -67,7 +68,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintHorizontal_bias="0.05"/>
+            app:layout_constraintHorizontal_bias="0.04"/>
 
         <TextView
             android:id="@+id/tv_fitness_result"
@@ -90,65 +91,63 @@
         android:layout_height="0dp"
         android:padding="12dp"
         android:background="@drawable/rounded_background"
-        app:layout_constraintBottom_toTopOf="@+id/h1_guideline"
+        app:layout_constraintBottom_toTopOf="@+id/btn_confirm"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/cl_fitness_result"
-        app:layout_constraintWidth_percent="0.86"
-        app:layout_constraintHeight_percent="0.52">
+        app:layout_constraintWidth_percent="0.9"
+        app:layout_constraintHeight_percent="0.6">
 
         <TextView
-            android:id="@+id/tv_similiarity_fitness"
+            android:id="@+id/tv_patent_similiarity"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="@font/pretendard_semibold"
-            android:text="유사도 결과"
+            android:text="유사 특허"
             android:textColor="@color/black"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.05"
+            app:layout_constraintHorizontal_bias="0.04"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:id="@+id/tv_similiarity_percent"
+            android:id="@+id/tv_swipe_exp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="65%"
-            android:textSize="16sp"
-            android:textColor="@color/mr_green"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/tv_similiarity_fitness"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintHorizontal_bias="0.95"/>
+            android:text="좌우로 밀어 유사 특허 결과를 확인하세요!"
+            android:textColor="@color/mr_gray_dark"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/tv_patent_similiarity"
+            app:layout_constraintTop_toBottomOf="@id/tv_patent_similiarity"
+            app:layout_constraintVertical_bias="0.02"/>
 
         <androidx.viewpager2.widget.ViewPager2
-            android:visibility="gone"
             android:id="@+id/vp_similiary_results"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:padding="12dp"
             android:background="@drawable/rounded_background_stroke"
-            app:layout_constraintHeight_percent="0.86"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="@+id/tv_similiarity_percent"
-            app:layout_constraintStart_toStartOf="@+id/tv_similiarity_fitness"
-            app:layout_constraintTop_toBottomOf="@+id/tv_similiarity_fitness" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHeight_percent="0.84"
+            app:layout_constraintTop_toBottomOf="@id/tv_swipe_exp" />
 
         <TextView
             android:id="@+id/tv_unsuitable_reason"
             android:layout_width="0dp"
             android:layout_height="0dp"
+            android:background="@drawable/rounded_background_stroke"
             android:padding="12dp"
             android:text="@string/tv_patent_exp"
-            android:textSize="14sp"
             android:textColor="@color/black"
-            android:background="@drawable/rounded_background_stroke"
-            app:layout_constraintHeight_percent="0.86"
+            android:textSize="14sp"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="@+id/tv_similiarity_percent"
-            app:layout_constraintStart_toStartOf="@+id/tv_similiarity_fitness"
-            app:layout_constraintTop_toBottomOf="@+id/tv_similiarity_fitness" />
+            app:layout_constraintHeight_percent="0.86"
+            app:layout_constraintStart_toStartOf="@+id/vp_similiary_results"
+            app:layout_constraintTop_toBottomOf="@+id/vp_similiary_results" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

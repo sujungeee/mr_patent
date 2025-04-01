@@ -44,7 +44,7 @@ class PatentFolderChoiceFragment : BaseFragment<FragmentPatentFolderChoiceBindin
             FolderDto.Folder(3, "폴더 3", "2024-03-26")
         )
         binding.rvFolderItems.layoutManager = LinearLayoutManager(requireContext())
-        binding.rvFolderItems.adapter = FolderAdapter(tmp) { position ->
+        binding.rvFolderItems.adapter = FolderAdapter(false, false, tmp) { position ->
             patentViewModel.setFolderId(tmp[position].userPatentFolderId)
             when(patentViewModel.draftType.value) {
                 "FileUpload" -> findNavController().navigate(R.id.fileUploadFragment)
@@ -69,12 +69,12 @@ class PatentFolderChoiceFragment : BaseFragment<FragmentPatentFolderChoiceBindin
     private fun initObserver() {
         patentViewModel.folders.observe(viewLifecycleOwner) {
             binding.rvFolderItems.layoutManager = LinearLayoutManager(requireContext())
-            binding.rvFolderItems.adapter = FolderAdapter(it) { position ->
+            binding.rvFolderItems.adapter = FolderAdapter(false, false, it) { position ->
                 patentViewModel.setFolderId(it[position].userPatentFolderId)
                 when(patentViewModel.draftType.value) {
                     "FileUpload" -> findNavController().navigate(R.id.fileUploadFragment)
-                    "Write" -> findNavController().navigate(R.id.patentContentFragment)
-                    "Update" -> findNavController().navigate(R.id.patentContentFragment)
+                    "Write" -> findNavController().navigate(PatentFolderChoiceFragmentDirections.actionPatentFolderChoiceFragmentToPatentContentFragment(patentViewModel.patentId.value!!, "edit"))
+                    "Update" -> findNavController().navigate(PatentFolderChoiceFragmentDirections.actionPatentFolderChoiceFragmentToPatentContentFragment(patentViewModel.patentId.value!!, "edit"))
                 }
             }
         }
