@@ -1,7 +1,8 @@
 from fastapi import APIRouter, UploadFile, File, BackgroundTasks, HTTPException
 from typing import Dict, Any
 import os
-import pytesseract
+import io
+from google.cloud import vision
 from pdf2image import convert_from_path
 from app.core.logging import logger
 
@@ -11,8 +12,8 @@ router = APIRouter(prefix="/api", tags=["ocr"])
 TEMP_DIR = "/temp_pdf"
 os.makedirs(TEMP_DIR, exist_ok=True)
 
-# Tesseract 실행 파일 경로 명시적 지정
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# Google Cloud 인증 설정 - 루트 디렉터리에 있는 키 파일 사용
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "d208-mr-patent-ab1793e56fe1.json"  # 실제 키 파일명으로 변경하세요
 
 @router.post("/pdf/extract-text", response_model=Dict[str, Any])
 async def extract_text_from_pdf(
@@ -28,7 +29,7 @@ async def extract_text_from_pdf(
         f.write(content)
     
     try:
-        # PDF에서 텍스트 추출
+        # Google Cloud Vision API로 텍스트 추출
         text = extract_text(temp_file_path)
         
         # 임시 파일 삭제
@@ -44,21 +45,39 @@ async def extract_text_from_pdf(
         raise HTTPException(status_code=500, detail=f"PDF 처리 중 오류: {str(e)}")
 
 def extract_text(pdf_path: str) -> str:
-    """PDF에서 텍스트 추출 (OCR)"""
+    """PDF에서 텍스트 추출 (Google Cloud Vision API 사용)"""
     try:
+        # Vision API 클라이언트 초기화
+        client = vision.ImageAnnotatorClient()
+        
         # Poppler 경로 지정
         poppler_path = r"C:\SSAFY\poppler-24.08.0\Library\bin"
         
-        # PDF를 이미지로 변환 (Poppler 경로 지정)
+        # PDF를 이미지로 변환 (여전히 poppler 필요)
         pages = convert_from_path(pdf_path, 300, poppler_path=poppler_path)
         text_result = ""
         
+        # 각 페이지를 Vision API로 처리
         for i, page in enumerate(pages):
-            # 이미지에서 텍스트 추출 (한국어+영어)
-            text = pytesseract.image_to_string(page, lang='kor+eng')
+            # 이미지를 메모리에 저장
+            img_byte_arr = io.BytesIO()
+            page.save(img_byte_arr, format='PNG')
+            content = img_byte_arr.getvalue()
+            
+            # Vision API 요청
+            image = vision.Image(content=content)
+            
+            # 문서 텍스트 감지 요청 (한국어+영어 힌트 포함)
+            response = client.document_text_detection(
+                image=image,
+                image_context={"language_hints": ["ko", "en"]}
+            )
+            
+            # 페이지별 결과 저장
+            text = response.full_text_annotation.text
             text_result += f"\n--- 페이지 {i+1} ---\n{text}"
             
         return text_result
     except Exception as e:
-        logger.error(f"OCR 처리 중 오류: {str(e)}")
+        logger.error(f"Vision API 처리 중 오류: {str(e)}")
         raise Exception(f"OCR 처리 중 오류: {str(e)}")
