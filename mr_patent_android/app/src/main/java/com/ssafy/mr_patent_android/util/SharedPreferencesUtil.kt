@@ -30,16 +30,6 @@ class SharedPreferencesUtil(context: Context) {
     }
 
 
-//    fun addCookie(cookies: HashSet<String>) {
-//        val editor = preferences.edit()
-//        editor.putStringSet(ApplicationClass.COOKIES_KEY_NAME, cookies)
-//        editor.apply()
-//    }
-//
-//    fun getCookie(): MutableSet<String>? {
-//        return preferences.getStringSet(ApplicationClass.COOKIES_KEY_NAME, HashSet())
-//    }
-
     fun addUser(userDto: UserDto){
         val editor = preferences.edit()
         editor.putInt("user_id", userDto.userId)

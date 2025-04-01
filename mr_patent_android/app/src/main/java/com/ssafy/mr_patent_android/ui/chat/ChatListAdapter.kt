@@ -29,7 +29,7 @@ class ChatListAdapter(val chatRoomList: List<ChatRoomDto>, val itemClickListener
     override fun getItemCount(): Int = chatRoomList.size
 
     fun interface ItemClickListener {
-        fun onItemClick(id: Int)
+        fun onItemClick(roomDto: ChatRoomDto)
     }
 
     inner class ChatListAdapter(private val binding: ListItemChatRoomBinding) : RecyclerView.ViewHolder(binding.root) {
@@ -44,11 +44,12 @@ class ChatListAdapter(val chatRoomList: List<ChatRoomDto>, val itemClickListener
             }
             Glide.with(binding.root)
                 .load(chatRoomList[position].userImage)
-                .placeholder(R.drawable.user_profile)
+                .fallback(R.drawable.user_profile)
+                .error(R.drawable.image_load_error_icon)
                 .into(binding.ivPatentAttorney)
 
             binding.listItemChatRoom.setOnClickListener {
-                itemClickListener.onItemClick(chatRoomList[position].userId)
+                itemClickListener.onItemClick(chatRoomList[position])
             }
         }
     }

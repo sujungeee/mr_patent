@@ -1,21 +1,45 @@
 package com.ssafy.mr_patent_android
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
+import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.navigation.NavHostController
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupWithNavController
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.firebase.messaging.FirebaseMessaging
 import com.ssafy.mr_patent_android.base.BaseActivity
 import com.ssafy.mr_patent_android.databinding.ActivityMainBinding
 
 private const val TAG = "MainActivity_Mr_Patent"
 class MainActivity : BaseActivity<ActivityMainBinding>(ActivityMainBinding::inflate)  {
+    val viewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
+        initFcm()
         initNavigation()
     }
+
+    private fun initFcm(){
+
+        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+            if (!task.isSuccessful) {
+
+                Log.w(TAG, "Fetching FCM registration token failed", task.exception)
+                return@OnCompleteListener
+            }
+            // Get new FCM registration token
+            val token = task.result
+
+            viewModel.sendFcmToken(token)
+            Log.d(TAG, "FCM 토큰: $token")
+        })
+    }
+
 
     private fun initNavigation() {
         val navController = supportFragmentManager.findFragmentById(R.id.frame_layout)
