@@ -9,5 +9,6 @@ class RetrofitUtil {
         val userService = ApplicationClass.retrofit.create(UserService::class.java)
         val chatService = ApplicationClass.retrofit.create(ChatService::class.java)
         val patentService = ApplicationClass.retrofit.create(PatentService::class.java)
+        val fileService = ApplicationClass.retrofit.create(FileService::class.java)
     }
 }

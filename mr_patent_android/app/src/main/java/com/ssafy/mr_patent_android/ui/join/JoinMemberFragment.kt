@@ -6,12 +6,14 @@ import android.view.View
 import android.widget.Toast
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.ssafy.mr_patent_android.R
 import com.ssafy.mr_patent_android.base.BaseFragment
 import com.ssafy.mr_patent_android.databinding.FragmentJoinMemberBinding
 import com.ssafy.mr_patent_android.ui.login.EmailVerifyViewModel
 import com.ssafy.mr_patent_android.ui.login.LoginActivity
+import kotlinx.coroutines.launch
 
 private const val TAG = "JoinMemberFragment_Mr_Patent"
 class JoinMemberFragment : BaseFragment<FragmentJoinMemberBinding>(
@@ -39,14 +41,22 @@ class JoinMemberFragment : BaseFragment<FragmentJoinMemberBinding>(
         }
 
         binding.btnJoin.setOnClickListener {
-            // TODO: add
-//            if (emailFlag
-//                && isFillInput()
-//                && isValidName(binding.etName.text.toString())
-//                && isValidPw(binding.etPw.text.toString())) {
-//                joinViewModel.joinMember(binding.etEmail.text.toString(), binding.etName.text.toString(), binding.etPw.text.toString())
-//            }
-            findNavController().navigate(R.id.nav_joinFinishFragment) // TODO: delete
+            if (emailFlag
+                && isFillInput()
+                && isValidName(binding.etName.text.toString())
+                && isValidPw(binding.etPw.text.toString())) {
+                if (joinViewModel.userImage.value != null) {
+                    // TODO: 확장자 추출
+
+                    lifecycleScope.launch {
+                        joinViewModel.uploadFile(joinViewModel.userImage.value!!, "image/jpeg", requireActivity() as LoginActivity)
+                    }
+                } else {
+                    joinViewModel.joinMember(binding.etEmail.text.toString(), binding.etName.text.toString(), binding.etPw.text.toString(), "")
+                }
+            }
+            // TODO: delete
+            findNavController().navigate(R.id.nav_joinFinishFragment)
         }
 
         binding.btnEmailDupl.setOnClickListener {
@@ -101,12 +111,16 @@ class JoinMemberFragment : BaseFragment<FragmentJoinMemberBinding>(
 
         emailVerifyViewModel.emailVerifyState.observe(viewLifecycleOwner, {
             if(it) {
-                // 이메일 인증 성공
                 showCustomToast("이메일 인증 성공")
                 emailFlag = true
             } else {
-                // 이메일 인증 실패
                 showCustomToast("이메일 인증 실패")
+            }
+        })
+
+        joinViewModel.uploadImageState.observe(viewLifecycleOwner, {
+            if (it) {
+                joinViewModel.joinMember(binding.etEmail.text.toString(), binding.etName.text.toString(), binding.etPw.text.toString(), joinViewModel.userImage.value!!)
             }
         })
 
@@ -147,21 +161,21 @@ class JoinMemberFragment : BaseFragment<FragmentJoinMemberBinding>(
     }
 
     fun isValidName(name: String): Boolean {
-        val regex = "^[a-zA-Z가-힣]{4,12}$".toRegex()
+        val regex = "^[a-zA-Z가-힣]{3,12}$".toRegex()
         val result = regex.matches(name)
         if (!result) {
-            showCustomToast("닉네임이 형식에 맞지 않습니다.")
+            showCustomToast("이름이 형식에 맞지 않습니다.")
         }
         return regex.matches(name)
     }
 
     fun isValidPw(pw: String): Boolean {
-        val regex = "^[a-zA-Z가-힣!@#\$%^&*()]{8,16}$".toRegex()
+        val regex = "^[a-zA-Z0-9!@#\$%^&*()]{8,16}$".toRegex()
         val result = regex.matches(pw)
         if (!result) {
             showCustomToast("비밀번호가 형식에 맞지 않습니다.")
         }
-        return regex.matches(pw)
+        return result
     }
 
     companion object {

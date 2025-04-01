@@ -2,6 +2,7 @@ package com.ssafy.mr_patent_android.ui.join
 
 import android.os.Bundle
 import android.view.View
+import androidx.activity.addCallback
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.ssafy.mr_patent_android.R
@@ -25,7 +26,6 @@ class JoinBranchFragment : BaseFragment<FragmentJoinBranchBinding>(
     }
 
     private fun initView() {
-
         binding.tvBefore.setOnClickListener {
             findNavController().popBackStack()
             joinViewModel.setUserRole(-1)
@@ -47,6 +47,11 @@ class JoinBranchFragment : BaseFragment<FragmentJoinBranchBinding>(
         } else if (joinViewModel.userRole.value == 1) {
             binding.clGeneralPerson.setBackgroundResource(R.drawable.rounded_background)
             binding.clExpert.setBackgroundResource(R.drawable.rounded_background_stroke_active)
+        }
+
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+            joinViewModel.setUserRole(-1)
+            findNavController().popBackStack()
         }
     }
 

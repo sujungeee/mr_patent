@@ -2,6 +2,7 @@ package com.ssafy.mr_patent_android.ui.address
 
 import android.os.Bundle
 import android.view.View
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.libraries.places.api.Places
@@ -18,6 +19,7 @@ private const val TAG = "AddressSearchFragment_Mr_Patent"
 class AddressSearchFragment : BaseFragment<FragmentAddressSearchBinding>(
     FragmentAddressSearchBinding::bind, R.layout.fragment_address_search
 ) {
+    private val addressViewModel : AddressViewModel by activityViewModels()
 
     private lateinit var placesClient: PlacesClient
     private var addressList: MutableList<AddressDto> = mutableListOf()
@@ -47,7 +49,6 @@ class AddressSearchFragment : BaseFragment<FragmentAddressSearchBinding>(
             binding.clAddressInfo.visibility = View.GONE
 
             val searchText = binding.etAddressSearch.text.toString()
-
             search(searchText)
         }
     }
@@ -91,8 +92,8 @@ class AddressSearchFragment : BaseFragment<FragmentAddressSearchBinding>(
         binding.tvAddressNone.visibility = View.GONE
         binding.rvAddressList.layoutManager = LinearLayoutManager(requireContext())
         binding.rvAddressList.adapter = AddressAdapter(addressList) { position ->
-            findNavController().navigate(AddressSearchFragmentDirections
-                .actionNavAddressSearchFragmentToNavJoinExpertFragment(addressList[position].address))
+            addressViewModel.setAddress(addressList[position].address)
+            findNavController().popBackStack()
         }
     }
 

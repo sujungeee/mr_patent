@@ -1,0 +1,80 @@
+package com.ssafy.mr_patent_android.util
+
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.provider.OpenableColumns
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
+import java.text.DecimalFormat
+
+private const val TAG = "FilePicker_Mr_Patent"
+class FilePicker(
+    private val fragment: Fragment,
+    private val onFileSelected: (Uri, String, Long) -> Unit
+) {
+    private val requestPermissionLauncher = fragment.registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            openStorage()
+        } else {
+            Toast.makeText(fragment.requireContext(), "권한을 허용해주세요.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private val pickFileLauncher = fragment.registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            val fileName = getFileName(fragment.requireContext(), it)
+            val fileSize = getFileSize(fragment.requireContext(), it)
+            onFileSelected(it, fileName, fileSize)
+        }
+    }
+
+    fun checkPermissionAndOpenStorage() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            openStorage()
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            openStorage()
+        } else {
+            if (ContextCompat.checkSelfPermission(fragment.requireContext(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                openStorage()
+            } else {
+                requestPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
+        }
+    }
+
+    private fun openStorage() {
+        pickFileLauncher.launch("application/pdf")
+    }
+
+    private fun getFileName(context: Context, uri: Uri): String {
+        var name = "unknown.pdf"
+        context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            if (nameIndex != -1 && cursor.moveToFirst()) {
+                name = cursor.getString(nameIndex)
+            }
+        }
+        return name
+    }
+
+    private fun getFileSize(context: Context, uri: Uri): Long {
+        var size = 0L
+        context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+            val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+            if (sizeIndex != -1 && cursor.moveToFirst()) {
+                size = cursor.getLong(sizeIndex)
+            }
+        }
+
+        return size
+    }
+}

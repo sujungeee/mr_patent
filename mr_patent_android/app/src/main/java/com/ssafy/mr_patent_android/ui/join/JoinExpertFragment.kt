@@ -1,24 +1,36 @@
 package com.ssafy.mr_patent_android.ui.join
 
+import android.app.Dialog
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
-import androidx.activity.OnBackPressedCallback
+import android.view.WindowManager
+import android.widget.Button
+import android.widget.EditText
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.fragment.navArgs
+import com.bumptech.glide.Glide
 import com.google.android.material.chip.Chip
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.ssafy.mr_patent_android.R
 import com.ssafy.mr_patent_android.base.BaseFragment
 import com.ssafy.mr_patent_android.databinding.FragmentJoinExpertBinding
+import com.ssafy.mr_patent_android.ui.address.AddressViewModel
 import com.ssafy.mr_patent_android.ui.login.EmailVerifyViewModel
+import com.ssafy.mr_patent_android.ui.login.LoginActivity
+import com.ssafy.mr_patent_android.ui.patent.FileViewModel
+import com.ssafy.mr_patent_android.util.FilePicker
+import com.ssafy.mr_patent_android.util.FileUtil
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.time.LocalDateTime
 import java.util.Date
 import java.util.Locale
 
@@ -28,11 +40,17 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
 ) {
     private val joinViewModel: JoinViewModel by activityViewModels()
     private val emailVerifyViewModel: EmailVerifyViewModel by activityViewModels()
+    private val addressViewModel : AddressViewModel by activityViewModels()
+    private val fileViewModel : FileViewModel by activityViewModels()
+
+    private lateinit var filePickerUtil: FilePicker
 
     private lateinit var license : String
-    private var emailFlag : Boolean = false
+    private lateinit var identification : String
+    private lateinit var address : String
+    private lateinit var categories : MutableList<String>
 
-//    private val args: JoinExpertFragmentArgs by navArgs()
+    private var emailFlag : Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,24 +58,38 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         initView()
         initObserver()
-
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                findNavController().navigate(R.id.nav_joinProfileFragment)
-            }
-        })
-
     }
 
     private fun initView() {
-//        args.address.let {
-//            binding.etAddress1.setText(it)
-//        }
+        filePickerUtil = FilePicker(this) { uri, fileName, fileSize ->
+            if(fileSize >= 1024 * 1024 * 5) {
+                setDialogSizeOver()
+                return@FilePicker
+            } else {
+                joinViewModel.setFile(uri.toString())
+                binding.ivLicenseUpload.visibility = View.GONE
+                binding.ivPdf.visibility = View.VISIBLE
+                binding.tvFileName.visibility = View.VISIBLE
+                binding.tvFileSize.visibility = View.VISIBLE
+                binding.tvFileName.text = fileName
+                binding.tvFileSize.text = FileUtil().formatFileSize(fileSize)
+                license = uri.toString()
+            }
+        }
 
         binding.tvBefore.setOnClickListener {
-            findNavController().navigate(R.id.nav_joinProfileFragment)
+            findNavController().popBackStack()
+        }
+
+        binding.ivLicenseUpload.setOnClickListener {
+            filePickerUtil.checkPermissionAndOpenStorage()
+        }
+
+        binding.tvLicenseUpload.setOnClickListener {
+            filePickerUtil.checkPermissionAndOpenStorage()
         }
 
         // TODO: delete
@@ -72,11 +104,9 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
                 && isValidPw(binding.etPw.text.toString())
                 && isValidDescription(binding.etDescription.text.toString())
             ) {
-                val identification =
-                    binding.etIdentificationFront.text.toString() + "-" + binding.etIdentificationBack.text.toString()
-                val address =
-                    binding.etAddress1.text.toString() + " " + binding.etAddress2.text.toString()
-                val categories = mutableListOf<String>()
+                binding.etIdentificationFront.text.toString() + "-" + binding.etIdentificationBack.text.toString()
+                binding.etAddress1.text.toString() + " " + binding.etAddress2.text.toString()
+                categories = mutableListOf<String>()
                 for (i in 0 until binding.cgFilter.childCount) {
                     val chip = binding.cgFilter.getChildAt(i) as Chip
                     if (chip.isChecked) {
@@ -84,18 +114,27 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
                     }
                 }
 
-                joinViewModel.joinExpert(
-                    binding.etEmail.text.toString(),
-                    binding.etPw.text.toString(),
-                    binding.etName.text.toString(),
-                    identification,
-                    binding.etDescription.text.toString()
-                    , address
-                    , binding.etPhone.text.toString()
-                    , license
-                    , binding.tvDateChoice.text.toString()
-                    , categories
-                )
+                if (joinViewModel.userImage.value != null) {
+                    // TODO: 확장자 추출
+
+                    lifecycleScope.launch {
+                        joinViewModel.uploadFile(joinViewModel.userImage.value!!, "image/jpeg", requireActivity() as LoginActivity)
+                    }
+                } else {
+                    joinViewModel.joinExpert(
+                        binding.etEmail.text.toString()
+                        , binding.etPw.text.toString()
+                        , binding.etName.text.toString()
+                        ,""
+                        , identification
+                        , binding.etDescription.text.toString()
+                        , address
+                        , binding.etPhone.text.toString()
+                        , license
+                        , binding.tvDateChoice.text.toString()
+                        , categories
+                    )
+                }
             }
         }
 
@@ -175,12 +214,40 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
 
         emailVerifyViewModel.emailVerifyState.observe(viewLifecycleOwner, {
             if (it) {
-                // 이메일 인증 성공
                 showCustomToast("이메일 인증 성공")
                 emailFlag = true
             } else {
-                // 이메일 인증 실패
                 showCustomToast("이메일 인증 실패")
+            }
+        })
+
+        addressViewModel.address.observe(viewLifecycleOwner) {
+            binding.etAddress1.setText(it)
+        }
+
+        joinViewModel.uploadImageState.observe (viewLifecycleOwner, {
+            if (it) {
+                lifecycleScope.launch {
+                    joinViewModel.uploadFile(joinViewModel.file.value!!, "application/pdf", requireActivity() as LoginActivity)
+                }
+            }
+        })
+
+        joinViewModel.uploadFileState.observe(viewLifecycleOwner, {
+            if (it) {
+                joinViewModel.joinExpert(
+                    binding.etEmail.text.toString()
+                    , binding.etPw.text.toString()
+                    , binding.etName.text.toString()
+                    , joinViewModel.userImage.value!!
+                    , identification
+                    , binding.etDescription.text.toString()
+                    , address
+                    , binding.etPhone.text.toString()
+                    , license
+                    , binding.tvDateChoice.text.toString()
+                    , categories
+                )
             }
         })
 
@@ -222,6 +289,27 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
         timer.start()
     }
 
+    private fun setDialogSizeOver() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_size_over, null)
+        val dialogBuilder = Dialog(requireContext())
+        dialogBuilder.setContentView(dialogView)
+        dialogBuilder.create()
+        dialogBuilder.window?.apply {
+            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            setLayout(
+                ((context.resources.displayMetrics.widthPixels) * 0.8).toInt(),
+                WindowManager.LayoutParams.WRAP_CONTENT
+            )
+        }
+        dialogBuilder.show()
+
+        val dlBtnYes = dialogView.findViewById<Button>(R.id.dl_btn_yes)
+
+        dlBtnYes.setOnClickListener {
+            dialogBuilder.dismiss()
+        }
+    }
+
     fun isFillInput() : Boolean {
         val result = binding.etEmail.text.toString().isNotBlank()
                 && binding.etName.text.toString().isNotBlank()
@@ -252,7 +340,7 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
     }
 
     fun isValidPw(pw: String): Boolean {
-        val regex = "^[a-zA-Z가-힣!@#\$%^&*()]{8,16}$".toRegex()
+        val regex = "^[a-zA-Z0-9!@#\$%^&*()]{8,16}$".toRegex()
         val result = regex.matches(pw)
         if (!result) {
             showCustomToast("비밀번호가 형식에 맞지 않습니다.")
