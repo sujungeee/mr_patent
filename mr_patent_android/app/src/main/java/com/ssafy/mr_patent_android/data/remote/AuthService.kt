@@ -2,6 +2,7 @@ package com.ssafy.mr_patent_android.data.remote
 
 import com.ssafy.mr_patent_android.base.BaseResponse
 import com.ssafy.mr_patent_android.data.model.dto.EmailCodeRequest
+import com.ssafy.mr_patent_android.data.model.dto.FcmRequest
 import com.ssafy.mr_patent_android.data.model.dto.JoinExpertRequest
 import com.ssafy.mr_patent_android.data.model.dto.JoinRequest
 import com.ssafy.mr_patent_android.data.model.dto.LoginRequest
@@ -54,4 +55,11 @@ interface AuthService {
     suspend fun checkDuplEmail(
         @Query("user_email") userEmail: String
     ): Response<BaseResponse<Boolean>>
+
+    @POST("fcm/token")
+    suspend fun sendFcmToken(
+        @Body fcmRequest: FcmRequest
+    ): Response<BaseResponse<Boolean>>
+
+
 }
