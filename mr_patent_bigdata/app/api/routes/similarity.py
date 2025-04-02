@@ -175,7 +175,31 @@ async def process_full_similarity_analysis(patent_draft_id: int, similarity_id: 
     """적합도 검사, 유사도 분석, 상세 비교를 순차적으로 모두 수행"""
     try:
         # 1단계: 적합도 검사 수행
-        await perform_fitness_check(patent_draft_id)
+        fitness_results = await perform_fitness_check(patent_draft_id)
+        
+        # 적합도 검사 결과 확인 - 하나라도 false면 유사도 분석 건너뛰기
+        is_all_corrected = all(fitness_results.values())
+        
+        # 유사도 분석 상태 업데이트
+        now = datetime.now(timezone.utc)
+        update_query = """
+        UPDATE similarity SET
+            similarity_status = :status,
+            similarity_updated_at = :updated_at
+        WHERE similarity_id = :similarity_id
+        """
+        
+        if not is_all_corrected:
+            # 적합도 검사 실패 시 유사도 분석 건너뛰기
+            await database.execute(
+                query=update_query,
+                values={
+                    "similarity_id": similarity_id,
+                    "status": "SKIPPED_DUE_TO_FITNESS",
+                    "updated_at": now
+                }
+            )
+            return  # 함수 종료
         
         # 2단계: 유사도 분석 수행
         similar_patents = await perform_similarity_analysis(patent_draft_id, similarity_id)
@@ -193,6 +217,16 @@ async def process_full_similarity_analysis(patent_draft_id: int, similarity_id: 
                     patent["similarity_patent_id"], 
                     patent_public_id
                 )
+                
+        # 유사도 분석 완료 상태 업데이트
+        await database.execute(
+            query=update_query,
+            values={
+                "similarity_id": similarity_id,
+                "status": "COMPLETED",
+                "updated_at": now
+            }
+        )
     except Exception as e:
         # 오류 발생 시 로깅
         print(f"유사도 분석 중 오류 발생: {str(e)}")
@@ -285,7 +319,7 @@ async def perform_fitness_check(patent_draft_id: int):
     return fitness_results
 
 async def perform_similarity_analysis(patent_draft_id: int, similarity_id: int):
-    """특허 초안과 유사한 특허 분석 - 필드별 벡터 비교 방식으로 개선"""
+    """특허 초안과 유사한 특허 분석 - 필드별 벡터 비교 방식"""
     # 특허 초안 조회
     draft_query = """
     SELECT * FROM patent_draft 
@@ -316,14 +350,13 @@ async def perform_similarity_analysis(patent_draft_id: int, similarity_id: int):
     now = datetime.now(timezone.utc)
     
     while True:
-        # 특허 배치 조회 - 필드별 벡터 컬럼 포함
+        # 특허 배치 조회 - 필드별 벡터 컬럼만 포함 (통합 벡터 필드 제외)
         patents_query = """
         SELECT patent_id, patent_title, patent_summary, patent_claim,
                patent_application_number, 
                patent_title_tfidf_vector, patent_title_kobert_vector,
                patent_summary_tfidf_vector, patent_summary_kobert_vector,
-               patent_claim_tfidf_vector, patent_claim_kobert_vector,
-               patent_tfidf_vector, patent_kobert_vector
+               patent_claim_tfidf_vector, patent_claim_kobert_vector
         FROM patent
         LIMIT :limit OFFSET :offset
         """
@@ -339,15 +372,20 @@ async def perform_similarity_analysis(patent_draft_id: int, similarity_id: int):
         # 각 특허와 유사도 계산
         for patent in patents:
             try:
-                # 필드별 벡터 추출 (없을 경우 통합 벡터로 대체)
-                patent_title_tfidf = np.frombuffer(patent["patent_title_tfidf_vector"]) if patent["patent_title_tfidf_vector"] else np.frombuffer(patent["patent_tfidf_vector"])
-                patent_title_kobert = np.frombuffer(patent["patent_title_kobert_vector"]) if patent["patent_title_kobert_vector"] else np.frombuffer(patent["patent_kobert_vector"])
+                # 필드별 벡터 추출 (없을 경우 영벡터 사용)
+                # TF-IDF 벡터 (차원: 1000)
+                zero_tfidf = np.zeros(1000)
+                # KoBERT 벡터 (차원: 768)
+                zero_kobert = np.zeros(768)
                 
-                patent_summary_tfidf = np.frombuffer(patent["patent_summary_tfidf_vector"]) if patent["patent_summary_tfidf_vector"] else np.frombuffer(patent["patent_tfidf_vector"])
-                patent_summary_kobert = np.frombuffer(patent["patent_summary_kobert_vector"]) if patent["patent_summary_kobert_vector"] else np.frombuffer(patent["patent_kobert_vector"])
+                patent_title_tfidf = np.frombuffer(patent["patent_title_tfidf_vector"]) if patent["patent_title_tfidf_vector"] else zero_tfidf
+                patent_title_kobert = np.frombuffer(patent["patent_title_kobert_vector"]) if patent["patent_title_kobert_vector"] else zero_kobert
                 
-                patent_claim_tfidf = np.frombuffer(patent["patent_claim_tfidf_vector"]) if patent["patent_claim_tfidf_vector"] else np.frombuffer(patent["patent_tfidf_vector"])
-                patent_claim_kobert = np.frombuffer(patent["patent_claim_kobert_vector"]) if patent["patent_claim_kobert_vector"] else np.frombuffer(patent["patent_kobert_vector"])
+                patent_summary_tfidf = np.frombuffer(patent["patent_summary_tfidf_vector"]) if patent["patent_summary_tfidf_vector"] else zero_tfidf
+                patent_summary_kobert = np.frombuffer(patent["patent_summary_kobert_vector"]) if patent["patent_summary_kobert_vector"] else zero_kobert
+                
+                patent_claim_tfidf = np.frombuffer(patent["patent_claim_tfidf_vector"]) if patent["patent_claim_tfidf_vector"] else zero_tfidf
+                patent_claim_kobert = np.frombuffer(patent["patent_claim_kobert_vector"]) if patent["patent_claim_kobert_vector"] else zero_kobert
                 
                 # 필드별 유사도 계산 - 같은 필드끼리 비교
                 title_tfidf_similarity = float(cosine_similarity([draft_title_tfidf], [patent_title_tfidf])[0][0])
@@ -426,6 +464,7 @@ async def perform_similarity_analysis(patent_draft_id: int, similarity_id: int):
         patent["similarity_patent_id"] = similarity_patent_id
     
     return top_similar_patents
+
 
 async def fetch_patent_public(patent_id: int, application_number: str):
     """KIPRIS API를 사용해 특허 공고전문 정보 가져오기"""

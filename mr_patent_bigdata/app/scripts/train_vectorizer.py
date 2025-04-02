@@ -9,7 +9,7 @@ import numpy as np
 # 프로젝트 루트 디렉토리를 PYTHONPATH에 추가
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from app.services.vectorizer import train_and_save_vectorizer
+from app.services.vectorizer import train_and_save_vectorizer, get_tfidf_vector, get_kobert_vector
 from app.core.config import settings
 
 # 데이터베이스 연결
@@ -33,7 +33,7 @@ async def train_vectorizer_from_patents():
     
     print(f"총 {len(patents)}개 특허로 벡터라이저 학습 시작...")
     
-    # 1. 전체 텍스트로 TF-IDF 벡터라이저 학습 (기존 방식 유지)
+    # 1. 전체 텍스트로 TF-IDF 벡터라이저 학습
     combined_texts = []
     for patent in patents:
         title = patent["patent_title"] or ""
@@ -61,12 +61,7 @@ async def train_vectorizer_from_patents():
         claim_tfidf = get_tfidf_vector(claim)
         claim_kobert = get_kobert_vector(claim)
         
-        # 기존 벡터도 유지 (호환성)
-        combined_text = f"{title} {summary} {claim}"
-        tfidf_vector = get_tfidf_vector(combined_text)
-        kobert_vector = get_kobert_vector(combined_text)
-        
-        # 필드별 벡터 업데이트
+        # 필드별 벡터 업데이트 (통합 벡터 필드 제거)
         update_query = """
         UPDATE patent SET
             patent_title_tfidf_vector = :title_tfidf,
@@ -74,9 +69,7 @@ async def train_vectorizer_from_patents():
             patent_summary_tfidf_vector = :summary_tfidf,
             patent_summary_kobert_vector = :summary_kobert,
             patent_claim_tfidf_vector = :claim_tfidf,
-            patent_claim_kobert_vector = :claim_kobert,
-            patent_tfidf_vector = :tfidf_vector,
-            patent_kobert_vector = :kobert_vector
+            patent_claim_kobert_vector = :claim_kobert
         WHERE patent_id = :patent_id
         """
         
@@ -89,8 +82,6 @@ async def train_vectorizer_from_patents():
                 "summary_kobert": summary_kobert.tobytes(),
                 "claim_tfidf": claim_tfidf.tobytes(),
                 "claim_kobert": claim_kobert.tobytes(),
-                "tfidf_vector": tfidf_vector.tobytes(),
-                "kobert_vector": kobert_vector.tobytes(),
                 "patent_id": patent_id
             }
         )

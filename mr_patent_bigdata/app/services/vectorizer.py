@@ -117,18 +117,31 @@ def get_kobert_vector(text: str, max_length: int = 512) -> np.ndarray:
         logger.error(f"KoBERT 벡터 생성 중 오류: {e}")
         return np.zeros(768)  # 오류 발생 시 영벡터 반환
 
-def generate_vectors(patent_data: Dict[str, Any]) -> Tuple[np.ndarray, np.ndarray]:
-    """특허 데이터의 벡터 생성"""
+def generate_vectors(patent_data):
+    """특허 데이터의 필드별 벡터 생성"""
     title = patent_data.get("title", "")
     summary = patent_data.get("summary", "")
     claims = patent_data.get("claims", "")
     
-    combined_text = f"{title} {summary} {claims}"
+    # 필드별 벡터 생성
+    title_tfidf = get_tfidf_vector(title)
+    title_kobert = get_kobert_vector(title)
     
-    tfidf_vector = get_tfidf_vector(combined_text)
-    kobert_vector = get_kobert_vector(combined_text)
+    summary_tfidf = get_tfidf_vector(summary)
+    summary_kobert = get_kobert_vector(summary)
     
-    return tfidf_vector, kobert_vector
+    claim_tfidf = get_tfidf_vector(claims)
+    claim_kobert = get_kobert_vector(claims)
+    
+    return {
+        'title_tfidf_vector': title_tfidf,
+        'title_kobert_vector': title_kobert,
+        'summary_tfidf_vector': summary_tfidf,
+        'summary_kobert_vector': summary_kobert,
+        'claim_tfidf_vector': claim_tfidf,
+        'claim_kobert_vector': claim_kobert
+    }
+
 
 def generate_field_vectors(field_text: str) -> Tuple[np.ndarray, np.ndarray]:
     """특정 필드의 벡터 생성"""

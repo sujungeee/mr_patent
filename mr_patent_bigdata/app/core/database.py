@@ -65,11 +65,16 @@ patent = Table(
     Column("patent_ipc", String(100), nullable=False),
     Column("patent_summary", Text, nullable=False),
     Column("patent_claim", Text, nullable=False),
-    Column("patent_tfidf_vector", LargeBinary, nullable=False),
-    Column("patent_kobert_vector", LargeBinary, nullable=False),
+    Column("patent_title_tfidf_vector", LargeBinary, nullable=False),
+    Column("patent_title_kobert_vector", LargeBinary, nullable=False),
+    Column("patent_summary_tfidf_vector", LargeBinary, nullable=False),
+    Column("patent_summary_kobert_vector", LargeBinary, nullable=False),
+    Column("patent_claim_tfidf_vector", LargeBinary, nullable=False),
+    Column("patent_claim_kobert_vector", LargeBinary, nullable=False),
     Column("patent_created_at", TIMESTAMP, nullable=False, default=datetime.utcnow),
     Column("patent_updated_at", TIMESTAMP, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 )
+
 
 # 특허 초안 테이블
 patent_draft = Table(

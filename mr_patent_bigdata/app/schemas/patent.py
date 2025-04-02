@@ -12,14 +12,15 @@ class ProcessResponse(BaseModel):
     directory: str
 
 class ResumeRequest(BaseModel):
-    rtf_directory: str
+    filename: str  # 저장된 특허 데이터 파일명 (필수)
+    rtf_directory: Optional[str] = None  # 선택적 필드로 변경
     start_index: int = 0  # 시작할 특허 인덱스 (기본값: 0)
 
 class ResumeResponse(BaseModel):
-    status: bool
-    message: str
     task_id: str
-    directory: str
+    status: bool = True
+    message: str = "처리가 시작되었습니다."
+    directory: str = ""
 
 class FolderBase(BaseModel):
     user_patent_folder_title: str

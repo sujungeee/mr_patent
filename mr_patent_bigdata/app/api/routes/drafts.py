@@ -94,7 +94,7 @@ async def create_or_update_draft(
                 try:
                     # 벡터 생성
                     tfidf_vector = get_tfidf_vector(text)
-                    kobert_vector = get_kobert_vector(text)
+                    kobert_vector = (text)
                     
                     # 벡터 필드에 저장
                     vector_fields[f"patent_draft_{field}_tfidf_vector"] = tfidf_vector.tobytes()
