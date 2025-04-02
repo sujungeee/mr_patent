@@ -5,55 +5,74 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.activityViewModels
+import androidx.navigation.findNavController
+import androidx.navigation.fragment.findNavController
 import com.ssafy.mr_patent_android.R
+import com.ssafy.mr_patent_android.base.BaseFragment
+import com.ssafy.mr_patent_android.databinding.FragmentSimiliarityTestBinding
+import com.ssafy.mr_patent_android.ui.mypage.PatentFolderDetailFragmentDirections
+import com.ssafy.mr_patent_android.ui.mypage.PatentFolderDetailViewModel
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
+private const val TAG = "SimiliarityTestFragment_Mr_Patent"
+class SimiliarityTestFragment : BaseFragment<FragmentSimiliarityTestBinding>(
+    FragmentSimiliarityTestBinding::bind, R.layout.fragment_similiarity_test
+) {
+    private val similiarityTestViewModel : SimiliarityTestViewModel by activityViewModels()
 
-/**
- * A simple [Fragment] subclass.
- * Use the [SimiliarityTestFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
-class SimiliarityTestFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+    private val patentViewModel : PatentViewModel by activityViewModels()
+    private val patentFolderDetailViewModel : PatentFolderDetailViewModel by activityViewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        initView()
+        initObserver()
+    }
+
+    private fun initView() {
+        binding.btnSimiliarityTestConfirm.setOnClickListener {
+            // 화면 이동
+            if (similiarityTestViewModel.status.value == "finished") {
+                findNavController().popBackStack(R.id.nav_fragment_patent, false)
+                val bottomNavController = requireActivity().findNavController(R.id.nav_fragment_mypage)
+                bottomNavController.navigate(R.id.fragment_patent_folder)
+                patentFolderDetailViewModel.setFolderId(patentViewModel.folderId.value!!)
+                bottomNavController.navigate(R.id.fragment_patent_folder_detail)
+                bottomNavController.navigate(
+                    PatentFolderDetailFragmentDirections.actionPatentFolderDetailFragmentToPatentContentFragment(similiarityTestViewModel.patentId.value!!, "select")
+                )
+            }
+            if (similiarityTestViewModel.status.value == "ongoing") {
+                findNavController().popBackStack(R.id.nav_fragment_patent, false)
+            }
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_similiarity_test, container, false)
+    private fun initObserver() {
+        similiarityTestViewModel.status.observe(viewLifecycleOwner) {
+            when (it) {
+                "finished" -> {
+                    binding.ivStatusOngoing.visibility = View.GONE
+                    binding.tvStatusOngoing.visibility = View.GONE
+                    binding.ivStatusFinished.visibility = View.VISIBLE
+                    binding.tvStatusFinished.visibility = View.VISIBLE
+                    binding.btnSimiliarityTestConfirm.text = "유사도 분석 결과 확인하기"
+                }
+            }
+        }
     }
 
     companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment SimiliarityTestFragment.
-         */
-        // TODO: Rename and change types and number of parameters
         @JvmStatic
-        fun newInstance(param1: String, param2: String) =
+        fun newInstance(key: String, value: String) =
             SimiliarityTestFragment().apply {
                 arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+                    putString(key, value)
                 }
             }
     }
