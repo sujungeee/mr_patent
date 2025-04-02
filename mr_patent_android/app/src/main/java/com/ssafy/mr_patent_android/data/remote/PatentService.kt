@@ -4,6 +4,7 @@ import com.ssafy.mr_patent_android.base.BaseResponse
 import com.ssafy.mr_patent_android.data.model.dto.FolderDto
 import com.ssafy.mr_patent_android.data.model.dto.FolderRequest
 import com.ssafy.mr_patent_android.data.model.response.FitnessResultResponse
+import com.ssafy.mr_patent_android.data.model.response.PatentContentResponse
 import com.ssafy.mr_patent_android.data.model.response.PatentListResponse
 import com.ssafy.mr_patent_android.data.model.response.PatentRecentResponse
 import com.ssafy.mr_patent_android.data.model.response.SimiliarityResultResponse
@@ -45,4 +46,9 @@ interface PatentService {
     suspend fun getSimiliarityResult(
         @Path("user_patent_id") userPatentId: Int
     ): Response<BaseResponse<SimiliarityResultResponse>>
+
+    @GET("draft/{patent_draft_id}")
+    suspend fun getPatentContent(
+        @Path("patent_draft_id") patentDraftId: Int
+    ): Response<BaseResponse<PatentContentResponse>>
 }

@@ -41,7 +41,7 @@ class PatentFragment : BaseFragment<FragmentPatentBinding>(
         )
         binding.rvRecentDrafts.layoutManager = LinearLayoutManager(requireContext())
         binding.rvRecentDrafts.adapter = PatentRecentAdapter(tmp) { position ->
-            patentViewModel.setDraftType("Update")
+            patentViewModel.setDraftType("update")
             patentViewModel.setPatentDraftId(tmp[position].parentDraftId)
             findNavController().navigate(R.id.patentFolderChoiceFragment)
         }
@@ -51,12 +51,12 @@ class PatentFragment : BaseFragment<FragmentPatentBinding>(
         patentViewModel.getRecentPatentList()
 
         binding.clFileUpload.setOnClickListener {
-            patentViewModel.setDraftType("FileUpload")
+            patentViewModel.setDraftType("upload")
             findNavController().navigate(R.id.patentFolderChoiceFragment)
         }
 
         binding.clWrite.setOnClickListener {
-            patentViewModel.setDraftType("Write")
+            patentViewModel.setDraftType("write")
             findNavController().navigate(R.id.patentFolderChoiceFragment)
         }
     }

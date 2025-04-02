@@ -28,7 +28,7 @@ class FilePicker(
     }
 
     private val pickFileLauncher = fragment.registerForActivityResult(
-        ActivityResultContracts.GetContent()
+        ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         uri?.let {
             val fileName = getFileName(fragment.requireContext(), it)
@@ -52,7 +52,7 @@ class FilePicker(
     }
 
     private fun openStorage() {
-        pickFileLauncher.launch("application/pdf")
+        pickFileLauncher.launch(arrayOf("application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
     }
 
     private fun getFileName(context: Context, uri: Uri): String {
