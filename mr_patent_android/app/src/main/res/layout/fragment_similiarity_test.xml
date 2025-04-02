@@ -30,7 +30,6 @@
         app:layout_constraintVertical_bias="0.1" />
 
     <ImageView
-        android:visibility="gone"
         android:id="@+id/iv_status_ongoing"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -43,7 +42,6 @@
         app:layout_constraintVertical_bias="0.25" />
 
     <TextView
-        android:visibility="gone"
         android:id="@+id/tv_status_ongoing"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -58,6 +56,7 @@
         app:layout_constraintVertical_bias="0.55"/>
 
     <ImageView
+        android:visibility="gone"
         android:id="@+id/iv_status_finished"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -70,6 +69,7 @@
         app:layout_constraintVertical_bias="0.25"/>
 
     <TextView
+        android:visibility="gone"
         android:id="@+id/tv_status_finished"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -90,7 +90,7 @@
         android:layout_marginHorizontal="20dp"
         android:backgroundTint="@color/mr_blue"
         android:fontFamily="@font/pretendard_semibold"
-        android:text="유사도 분석 결과 확인하기"
+        android:text="홈으로 가기"
         android:textSize="18sp"
         app:layout_constraintTop_toTopOf="@id/h1_guideline"
         app:layout_constraintBottom_toBottomOf="parent" />
