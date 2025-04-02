@@ -28,6 +28,9 @@ class FirebaseMessageService : FirebaseMessagingService() {
         Log.d(TAG, "From: " + message!!.from)
 
         if(message.data.isNotEmpty()){
+            Log.d(TAG, "onMessageReceived: ${message} ")
+            Log.d(TAG, "onMessageReceived: ${message.data} ")
+            Log.d(TAG, "onMessageReceived: ${message.notification}")
             val body = message.data["body"]
             val title = message.data["title"]
             val data = message.data["data"]
@@ -55,8 +58,7 @@ class FirebaseMessageService : FirebaseMessagingService() {
 
         val intent = Intent(this, MainActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP) // Activity Stack 을 경로만 남긴다. A-B-C-D-B => A-B
-        val pendingIntent = PendingIntent.getActivity(this, uniId, intent,
-            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE)
+        val pendingIntent = createPendingIntent(type ?: "default", remoteMessage)
 
 
         // 알림 소리
@@ -83,8 +85,8 @@ class FirebaseMessageService : FirebaseMessagingService() {
 
         notificationBuilder
             .setSmallIcon(R.mipmap.ic_launcher) // 아이콘 설정
-            .setContentTitle(remoteMessage.data["title"].toString()) // 제목
-            .setContentText(remoteMessage.data["body"].toString()) // 메시지 내용
+            .setContentTitle(remoteMessage.notification?.title) // 제목
+            .setContentText(remoteMessage.notification?.body) // 메시지 내용
             .setAutoCancel(true)
             .setSound(soundUri) // 알림 소리
             .setContentIntent(pendingIntent) // 알림 실행 시 Intent
@@ -108,10 +110,13 @@ class FirebaseMessageService : FirebaseMessagingService() {
         }
     }
 
-    private fun createPendingIntent(fcmType: String, parameter: String): PendingIntent {
+    private fun createPendingIntent(fcmType: String, remoteMessage: RemoteMessage): PendingIntent {
+        Log.d(TAG, "createPendingIntent: $fcmType")
         val intent = when (fcmType) {
             "CHAT" -> Intent(this, MainActivity::class.java).apply {
-
+                for(key in remoteMessage.data.keys){
+                    putExtra(key, remoteMessage.data.getValue(key))
+                }
             }
             "SIMILARITY_TEST" -> Intent(this, MainActivity::class.java).apply {
             }
