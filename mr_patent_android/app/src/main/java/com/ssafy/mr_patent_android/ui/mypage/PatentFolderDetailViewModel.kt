@@ -17,10 +17,6 @@ class PatentFolderDetailViewModel : ViewModel() {
     val patents: LiveData<List<PatentListResponse.PatentSummaryInfo>>
         get() = _patents
 
-    private val _patentId = MutableLiveData<Int>()
-    val patentId: LiveData<Int>
-        get() = _patentId
-
     private val _deleteFlag = MutableLiveData<Boolean>()
     val deleteFlag: LiveData<Boolean>
         get() = _deleteFlag
@@ -32,10 +28,6 @@ class PatentFolderDetailViewModel : ViewModel() {
     // TODO: delete
     fun setPatents(patents: List<PatentListResponse.PatentSummaryInfo>) {
         _patents.value = patents
-    }
-
-    fun setPatentId(patentId: Int) {
-        _patentId.value = patentId
     }
 
     fun setDeleteFlag(deleteFlag: Boolean) {

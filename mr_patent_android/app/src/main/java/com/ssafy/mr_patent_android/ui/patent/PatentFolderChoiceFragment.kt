@@ -47,9 +47,9 @@ class PatentFolderChoiceFragment : BaseFragment<FragmentPatentFolderChoiceBindin
         binding.rvFolderItems.adapter = FolderAdapter(false, false, tmp) { position ->
             patentViewModel.setFolderId(tmp[position].userPatentFolderId)
             when(patentViewModel.draftType.value) {
-                "FileUpload" -> findNavController().navigate(R.id.fileUploadFragment)
-                "Write" -> findNavController().navigate(R.id.patentContentFragment)
-                "Update" -> findNavController().navigate(R.id.patentContentFragment)
+                "upload" -> findNavController().navigate(R.id.fileUploadFragment)
+                "write" -> findNavController().navigate(PatentFolderChoiceFragmentDirections.actionPatentFolderChoiceFragmentToPatentContentFragment(-1, "write"))
+                "update" -> findNavController().navigate(PatentFolderChoiceFragmentDirections.actionPatentFolderChoiceFragmentToPatentContentFragment(patentViewModel.patentDraftId.value!!, "update"))
             }
         }
     }
@@ -72,9 +72,9 @@ class PatentFolderChoiceFragment : BaseFragment<FragmentPatentFolderChoiceBindin
             binding.rvFolderItems.adapter = FolderAdapter(false, false, it) { position ->
                 patentViewModel.setFolderId(it[position].userPatentFolderId)
                 when(patentViewModel.draftType.value) {
-                    "FileUpload" -> findNavController().navigate(R.id.fileUploadFragment)
-                    "Write" -> findNavController().navigate(PatentFolderChoiceFragmentDirections.actionPatentFolderChoiceFragmentToPatentContentFragment(patentViewModel.patentId.value!!, "edit"))
-                    "Update" -> findNavController().navigate(PatentFolderChoiceFragmentDirections.actionPatentFolderChoiceFragmentToPatentContentFragment(patentViewModel.patentId.value!!, "edit"))
+                    "upload" -> findNavController().navigate(R.id.fileUploadFragment)
+                    "write" -> findNavController().navigate(PatentFolderChoiceFragmentDirections.actionPatentFolderChoiceFragmentToPatentContentFragment(-1, "write"))
+                    "update" -> findNavController().navigate(PatentFolderChoiceFragmentDirections.actionPatentFolderChoiceFragmentToPatentContentFragment(patentViewModel.patentDraftId.value!!, "update"))
                 }
             }
         }
