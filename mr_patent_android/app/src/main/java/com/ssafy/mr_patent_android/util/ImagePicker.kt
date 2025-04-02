@@ -18,14 +18,14 @@ class ImagePicker(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            checkPermissionAndOpenGallery()
+            openGallery()
         } else {
             Toast.makeText(fragment.requireContext(), "권한을 허용해주세요.", Toast.LENGTH_SHORT).show()
         }
     }
 
     private val pickImageLauncher = fragment.registerForActivityResult(
-        ActivityResultContracts.GetContent()
+        ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         uri?.let(onImageSelected)
     }
@@ -47,6 +47,6 @@ class ImagePicker(
     }
 
     private fun openGallery() {
-        pickImageLauncher.launch("image/*")
+        pickImageLauncher.launch(arrayOf("image/jpeg", "image/png"))
     }
 }
