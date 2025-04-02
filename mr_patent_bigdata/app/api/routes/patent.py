@@ -11,7 +11,7 @@ from app.core.database import database, patent, task_status
 from app.schemas.patent import ProcessRequest, ProcessResponse, ResumeRequest, ResumeResponse
 from app.services.extractor import extract_patent_data, prepare_corpus
 from app.services.vectorizer import fit_tfidf_vectorizer
-from app.services.dask_vectorizer import process_patents_with_dask  # Dask 기반 병렬 처리 함수 임포트
+from app.services.spark_vectorizer import process_patents_with_spark  # Spark 기반 병렬 처리 함수 임포트
 from striprtf.striprtf import rtf_to_text
 
 router = APIRouter(prefix="/api/patent", tags=["patent"])
@@ -116,9 +116,9 @@ async def process_patent_files(rtf_directory: str, task_id: str):
             )
         )
         
-        # 3단계: Dask를 사용한 병렬 처리로 벡터화 수행
-        logger.info(f"총 {len(all_patents)}개 특허 Dask 병렬 벡터화 시작")
-        total_processed = await process_patents_with_dask(all_patents)
+        # 3단계: Spark를 사용한 병렬 처리로 벡터화 수행
+        logger.info(f"총 {len(all_patents)}개 특허 Spark 병렬 벡터화 시작")
+        total_processed = await process_patents_with_spark(all_patents)
         
         # 작업 완료
         await database.execute(
@@ -140,7 +140,7 @@ async def process_patent_files(rtf_directory: str, task_id: str):
         raise
 
 async def process_saved_data(task_id: str, filename: str):
-    """저장된 특허 데이터를 벡터화하고 데이터베이스에 저장 (Dask 병렬 처리 적용)"""
+    """저장된 특허 데이터를 벡터화하고 데이터베이스에 저장 (Spark 병렬 처리 적용)"""
     try:        
         # 저장된 데이터 로드
         all_patents = load_extracted_data(filename)
@@ -164,9 +164,9 @@ async def process_saved_data(task_id: str, filename: str):
             )
         )
         
-        # Dask로 병렬 처리 수행
-        logger.info(f"총 {len(all_patents)}개 특허 Dask 병렬 벡터화 시작")
-        total_processed = await process_patents_with_dask(all_patents)
+        # Spark로 병렬 처리 수행
+        logger.info(f"총 {len(all_patents)}개 특허 Spark 병렬 벡터화 시작")
+        total_processed = await process_patents_with_spark(all_patents)
         
         # 작업 완료
         await database.execute(
@@ -202,9 +202,14 @@ async def extract_and_vectorize(request: ProcessRequest, background_tasks: Backg
     )
     
     # 백그라운드에서 처리 시작
-    background_tasks.add_task(process_patent_files, request.directory_path, task_id)
+    background_tasks.add_task(process_patent_files, request.rtf_directory, task_id)
     
-    return ProcessResponse(task_id=task_id)
+    return ProcessResponse(
+        task_id=task_id,
+        status=True,
+        message="특허 데이터 처리가 시작되었습니다.",
+        directory=request.rtf_directory
+    )
 
 # 추가된 엔드포인트 - 저장된 데이터에서 처리 재개
 @router.post("/resume-from-saved", response_model=ResumeResponse)

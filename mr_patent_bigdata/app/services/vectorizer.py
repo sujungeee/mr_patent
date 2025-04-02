@@ -4,8 +4,7 @@ import numpy as np
 import torch
 from sklearn.feature_extraction.text import TfidfVectorizer
 from typing import List, Dict, Any, Tuple
-from kobert_tokenizer import KoBERTTokenizer
-from transformers import BertModel
+from transformers import AutoTokenizer, AutoModel
 
 from app.core.logging import logger
 
@@ -13,12 +12,22 @@ from app.core.logging import logger
 VECTORIZER_PATH = "models/tfidf_vectorizer.pkl"
 os.makedirs(os.path.dirname(VECTORIZER_PATH), exist_ok=True)
 
-# TF-IDF 벡터라이저와 KoBERT 모델 초기화
+# TF-IDF 벡터라이저 초기화
 tfidf_vectorizer = TfidfVectorizer(max_features=1000)
 
-# KoBERT 모델 초기화
-tokenizer = KoBERTTokenizer.from_pretrained('skt/kobert-base-v1')
-model = BertModel.from_pretrained('skt/kobert-base-v1', return_dict=False)
+# KLUE BERT 모델 초기화
+tokenizer = None
+model = None
+BERT_LOADED = False
+
+def load_bert_model():
+    """KLUE BERT 모델 로드"""
+    global tokenizer, model, BERT_LOADED
+    if not BERT_LOADED:
+        tokenizer = AutoTokenizer.from_pretrained("klue/bert-base")
+        model = AutoModel.from_pretrained("klue/bert-base")
+        BERT_LOADED = True
+        logger.info("KLUE/BERT 모델 로드 완료")
 
 def train_and_save_vectorizer(corpus, filename=VECTORIZER_PATH):
     """특허 말뭉치로 TF-IDF 벡터라이저 학습 및 저장"""
@@ -63,19 +72,6 @@ def save_vectorizer(vectorizer, filename=VECTORIZER_PATH):
         pickle.dump(vectorizer, f)
     logger.info(f"TF-IDF 벡터라이저 저장 완료 (경로: {filename})")
 
-def load_vectorizer(filename=VECTORIZER_PATH):
-    """저장된 TF-IDF 벡터라이저 로드"""
-    global tfidf_vectorizer
-    
-    try:
-        with open(filename, "rb") as f:
-            tfidf_vectorizer = pickle.load(f)
-        logger.info(f"TF-IDF 벡터라이저 로드 완료 (어휘 크기: {len(tfidf_vectorizer.vocabulary_)})")
-        return tfidf_vectorizer
-    except FileNotFoundError:
-        logger.warning("저장된 벡터라이저가 없습니다. 기본 벡터라이저를 사용합니다.")
-        return tfidf_vectorizer
-
 def get_tfidf_vector(text: str) -> np.ndarray:
     """텍스트의 TF-IDF 벡터 계산"""
     global tfidf_vectorizer
@@ -97,10 +93,16 @@ def get_tfidf_vector(text: str) -> np.ndarray:
             logger.warning("벡터라이저 로드 실패. 영벡터를 반환합니다.")
             return np.zeros(1000)
 
-def get_kobert_vector(text: str, max_length: int = 512) -> np.ndarray:
-    """텍스트의 KoBERT 벡터 계산"""
+def get_bert_vector(text: str, max_length: int = 512) -> np.ndarray:
+    """텍스트의 KLUE BERT 벡터 계산"""
+    global tokenizer, model, BERT_LOADED
+    
     if not text:
-        return np.zeros(768)  # KoBERT 임베딩 차원
+        return np.zeros(768)  # BERT 임베딩 차원
+    
+    # BERT 모델 로드 확인
+    if not BERT_LOADED:
+        load_bert_model()
     
     try:
         # 텍스트가 너무 길면 잘라내기
@@ -109,13 +111,16 @@ def get_kobert_vector(text: str, max_length: int = 512) -> np.ndarray:
         
         inputs = tokenizer(text, return_tensors='pt', truncation=True, max_length=max_length, padding='max_length')
         with torch.no_grad():
-            # return_dict=True를 추가하여 속성으로 접근 가능한 객체 반환
-            outputs = model(**inputs, return_dict=True)
+            outputs = model(**inputs)
         
+        # CLS 토큰 임베딩 사용
         return outputs.last_hidden_state[:, 0, :].numpy().flatten()
     except Exception as e:
-        logger.error(f"KoBERT 벡터 생성 중 오류: {e}")
+        logger.error(f"BERT 벡터 생성 중 오류: {e}")
         return np.zeros(768)  # 오류 발생 시 영벡터 반환
+
+# 이전 코드와의 호환성을 위한 별칭
+get_kobert_vector = get_bert_vector
 
 def generate_vectors(patent_data):
     """특허 데이터의 필드별 벡터 생성"""
@@ -125,27 +130,26 @@ def generate_vectors(patent_data):
     
     # 필드별 벡터 생성
     title_tfidf = get_tfidf_vector(title)
-    title_kobert = get_kobert_vector(title)
+    title_bert = get_bert_vector(title)
     
     summary_tfidf = get_tfidf_vector(summary)
-    summary_kobert = get_kobert_vector(summary)
+    summary_bert = get_bert_vector(summary)
     
     claim_tfidf = get_tfidf_vector(claims)
-    claim_kobert = get_kobert_vector(claims)
+    claim_bert = get_bert_vector(claims)
     
     return {
         'title_tfidf_vector': title_tfidf,
-        'title_kobert_vector': title_kobert,
+        'title_bert_vector': title_bert,
         'summary_tfidf_vector': summary_tfidf,
-        'summary_kobert_vector': summary_kobert,
+        'summary_bert_vector': summary_bert,
         'claim_tfidf_vector': claim_tfidf,
-        'claim_kobert_vector': claim_kobert
+        'claim_bert_vector': claim_bert
     }
-
 
 def generate_field_vectors(field_text: str) -> Tuple[np.ndarray, np.ndarray]:
     """특정 필드의 벡터 생성"""
     tfidf_vector = get_tfidf_vector(field_text)
-    kobert_vector = get_kobert_vector(field_text)
+    bert_vector = get_bert_vector(field_text)
     
-    return tfidf_vector, kobert_vector
+    return tfidf_vector, bert_vector

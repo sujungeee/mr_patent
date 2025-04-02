@@ -5,7 +5,7 @@ import logging
 
 from app.core.database import database
 from app.schemas.patent import PatentDraftCreate, PatentDraftResponse
-from app.services.vectorizer import get_tfidf_vector, get_kobert_vector
+from app.services.vectorizer import get_tfidf_vector, get_bert_vector
 import numpy as np
 
 router = APIRouter(prefix="/api", tags=["drafts"])
@@ -94,17 +94,17 @@ async def create_or_update_draft(
                 try:
                     # 벡터 생성
                     tfidf_vector = get_tfidf_vector(text)
-                    kobert_vector = (text)
+                    bert_vector = get_bert_vector(text)
                     
                     # 벡터 필드에 저장
                     vector_fields[f"patent_draft_{field}_tfidf_vector"] = tfidf_vector.tobytes()
-                    vector_fields[f"patent_draft_{field}_kobert_vector"] = kobert_vector.tobytes()
+                    vector_fields[f"patent_draft_{field}_bert_vector"] = bert_vector.tobytes()
                 except Exception as e:
                     # 벡터화 실패 시 로그 기록
                     logger.error(f"벡터화 실패 ({field}): {str(e)}")
                     # 빈 벡터 할당
-                    vector_fields[f"patent_draft_{field}_tfidf_vector"] = np.zeros(10).tobytes()
-                    vector_fields[f"patent_draft_{field}_kobert_vector"] = np.zeros(768).tobytes()
+                    vector_fields[f"patent_draft_{field}_tfidf_vector"] = np.zeros(1000).tobytes()
+                    vector_fields[f"patent_draft_{field}_bert_vector"] = np.zeros(768).tobytes()
         
         # 초안이 이미 존재하는지 확인
         existing_draft_query = """
@@ -250,44 +250,3 @@ async def create_or_update_draft(
                 "timestamp": get_current_timestamp()
             }
         )
-
-@router.get("/drafts/recent", response_model=Dict[str, Any])
-async def get_recent_drafts(user_id: int, limit: int = 5):
-    """사용자의 최근 특허 초안 목록 조회 (최대 5개)"""
-    # 최근 초안 조회 (최대 limit 개수만큼)
-    query = """
-    SELECT pd.patent_draft_id, pd.patent_draft_title, pd.patent_draft_summary, pd.patent_draft_updated_at 
-    FROM patent_draft pd
-    JOIN user_patent_folder upf ON pd.user_patent_folder_id = upf.user_patent_folder_id
-    WHERE upf.user_id = :user_id
-    ORDER BY pd.patent_draft_updated_at DESC
-    LIMIT :limit
-    """
-    
-    drafts = await database.fetch_all(
-        query=query,
-        values={
-            "user_id": user_id,
-            "limit": min(limit, 5)  # 최대 5개로 제한
-        }
-    )
-    
-    if not drafts:
-        return {
-            "data": {"patent_drafts": []},
-            "timestamp": get_current_timestamp()
-        }
-    
-    result = []
-    for draft in drafts:
-        result.append({
-            "patent_draft_id": draft["patent_draft_id"],
-            "patent_draft_title": draft["patent_draft_title"],
-            "patent_draft_summary": draft["patent_draft_summary"],
-            "updated_at": draft["patent_draft_updated_at"].isoformat() + 'Z'
-        })
-    
-    return {
-        "data": {"patent_drafts": result},
-        "timestamp": get_current_timestamp()
-    }

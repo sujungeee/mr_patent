@@ -1,5 +1,3 @@
-# app/scripts/train_vectorizer.py
-
 import sys
 import os
 import asyncio
@@ -9,7 +7,7 @@ import numpy as np
 # 프로젝트 루트 디렉토리를 PYTHONPATH에 추가
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from app.services.vectorizer import train_and_save_vectorizer, get_tfidf_vector, get_kobert_vector
+from app.services.vectorizer import train_and_save_vectorizer, get_tfidf_vector, get_bert_vector
 from app.core.config import settings
 
 # 데이터베이스 연결
@@ -55,21 +53,21 @@ async def train_vectorizer_from_patents():
         
         # 각 필드별 벡터 생성
         title_tfidf = get_tfidf_vector(title)
-        title_kobert = get_kobert_vector(title)
+        title_bert = get_bert_vector(title)
         summary_tfidf = get_tfidf_vector(summary)
-        summary_kobert = get_kobert_vector(summary)
+        summary_bert = get_bert_vector(summary)
         claim_tfidf = get_tfidf_vector(claim)
-        claim_kobert = get_kobert_vector(claim)
+        claim_bert = get_bert_vector(claim)
         
         # 필드별 벡터 업데이트 (통합 벡터 필드 제거)
         update_query = """
         UPDATE patent SET
             patent_title_tfidf_vector = :title_tfidf,
-            patent_title_kobert_vector = :title_kobert,
+            patent_title_kobert_vector = :title_bert,
             patent_summary_tfidf_vector = :summary_tfidf,
-            patent_summary_kobert_vector = :summary_kobert,
+            patent_summary_kobert_vector = :summary_bert,
             patent_claim_tfidf_vector = :claim_tfidf,
-            patent_claim_kobert_vector = :claim_kobert
+            patent_claim_kobert_vector = :claim_bert
         WHERE patent_id = :patent_id
         """
         
@@ -77,11 +75,11 @@ async def train_vectorizer_from_patents():
             query=update_query,
             values={
                 "title_tfidf": title_tfidf.tobytes(),
-                "title_kobert": title_kobert.tobytes(),
+                "title_bert": title_bert.tobytes(),
                 "summary_tfidf": summary_tfidf.tobytes(),
-                "summary_kobert": summary_kobert.tobytes(),
+                "summary_bert": summary_bert.tobytes(),
                 "claim_tfidf": claim_tfidf.tobytes(),
-                "claim_kobert": claim_kobert.tobytes(),
+                "claim_bert": claim_bert.tobytes(),
                 "patent_id": patent_id
             }
         )
