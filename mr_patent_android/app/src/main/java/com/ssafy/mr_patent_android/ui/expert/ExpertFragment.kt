@@ -1,9 +1,7 @@
-package com.ssafy.mr_patent_android.ui.patent_attorney
+package com.ssafy.mr_patent_android.ui.expert
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
@@ -12,11 +10,14 @@ import com.ssafy.mr_patent_android.R
 import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.sharedPreferences
 import com.ssafy.mr_patent_android.base.BaseFragment
 import com.ssafy.mr_patent_android.databinding.FragmentExpertBinding
-import com.ssafy.mr_patent_android.ui.login.PwdChangeFragmentArgs
+import com.ssafy.mr_patent_android.ui.chat.ChatFragmentArgs
 
 class ExpertFragment :
     BaseFragment<FragmentExpertBinding>(FragmentExpertBinding::bind, R.layout.fragment_expert) {
     val viewModel: ExpertViewModel by viewModels()
+    val expert_id by lazy {
+        navArgs<ExpertFragmentArgs>().value.id
+    }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,8 +35,8 @@ class ExpertFragment :
     }
 
     fun initView() {
-        viewModel.getExpert(id)
-        if (id == sharedPreferences.getUser().expertId) {
+        viewModel.getExpert(expert_id)
+        if (expert_id == sharedPreferences.getUser().expertId) {
             binding.btnEditProfile.visibility = View.VISIBLE
             binding.btnEditProfile.setOnClickListener {
                 findNavController().navigate(ExpertFragmentDirections.actionPatentAttorneyFragmentToProfileEditFragment())
@@ -45,7 +46,7 @@ class ExpertFragment :
             binding.fabChat.setOnClickListener {
                 findNavController().navigate(
                     ExpertFragmentDirections.actionPatentAttorneyFragmentToChatFragment(
-                        id
+                        expert_id
                     )
                 )
             }

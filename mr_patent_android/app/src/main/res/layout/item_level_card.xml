@@ -18,6 +18,7 @@
             android:layout_height="wrap_content"
             android:textSize="18sp"
             android:text="Level 1"
+            android:textColor="#1E54BC"
             android:paddingHorizontal="5dp"
             android:background="@drawable/rounded_background"
             android:backgroundTint="@color/mr_white"
@@ -31,6 +32,7 @@
             android:layout_height="wrap_content"
             android:textSize="14sp"
             android:text="Level 1"
+            android:textColor="#1E54BC"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tv_level_title" />
 

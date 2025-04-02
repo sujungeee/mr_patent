@@ -28,4 +28,6 @@ data class UserDto(
 
     constructor(userId: Int, userName: String, expertAddress: String, expertDescription: String, expertGetDate: String, expertId: Int, expertLicense_number: String, expertPhone: String, userImage: String, expertCreatedAt: String):
             this(userId, userName, -1, expertAddress, expertDescription, expertGetDate, expertId, expertLicense_number, expertPhone, mutableListOf(""),userImage,expertCreatedAt)
+
+    constructor(userName: String,userImage: String) : this(-1, userName, -1, "", "", "", -1, "", "", mutableListOf(""), userImage, "")
 }

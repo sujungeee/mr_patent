@@ -40,20 +40,31 @@
             android:background="@drawable/rounded_background"
             android:backgroundTint="@color/mr_white"/>
 
-        <ImageButton
+        <Button
+            android:enabled="false"
             android:id="@+id/btn_send"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:backgroundTint="@color/mr_blue"
-            android:src="@drawable/arrow_up"
-            android:contentDescription="Send"
-            android:background="@drawable/circle_shape"/>
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="전송"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/selector_btn_color" />
     </LinearLayout>
 
-    <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/viewPagerPreview"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_image"
+        android:layout_gravity="center"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="300dp"
+        android:visibility="gone"/>
+
+    <include
+        android:id="@+id/preview_image"
+        android:layout_gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="300dp"
+        layout="@layout/item_file_preview"
         android:visibility="gone"/>
 
     <androidx.constraintlayout.widget.ConstraintLayout

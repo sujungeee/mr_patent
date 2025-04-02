@@ -1,4 +1,4 @@
-package com.ssafy.mr_patent_android.ui.patent_attorney
+package com.ssafy.mr_patent_android.ui.expert
 
 import android.os.Build
 import android.view.LayoutInflater

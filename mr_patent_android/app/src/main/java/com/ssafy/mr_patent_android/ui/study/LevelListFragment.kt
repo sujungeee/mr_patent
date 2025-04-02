@@ -34,12 +34,12 @@ class LevelListFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
 
-        setlevelCard(R.id.card_level1, "Lv.1", "학습완료 |90개", "#F2F7FF", "#1E54BC")
-        setlevelCard(R.id.card_level2, "Lv.2", "학습완료 |90개", "#EBF2FF", "#1E54BC")
-        setlevelCard(R.id.card_level3, "Lv.3", "학습완료 |90개", "#D4E5FF", "#1E54BC")
-        setlevelCard(R.id.card_level4, "Lv.4", "학습완료 |90개", "#C6DBFD", "#1E54BC")
-        setlevelCard(R.id.card_level5, "Lv.5", "", "#A0BFFB", "#1E54BC", true)
-        setlevelCard(R.id.card_dictionary, "단어장", "", "#6D9AF0", "#1E54BC")
+        setlevelCard(R.id.card_level1, "Lv.1", "학습완료 |90개", "#EFF4FF")
+        setlevelCard(R.id.card_level2, "Lv.2", "학습완료 |90개", "#E7F0FF")
+        setlevelCard(R.id.card_level3, "Lv.3", "학습완료 |90개", "#D4E5FF")
+        setlevelCard(R.id.card_level4, "Lv.4", "학습완료 |90개", "#C6DBFD")
+        setlevelCard(R.id.card_level5, "Lv.5", "", "#A0BFFB", true)
+        setlevelCard(R.id.card_dictionary, "단어장", "", "#6D9AF0")
 
     }
 
@@ -48,7 +48,6 @@ class LevelListFragment : Fragment() {
         title: String,
         description: String,
         bgColor: String,
-        textColor: String,
         isLocked: Boolean = false
     ) {
         // 여기서 view는 onCreateView에서 인플레이트된 fragment의 루트 뷰입니다.
@@ -63,17 +62,12 @@ class LevelListFragment : Fragment() {
             val arrowIv = it.findViewById<ImageView>(R.id.iv_arrow)
             val icon= it.findViewById<ImageView>(R.id.iv_icon)
 
-            // Set background color
             card.setCardBackgroundColor(Color.parseColor(bgColor))
 
-            // Set text
             titleTv.text = title
-            titleTv.setTextColor(Color.parseColor(textColor))
 
-            // Set description
             if (description.isNotEmpty()) {
                 descTv.text = description
-                descTv.setTextColor(Color.parseColor(textColor))
                 icon?.visibility = View.GONE
             } else {
                 descTv.visibility = View.GONE

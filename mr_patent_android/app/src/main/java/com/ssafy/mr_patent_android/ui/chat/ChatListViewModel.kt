@@ -40,7 +40,7 @@ class ChatListViewModel : ViewModel() {
                 }
             }.onFailure {
                 it.printStackTrace()
-                _chatRoomList.value = listOf(ChatRoomDto(1,"d","da","da","d","da",1))
+                _chatRoomList.value = listOf(ChatRoomDto(1,1,"d","da","da","d","da",1))
                 Log.d(TAG, "getChatRoomList: ${_chatRoomList.value}")
             }
         }

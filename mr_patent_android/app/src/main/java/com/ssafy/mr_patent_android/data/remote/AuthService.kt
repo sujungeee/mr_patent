@@ -2,13 +2,14 @@ package com.ssafy.mr_patent_android.data.remote
 
 import com.ssafy.mr_patent_android.base.BaseResponse
 import com.ssafy.mr_patent_android.data.model.dto.EmailCodeRequest
+import com.ssafy.mr_patent_android.data.model.dto.FcmRequest
 import com.ssafy.mr_patent_android.data.model.dto.JoinExpertRequest
 import com.ssafy.mr_patent_android.data.model.dto.JoinRequest
 import com.ssafy.mr_patent_android.data.model.dto.LoginRequest
 import com.ssafy.mr_patent_android.data.model.dto.LogoutRequest
-import com.ssafy.mr_patent_android.data.model.dto.PwdEditRequest
 import com.ssafy.mr_patent_android.data.model.response.LoginResponse
 import com.ssafy.mr_patent_android.data.model.dto.PwdChangeRequest
+import com.ssafy.mr_patent_android.data.model.dto.PwdEditRequest
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -73,4 +74,11 @@ interface AuthService {
     suspend fun pwdEdit(
         @Body pwdEditRequest: PwdEditRequest
     ): Response<BaseResponse<Boolean?>>
+
+    @POST("fcm/token")
+    suspend fun sendFcmToken(
+        @Body fcmRequest: FcmRequest
+    ): Response<BaseResponse<Boolean>>
+
+
 }
