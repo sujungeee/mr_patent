@@ -72,13 +72,13 @@ def vectorize_patent(patent_data):
         logger.error(f"특허 벡터화 중 오류: {str(e)}")
         return None
 
-async def process_patents_with_dask(all_patents, batch_size=75000):
+async def process_patents_with_dask(all_patents, batch_size=100000):
     """Dask를 사용한 특허 벡터화 처리 (최적화 버전)"""
     # Dask 클러스터 설정
     cluster = LocalCluster(
-        n_workers=10,              # 6에서 10으로 증가
+        n_workers=12,              # 6에서 12으로 증가
         threads_per_worker=2,      # 적절함
-        memory_limit="25GB",       # 20GB에서 25GB로 증가
+        memory_limit="28GB",       # 20GB에서 25GB로 증가
         timeout=7200               # 타임아웃 2시간으로 증가
     )
     client = Client(cluster)
@@ -111,7 +111,7 @@ async def process_patents_with_dask(all_patents, batch_size=75000):
             results = await client.compute(vectorized_patents)
             
             # 데이터베이스에 배치 단위로 저장
-            db_batch_size = 100
+            db_batch_size = 500
             for i in range(0, len(results), db_batch_size):
                 db_batch = results[i:i+db_batch_size]
                 
