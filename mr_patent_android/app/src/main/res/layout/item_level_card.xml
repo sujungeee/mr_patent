@@ -31,7 +31,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="14sp"
-            android:text="Level 1"
+            android:padding="5dp"
             android:textColor="#1E54BC"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tv_level_title" />
@@ -50,6 +50,7 @@
             app:tint="@color/mr_blue" />
 
         <ImageView
+            android:visibility="gone"
             android:id="@+id/iv_icon"
             android:paddingTop="20dp"
             android:paddingStart="20dp"
@@ -64,7 +65,7 @@
 
     <ImageView
         android:visibility="gone"
-        android:id="@+id/iv_level_icon"
+        android:id="@+id/iv_lock_icon"
         android:background="#67000000"
         android:src="@drawable/lock_icon"
         android:layout_width="match_parent"

@@ -104,4 +104,7 @@ dependencies {
 
     //sse
     implementation("com.launchdarkly:okhttp-eventsource:4.1.0")
+
+    //EasyFlipView
+    implementation ("com.wajahatkarim:EasyFlipView:3.0.3")
 }
