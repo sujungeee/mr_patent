@@ -10,5 +10,6 @@ class RetrofitUtil {
         val chatService = ApplicationClass.retrofit.create(ChatService::class.java)
         val patentService = ApplicationClass.retrofit.create(PatentService::class.java)
         val fileService = ApplicationClass.retrofit.create(FileService::class.java)
+        val similiarityTestService = ApplicationClass.retrofit.create(SimiliarityTestService::class.java)
     }
 }

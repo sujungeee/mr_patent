@@ -10,6 +10,9 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.ssafy.mr_patent_android.R
 import com.ssafy.mr_patent_android.base.BaseFragment
+import com.ssafy.mr_patent_android.data.model.dto.FitnessFrameDto
+import com.ssafy.mr_patent_android.data.model.dto.PatentTitleDto
+import com.ssafy.mr_patent_android.data.model.response.FitnessResultResponse
 import com.ssafy.mr_patent_android.data.model.response.SimiliarityResultResponse
 import com.ssafy.mr_patent_android.databinding.FragmentReportResultBinding
 
@@ -32,9 +35,9 @@ class ReportResultFragment : BaseFragment<FragmentReportResultBinding>(
 
     private fun initView() {
         reportResultViewModel.getFitnessResult(reportResultViewModel.userPatentId.value!!)
-        reportResultViewModel.getSimiliarityResult(reportResultViewModel.userPatentId.value!!)
         // TODO: delete
         reportResultViewModel.setFitnessResult("FAIL")
+        reportResultViewModel.setFitnessContents(FitnessResultResponse. FitnessContent(true, true, false, true, true, true, true, true, true))
         reportResultViewModel.setSimiliarityResult(
             listOf(
                 SimiliarityResultResponse.Comparison(1, 2, 0.9, listOf(
@@ -73,13 +76,39 @@ class ReportResultFragment : BaseFragment<FragmentReportResultBinding>(
         reportResultViewModel.fitnessResult.observe(viewLifecycleOwner) {
             binding.tvFitnessResult.text = it
             when (it) {
-                "PASS" -> binding.tvFitnessResult.setTextColor(resources.getColor(R.color.mr_blue))
-                "FAIL" -> binding.tvFitnessResult.setTextColor(resources.getColor(R.color.mr_red))
+                "PASS" -> {
+                    binding.tvFitnessResult.setTextColor(resources.getColor(R.color.mr_blue))
+                    binding.vpSimiliarityResultPass.visibility = View.VISIBLE
+                    binding.rvSimiliarityResultFail.visibility = View.GONE
+                    reportResultViewModel.getSimiliarityResult(reportResultViewModel.userPatentId.value!!)
+                }
+                "FAIL" -> {
+                    binding.tvFitnessResult.setTextColor(resources.getColor(R.color.mr_red))
+                    binding.tvPatentSimiliarity.text = "기준 별 적합도 결과"
+                    binding.tvSwipeExp.visibility = View.INVISIBLE
+                    binding.vpSimiliarityResultPass.visibility = View.GONE
+                    binding.rvSimiliarityResultFail.visibility = View.VISIBLE
+                }
             }
         }
 
+        reportResultViewModel.fitnessContents.observe(viewLifecycleOwner) {
+            binding.rvSimiliarityResultFail.layoutManager = LinearLayoutManager(requireContext())
+            binding.rvSimiliarityResultFail.adapter = ReportResultFailAdapter(listOf(
+                FitnessFrameDto(PatentTitleDto.PatentTitleExpDto().patentDraftTitleExp, it.patentDraftTitle)
+                , FitnessFrameDto(PatentTitleDto.PatentTitleExpDto().patentDraftTechnicalFieldExp, it.patentDraftTechnicalField)
+                , FitnessFrameDto(PatentTitleDto.PatentTitleExpDto().patentDraftBackgroundExp, it.patentDraftBackground)
+                , FitnessFrameDto(PatentTitleDto.PatentTitleExpDto().patentDraftProblemExp, it.patentDraftProblem)
+                , FitnessFrameDto(PatentTitleDto.PatentTitleExpDto().patentDraftSolutionExp, it.patentDraftSolution)
+                , FitnessFrameDto(PatentTitleDto.PatentTitleExpDto().patentDraftEffectExp, it.patentDraftEffect)
+                , FitnessFrameDto(PatentTitleDto.PatentTitleExpDto().patentDraftDetailedExp, it.patentDraftDetailed)
+                , FitnessFrameDto(PatentTitleDto.PatentTitleSummaryDto().patentDraftSummary, it.patentDraftSummary)
+                , FitnessFrameDto(PatentTitleDto.PatentTitleClaimDto().patentDraftClaim, it.patentDraftClaim)
+            ))
+        }
+
         reportResultViewModel.similiarityResult.observe(viewLifecycleOwner) {
-            binding.vpSimiliaryResults.adapter = ReportResultAdapter(it)
+            binding.vpSimiliarityResultPass.adapter = ReportResultAdapter(it)
         }
     }
 
