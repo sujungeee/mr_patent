@@ -5,6 +5,7 @@ import io
 from google.cloud import vision
 from pdf2image import convert_from_path
 from app.core.logging import logger
+from dotenv import load_dotenv
 
 router = APIRouter(prefix="/api", tags=["ocr"])
 
@@ -12,8 +13,12 @@ router = APIRouter(prefix="/api", tags=["ocr"])
 TEMP_DIR = "/temp_pdf"
 os.makedirs(TEMP_DIR, exist_ok=True)
 
-# Google Cloud 인증 설정 - 루트 디렉터리에 있는 키 파일 사용
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "d208-mr-patent-ab1793e56fe1.json"  # 실제 키 파일명으로 변경하세요
+# .env 파일 로드
+load_dotenv()
+
+# 환경 변수에서 경로 가져오기
+credentials_path = os.getenv("GOOGLE_CREDENTIALS_PATH")
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
 
 @router.post("/pdf/extract-text", response_model=Dict[str, Any])
 async def extract_text_from_pdf(
