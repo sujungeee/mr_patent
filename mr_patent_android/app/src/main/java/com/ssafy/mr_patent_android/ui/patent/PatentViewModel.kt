@@ -1,7 +1,6 @@
 package com.ssafy.mr_patent_android.ui.patent
 
-import android.os.Build
-import androidx.annotation.RequiresApi
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -15,6 +14,7 @@ import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.patentServ
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 
+private const val TAG = "PatentViewModel_Mr_Patent"
 class PatentViewModel : ViewModel() {
     private val _draftType = MutableLiveData<String>()
     val draftType: LiveData<String>
@@ -30,7 +30,7 @@ class PatentViewModel : ViewModel() {
 
     // 미리 작성된 초안의 경우 그 초안을 불러오기 위한 id
     private val _patentDraftId = MutableLiveData<Int>()
-    val patentId: LiveData<Int>
+    val patentDraftId: LiveData<Int>
         get() = _patentDraftId
 
     // 폴더 id
@@ -55,8 +55,8 @@ class PatentViewModel : ViewModel() {
         _folders.value = folders
     }
 
-    fun setPatentDraftId(patentId: Int) {
-        _patentDraftId.value = patentId
+    fun setPatentDraftId(patentDraftId: Int) {
+        _patentDraftId.value = patentDraftId
     }
 
     fun setFolderId(folderId: Int) {
@@ -76,6 +76,7 @@ class PatentViewModel : ViewModel() {
             runCatching {
                 patentService.getFolderList(sharedPreferences.getUser().userId)
             }.onSuccess {
+                Log.d(TAG, "getFolderList: ${it.isSuccessful}")
                 if (it.isSuccessful) {
                     it.body()?.data?.let { response ->
                         _folders.value = response.folders.toMutableList()
@@ -96,6 +97,7 @@ class PatentViewModel : ViewModel() {
             runCatching {
                 patentService.getRecentPatentList(sharedPreferences.getUser().userId, 5)
             }.onSuccess {
+                Log.d(TAG, "getRecentPatentList: ")
                 if (it.isSuccessful) {
                     it.body()?.data?.let { response ->
                         _patentsRecent.value = response.patentDrafts

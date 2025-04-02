@@ -74,7 +74,6 @@ class PatentFolderDetailFragment : BaseFragment<FragmentPatentFolderDetailBindin
         patentFolderDetailViewModel.patents.observe(viewLifecycleOwner) {
             binding.rvFolderItems.layoutManager = LinearLayoutManager(requireContext())
             binding.rvFolderItems.adapter = PatentFolderDetailAdapter(false, it) { position ->
-                patentFolderDetailViewModel.setPatentId(it[position].patentDraftId)
                 findNavController().navigate(
                     PatentFolderDetailFragmentDirections.actionPatentFolderDetailFragmentToPatentContentFragment(it[position].patentDraftId, "select")
                 )
