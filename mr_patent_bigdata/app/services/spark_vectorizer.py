@@ -42,8 +42,8 @@ def create_tfidf_udf():
             _VECTORIZER_LOADED = True
             logger.info(f"벡터라이저 로드 완료")
     
-    # TF-IDF 벡터화 UDF - Arrow 최적화 적용
-    @F.udf(BinaryType(), useArrow=True)
+    # TF-IDF 벡터화 UDF - useArrow 제거
+    @F.udf(BinaryType())
     def tfidf_vectorize(text):
         ensure_vectorizer_loaded()
         if text is None or text == "":
@@ -63,8 +63,8 @@ def create_bert_udf():
         if not _BERT_LOADED:
             load_bert_model()
     
-    # BERT 벡터화 UDF
-    @F.udf(BinaryType(), useArrow=True)
+    # BERT 벡터화 UDF - useArrow 제거
+    @F.udf(BinaryType())
     def bert_vectorize(text):
         ensure_bert_loaded()
         if text is None or text == "":
