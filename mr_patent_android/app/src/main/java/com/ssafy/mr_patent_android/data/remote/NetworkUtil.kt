@@ -6,6 +6,9 @@ import okhttp3.ResponseBody
 
 object NetworkUtil {
     fun getErrorResponse(errorBody: ResponseBody): ErrorResponse? {
+        if (errorBody.string().isNullOrEmpty()) {
+            return null
+        }
         return Gson().fromJson(errorBody.string(), ErrorResponse::class.java)
     }
 }

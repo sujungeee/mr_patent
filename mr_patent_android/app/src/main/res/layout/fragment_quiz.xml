@@ -63,124 +63,19 @@
         app:layout_constraintWidth_percent="0.8" />
 
 
-    <com.google.android.material.card.MaterialCardView
-        app:strokeWidth="2dp"
-        android:id="@+id/num1"
+    <androidx.recyclerview.widget.RecyclerView
+        android:overScrollMode="never"
+        android:id="@+id/rv_quiz_options"
         android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="@drawable/rounded_background"
-        android:layout_marginBottom="10dp"
-        app:layout_constraintBottom_toTopOf="@+id/num2"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHeight_percent="0.12"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintWidth_percent="0.8" >
-        <ImageView
-            android:visibility="gone"
-            android:id="@+id/wrong1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/close"
-            app:tint="@color/mr_red"
-            android:layout_gravity="start|center"/>
-
-        <ImageView
-            android:visibility="gone"
-            android:id="@+id/right1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/search"
-            app:tint="@color/mr_green"
-            android:layout_gravity="start|center"/>
-        <TextView
-            android:id="@+id/num1_text"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="start|center"
-            android:padding="20dp"
-            android:paddingStart="30dp"
-            android:text="특허소송에서 특허권자가 확인대상 발명의 침해를 "
-            android:textSize="14dp"/>
-    </com.google.android.material.card.MaterialCardView>
-
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/num2"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="@drawable/rounded_background"
-        android:layout_marginBottom="10dp"
-        app:layout_constraintBottom_toTopOf="@+id/num3"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHeight_percent="0.12"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintWidth_percent="0.8" >
-        <ImageView
-            android:visibility="gone"
-            android:id="@+id/wrong2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/close"
-            app:tint="@color/mr_red"
-            android:layout_gravity="start|center"/>
-
-        <ImageView
-            android:visibility="gone"
-            android:id="@+id/right2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/search"
-            app:tint="@color/mr_green"
-            android:layout_gravity="start|center"/>
-        <TextView
-            android:id="@+id/num2_text"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="start|center"
-            android:padding="20dp"
-            android:paddingStart="30dp"
-            android:text="특허소송에서 특허권자가 확인대상 발명의 침해를 "
-            android:textSize="14dp"/>
-    </com.google.android.material.card.MaterialCardView>
-
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/num3"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="@drawable/rounded_background"
-        android:layout_marginBottom="10dp"
+        android:layout_height="wrap_content"
+        android:paddingVertical="10dp"
+        android:layout_marginVertical="10dp"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toTopOf="@+id/button"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHeight_percent="0.12"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintWidth_percent="0.8">
-        <ImageView
-            android:visibility="gone"
-            android:id="@+id/wrong3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/close"
-            app:tint="@color/mr_red"
-            android:layout_gravity="start|center"/>
-
-        <ImageView
-            android:visibility="gone"
-            android:id="@+id/right3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/search"
-            app:tint="@color/mr_green"
-            android:layout_gravity="start|center"/>
-        <TextView
-            android:id="@+id/num3_text"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="start|center"
-            android:padding="20dp"
-            android:paddingStart="30dp"
-            android:text="특허소송에서 특허권자가 확인대상 발명의 침해를 "
-            android:textSize="14dp"/>
-    </com.google.android.material.card.MaterialCardView>
-
+        app:layout_constraintWidth_percent="0.8"
+        app:layout_constraintHeight_percent="0.4"/>
 
     <Button
         android:id="@+id/button"

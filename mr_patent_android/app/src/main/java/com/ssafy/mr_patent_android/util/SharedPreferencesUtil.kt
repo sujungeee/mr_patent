@@ -21,12 +21,12 @@ class SharedPreferencesUtil(context: Context) {
     }
     fun addRToken(token: String) {
         val editor = preferences.edit()
-        editor.putString(ApplicationClass.ACCESS_TOKEN, token)
+        editor.putString(ApplicationClass.REFRESH_TOKEN, token)
         editor.apply()
     }
 
     fun getRToken(): String? {
-        return preferences.getString(ApplicationClass.ACCESS_TOKEN, null)
+        return preferences.getString(ApplicationClass.REFRESH_TOKEN, null)
     }
 
     fun clearToken() {

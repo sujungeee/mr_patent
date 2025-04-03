@@ -5,6 +5,7 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import android.util.Log
 import android.webkit.MimeTypeMap
+import androidx.core.content.ContentProviderCompat.requireContext
 import java.io.File
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -73,4 +74,18 @@ class FileUtil {
         }
         return file
     }
+
+    fun isFileSizeValid(context: Context,uri: Uri): Boolean {
+        return try {
+            val fileSize = context.contentResolver.openInputStream(uri)?.available()?.toLong() ?: 0
+            val formattedSize = formatFileSize(fileSize)
+            Log.d(TAG, "파일 크기: $formattedSize")
+
+            fileSize <= 5 * 1024 * 1024
+        } catch (e: Exception) {
+            Log.e(TAG, "파일 크기 확인 중 오류 발생", e)
+            false
+        }
+    }
+
 }
