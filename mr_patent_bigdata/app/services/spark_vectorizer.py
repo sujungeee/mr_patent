@@ -100,40 +100,29 @@ def check_memory_usage():
     logger.info(f"메모리 사용량: {mem.percent}%, 사용 가능: {mem.available / (1024**3):.2f}GB")
     return mem.percent
 
-async def process_patents_with_spark(all_patents, batch_size=100, with_bert=False):  # 기본값을 False로 변경
+async def process_patents_with_spark(all_patents, batch_size=2500, with_bert=False):  # 배치 크기를 1000으로 증가
     """Spark를 사용한 특허 TF-IDF 벡터화 처리 (BERT는 별도 처리)
     
     Args:
         all_patents: 처리할 특허 데이터 목록
-        batch_size: 배치 크기 (기본값: 100)
+        batch_size: 배치 크기 (기본값: 1000)
         with_bert: BERT 벡터화 함께 수행 여부 (기본값: False)
     """
     # 임시 디렉토리 확인 및 생성
-    temp_dir = "C:/temp"
+    temp_dir = "/tmp/spark-temp"  # Linux 경로로 변경
     if not os.path.exists(temp_dir):
         os.makedirs(temp_dir, exist_ok=True)
         logger.info(f"임시 디렉토리 생성됨: {temp_dir}")
     
-    # Spark 세션 설정 - 32GB RAM, Intel Core Ultra 7 프로세서에 최적화
+    # Spark 세션 설정 - EC2 인스턴스에 최적화
     spark = SparkSession.builder \
         .appName("PatentVectorizer") \
-        .config("spark.driver.memory", "22g") \
-        .config("spark.executor.memory", "18g") \
-        .config("spark.python.worker.memory", "2g") \
-        .config("spark.executor.pyspark.memory", "4g") \
-        .config("spark.sql.execution.arrow.pyspark.enabled", "true") \
-        .config("spark.sql.execution.pythonUDF.arrow.enabled", "true") \
-        .config("spark.default.parallelism", "24") \
-        .config("spark.executor.cores", "8") \
-        .config("spark.driver.maxResultSize", "10g") \
-        .config("spark.memory.fraction", "0.7") \
-        .config("spark.memory.storageFraction", "0.3") \
-        .config("spark.sql.shuffle.partitions", "24") \
-        .config("spark.sql.execution.arrow.maxRecordsPerBatch", "1000") \
-        .config("spark.network.timeout", "1800s") \
-        .config("spark.executor.heartbeatInterval", "600s") \
-        .config("spark.local.dir", temp_dir) \
-        .master("local[*]") \
+        .config("spark.driver.memory", "110g") \
+        .config("spark.sql.execution.arrow.maxRecordsPerBatch", "10000") \
+        .config("spark.default.parallelism", "32") \
+        .config("spark.sql.shuffle.partitions", "200") \
+        .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer") \
+        .master("local[16]") \
         .getOrCreate()
     
     # TF-IDF 및 BERT 벡터화 UDF 함수 생성

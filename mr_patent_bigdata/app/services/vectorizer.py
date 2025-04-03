@@ -119,7 +119,7 @@ def get_bert_vector(text: str, max_length: int = 512) -> np.ndarray:
         logger.error(f"BERT 벡터 생성 중 오류: {e}")
         return np.zeros(768)  # 오류 발생 시 영벡터 반환
 
-def generate_vectors(patent_data, with_bert=False):  # 기본값을 False로 변경
+def generate_vectors(patent_data, with_bert=False):
     """특허 데이터의 필드별 벡터 생성"""
     title = patent_data.get("title", "")
     summary = patent_data.get("summary", "")

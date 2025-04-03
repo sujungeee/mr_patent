@@ -17,7 +17,7 @@ from striprtf.striprtf import rtf_to_text
 router = APIRouter(prefix="/api/patent", tags=["patent"])
 
 # 추출된 데이터 저장을 위한 디렉토리
-DATA_DIR = "temp_data"
+DATA_DIR = "/tmp/patent_data"
 os.makedirs(DATA_DIR, exist_ok=True)
 
 def save_extracted_data(patents: List[Dict[str, Any]], filename: str = "extracted_patents.pkl") -> str:
@@ -116,9 +116,9 @@ async def process_patent_files(rtf_directory: str, task_id: str):
             )
         )
         
-        # 3단계: Spark를 사용한 병렬 처리로 벡터화 수행
+        # 3단계: Spark를 사용한 병렬 처리로 벡터화 수행 (with_bert=False로 설정)
         logger.info(f"총 {len(all_patents)}개 특허 Spark 병렬 벡터화 시작")
-        total_processed = await process_patents_with_spark(all_patents, with_bert=False)
+        total_processed = await process_patents_with_spark(all_patents, batch_size=1000, with_bert=False)
         
         # 작업 완료
         await database.execute(
@@ -164,9 +164,9 @@ async def process_saved_data(task_id: str, filename: str):
             )
         )
         
-        # Spark로 병렬 처리 수행
+        # Spark로 병렬 처리 수행 (with_bert=False, batch_size=1000으로 설정)
         logger.info(f"총 {len(all_patents)}개 특허 Spark 병렬 벡터화 시작")
-        total_processed = await process_patents_with_spark(all_patents)
+        total_processed = await process_patents_with_spark(all_patents, batch_size=1000, with_bert=False)
         
         # 작업 완료
         await database.execute(
