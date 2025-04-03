@@ -37,13 +37,14 @@ class FileUploadFragment : BaseFragment<FragmentFileUploadBinding>(
     }
 
     private fun initView() {
-        filePickerUtil = FilePicker(this) { uri, fileName, fileSize ->
+        filePickerUtil = FilePicker(this) { uri ->
+            val fileName = FileUtil().getFileName(requireContext(), uri)
+            val fileSize = FileUtil().getFileSize(requireContext(), uri)
             if(fileSize >= 1024 * 1024 * 5) {
                 setDialogSizeOver()
                 return@FilePicker
             } else {
-                // TODO: edit: file extraction type
-                val mode = "pdf"
+                val mode = FileUtil().getFileExtension(requireContext(), uri)
 
                 when (mode) {
                     "pdf" -> {

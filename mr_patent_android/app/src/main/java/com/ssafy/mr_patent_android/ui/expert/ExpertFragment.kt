@@ -39,7 +39,9 @@ class ExpertFragment :
         if (expert_id == sharedPreferences.getUser().expertId) {
             binding.btnEditProfile.visibility = View.VISIBLE
             binding.btnEditProfile.setOnClickListener {
-                findNavController().navigate(ExpertFragmentDirections.actionPatentAttorneyFragmentToProfileEditFragment())
+                findNavController().navigate(ExpertFragmentDirections.actionPatentAttorneyFragmentToProfileEditFragment(
+                    "expert", expert_id
+                ))
             }
             binding.fabChat.visibility = View.GONE
         } else {

@@ -15,7 +15,7 @@ import java.text.DecimalFormat
 private const val TAG = "FilePicker_Mr_Patent"
 class FilePicker(
     private val fragment: Fragment,
-    private val onFileSelected: (Uri, String, Long) -> Unit
+    private val onFileSelected: (Uri) -> Unit
 ) {
     private val requestPermissionLauncher = fragment.registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -31,9 +31,7 @@ class FilePicker(
         ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         uri?.let {
-            val fileName = getFileName(fragment.requireContext(), it)
-            val fileSize = getFileSize(fragment.requireContext(), it)
-            onFileSelected(it, fileName, fileSize)
+            onFileSelected(it)
         }
     }
 
@@ -53,28 +51,5 @@ class FilePicker(
 
     private fun openStorage() {
         pickFileLauncher.launch(arrayOf("application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
-    }
-
-    private fun getFileName(context: Context, uri: Uri): String {
-        var name = "unknown.pdf"
-        context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-            if (nameIndex != -1 && cursor.moveToFirst()) {
-                name = cursor.getString(nameIndex)
-            }
-        }
-        return name
-    }
-
-    private fun getFileSize(context: Context, uri: Uri): Long {
-        var size = 0L
-        context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-            val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
-            if (sizeIndex != -1 && cursor.moveToFirst()) {
-                size = cursor.getLong(sizeIndex)
-            }
-        }
-
-        return size
     }
 }

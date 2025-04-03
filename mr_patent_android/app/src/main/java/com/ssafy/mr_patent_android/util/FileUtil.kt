@@ -29,6 +29,7 @@ class FileUtil {
             else -> "$sizeInBytes Bytes"
         }
     }
+
     fun getFileExtension(context: Context, uri: Uri): String? {
         val contentResolver = context.contentResolver
         val mimeType = contentResolver.getType(uri) ?: return null
@@ -49,6 +50,18 @@ class FileUtil {
             }
         }
         return null
+    }
+
+    fun getFileSize(context: Context, uri: Uri): Long {
+        var size = 0L
+        context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+            val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+            if (sizeIndex != -1 && cursor.moveToFirst()) {
+                size = cursor.getLong(sizeIndex)
+            }
+        }
+
+        return size
     }
 
     fun getFileFromUri(context: Context, uri: Uri?, name:String, type:String): File {
