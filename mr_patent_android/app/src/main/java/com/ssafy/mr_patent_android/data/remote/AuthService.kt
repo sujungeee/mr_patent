@@ -20,15 +20,52 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface AuthService {
+    @POST("user")
+    suspend fun joinMember(
+        @Body joinRequest: JoinRequest
+    ): Response<BaseResponse<Boolean?>>
+
     @POST("user/reissue")
     suspend fun reissue(
         @Body refreshToken: String
     ): Response<BaseResponse<LoginResponse>>
 
+    @POST("user/logout")
+    suspend fun logout(
+        @Body logoutRequest: LogoutRequest
+    ): Response<BaseResponse<Boolean?>>
+
     @POST("user/login")
     suspend fun login(
         @Body loginRequest: LoginRequest
     ): Response<BaseResponse<LoginResponse>>
+
+    @POST("user/expert")
+    suspend fun joinExpert(
+        @Body joinExpertRequest: JoinExpertRequest
+    ): Response<BaseResponse<Boolean?>>
+
+
+    @GET("user/me")
+    suspend fun getMyInfo(
+
+    ): Response<BaseResponse<LoginResponse>>
+
+    @DELETE("user/me")
+    suspend fun deleteUser (
+        @Path("user_id") userId: Int
+    ): Response<BaseResponse<Boolean?>>
+
+    @PATCH("user/me")
+    suspend fun editUser(
+        @Body userDto: LoginResponse
+    ): Response<BaseResponse<Boolean?>>
+
+    @PATCH("user/me/pw")
+    suspend fun pwdEdit(
+        @Body pwdEditRequest: PwdEditRequest
+    ): Response<BaseResponse<Boolean?>>
+
 
     @POST("email/verification")
     suspend fun emailVerify(
@@ -40,45 +77,23 @@ interface AuthService {
         @Body userEmail: String
     ): Response<BaseResponse<String>>
 
-    @PATCH("user/pw-change")
+    @POST("email/password/verification")
+    suspend fun sendCodePwd(
+        @Body user_email: String
+    ): Response<BaseResponse<String>>
+
+    @PATCH("email/password/reset")
     suspend fun changePassword(
         @Body pwdChangeRequest: PwdChangeRequest
     ): Response<BaseResponse<Boolean>>
 
-    @POST("user/")
-    suspend fun joinMember(
-        @Body joinRequest: JoinRequest
-    ): Response<BaseResponse<Boolean?>>
-
-    @POST("user/expert")
-    suspend fun joinExpert(
-        @Body joinExpertRequest: JoinExpertRequest
-    ): Response<BaseResponse<Boolean?>>
-
-    @GET("user/check-email")
+    @GET("email/check")
     suspend fun checkDuplEmail(
-        @Query("user_email") userEmail: String
+        @Query("email") userEmail: String
     ): Response<BaseResponse<Boolean>>
-
-    @DELETE("user/{user_id}")
-    suspend fun deleteUser (
-        @Path("user_id") userId: Int
-    ): Response<BaseResponse<Boolean?>>
-
-    @POST("user/logout")
-    suspend fun logout(
-        @Body logoutRequest: LogoutRequest
-    ): Response<BaseResponse<Boolean?>>
-
-    @PATCH("user/pw")
-    suspend fun pwdEdit(
-        @Body pwdEditRequest: PwdEditRequest
-    ): Response<BaseResponse<Boolean?>>
 
     @POST("fcm/token")
     suspend fun sendFcmToken(
         @Body fcmRequest: FcmRequest
     ): Response<BaseResponse<Boolean>>
-
-
 }

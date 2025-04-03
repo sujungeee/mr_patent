@@ -4,7 +4,7 @@
     android:id="@+id/card_level"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp">
+    android:layout_margin="12dp">
 
     <LinearLayout
         android:id="@+id/ll_word"
@@ -29,34 +29,40 @@
             android:textSize="18sp"
             android:textStyle="bold" />
 
-            <ImageView
-                android:id="@+id/iv_bookmark"
+            <ToggleButton
+                android:id="@+id/t_btn_bookmark"
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:layout_marginHorizontal="10dp"
+                android:background="@drawable/selector_bookmark"
+                android:backgroundTint="@color/mr_red"
+                app:layout_constraintStart_toStartOf="@+id/card_study"
+                app:layout_constraintTop_toTopOf="@+id/card_study"
+                android:text=""
+                android:textOff=""
+                android:textOn=""/>
+
+            <Space
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/bookmark_fill"
-                app:tint="@color/mr_red" />
+                android:layout_weight="1"/>
 
-            <ImageSwitcher
-                android:id="@+id/is_expand"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end">
-
-                <ImageView
-                    android:id="@+id/iv_expand"
-                    android:layout_gravity="end"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/drop_up_24"
-                    app:tint="@color/mr_blue" />
-
-            </ImageSwitcher>
+            <ToggleButton
+                android:checked="false"
+                android:id="@+id/t_btn_expand"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:background="@drawable/selector_drop"
+                android:backgroundTint="@color/mr_blue"
+                android:text=""
+                android:textOff=""
+                android:textOn=""/>
 
         </LinearLayout>
 
         <!-- 설명 (아코디언으로 확장될 부분) -->
         <LinearLayout
+            android:visibility="gone"
             android:id="@+id/expandable_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -68,9 +74,10 @@
                 android:background="@color/mr_gray_light"/>
 
             <TextView
+                android:layout_marginTop="10dp"
                 android:id="@+id/tv_mean"
                 android:textColor="@color/mr_gray"
-                android:text="dasldkjaksdljaslkdjlaks"
+                android:text="dasldkjaksdl"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="14sp" />

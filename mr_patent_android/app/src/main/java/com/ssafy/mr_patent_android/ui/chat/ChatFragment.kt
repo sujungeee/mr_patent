@@ -63,7 +63,7 @@ class ChatFragment :
             navArgs<ChatFragmentArgs>().value.userImage }
     lateinit var stompClient: StompClient
 
-    val url = "ws://j12d208.p.ssafy.io/connect/websocket"
+    val url = "wss://j12d208.p.ssafy.io/"
     var headerList: MutableList<StompHeader> = mutableListOf()
     var modalBottomSheet: BottomSheetDialog? = null
 

@@ -6,12 +6,14 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.navigation.NavHostController
+import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
 import com.ssafy.mr_patent_android.base.BaseActivity
 import com.ssafy.mr_patent_android.databinding.ActivityMainBinding
+import com.ssafy.mr_patent_android.ui.home.HomeFragmentDirections
 
 private const val TAG = "MainActivity_Mr_Patent"
 class MainActivity : BaseActivity<ActivityMainBinding>(ActivityMainBinding::inflate)  {
@@ -42,6 +44,11 @@ class MainActivity : BaseActivity<ActivityMainBinding>(ActivityMainBinding::infl
 
 
     private fun initNavigation() {
+        Log.d(TAG, "initNavigation: ${intent.extras}")
+        Log.d(TAG, "initNavigation: ${intent.data}")
+        Log.d(TAG, "initNavigation: ${intent.getStringExtra("user_id")}")
+
+
         val navController = supportFragmentManager.findFragmentById(R.id.frame_layout)
             ?.findNavController() as NavHostController
 
@@ -58,6 +65,12 @@ class MainActivity : BaseActivity<ActivityMainBinding>(ActivityMainBinding::infl
             else {
                 binding.bottomNavigationView.visibility = View.GONE
             }
+        }
+
+        if (intent.getStringExtra("user_id") != null) {
+            val userId = intent.getStringExtra("user_id")!!.toInt()
+            val action = HomeFragmentDirections.actionNavFragmentHomeToChatFragment(userId)
+            navController.navigate(action)
         }
     }
 }
