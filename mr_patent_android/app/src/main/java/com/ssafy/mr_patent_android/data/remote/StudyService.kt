@@ -1,6 +1,7 @@
 package com.ssafy.mr_patent_android.data.remote
 
 import com.ssafy.mr_patent_android.base.BaseResponse
+import com.ssafy.mr_patent_android.data.model.dto.AnswerDto
 import com.ssafy.mr_patent_android.data.model.dto.ChatMessageDto
 import com.ssafy.mr_patent_android.data.model.dto.ChatRoomDto
 import com.ssafy.mr_patent_android.data.model.dto.ChatRoomRequest
@@ -34,7 +35,8 @@ interface StudyService {
     @POST("study/levels/{level_id}/quiz-results")
     suspend fun postQuizResult(
         @Path("level_id") level_id: Int,
-        @Body quizDto: QuizDto):
+        @Body QuizRequest: AnswerDto
+    ):
             Response<BaseResponse<QuizRequest>>
 
     @POST("bookmarks")

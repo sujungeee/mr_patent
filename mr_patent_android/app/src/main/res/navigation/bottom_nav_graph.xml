@@ -107,7 +107,13 @@
         android:id="@+id/quizResultFragment"
         android:name="com.ssafy.mr_patent_android.ui.study.QuizResultFragment"
         android:label="fragment_quiz_result"
-        tools:layout="@layout/fragment_quiz_result" />
+        tools:layout="@layout/fragment_quiz_result" >
+
+        <argument
+            android:name="answer_dto"
+            app:argType="integer[]" />
+
+    </fragment>
     <fragment
         android:id="@+id/chatFragment"
         android:name="com.ssafy.mr_patent_android.ui.chat.ChatFragment"
