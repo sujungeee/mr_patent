@@ -354,8 +354,8 @@ class ChatFragment :
                         bottomBinding.previewImage.previewImage.setImageResource(R.drawable.word_icon)
                     }
                 }
-//                bottomBinding.previewImage.tvFileSize.text =
-//                    FileUtil().getFileSize(requireContext(), it).toString()
+                bottomBinding.previewImage.tvFileSize.text =
+                    FileUtil().formatFileSize(FileUtil().getFileSize(requireContext(), it))
                 bottomBinding.previewImage.tvFileName.text =
                     FileUtil().getFileName(requireContext(), it)
             } else {
