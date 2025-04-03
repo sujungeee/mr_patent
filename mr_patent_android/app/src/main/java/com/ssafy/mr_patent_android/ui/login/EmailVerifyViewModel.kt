@@ -53,7 +53,7 @@ class EmailVerifyViewModel:ViewModel() {
         // 코드 전송 요청
         viewModelScope.launch {
             runCatching {
-                authService.sendCode(email)
+                authService.sendCodePwd(email)
             }.onSuccess {
                 // 코드 전송 성공
                 if (it.isSuccessful) {
@@ -63,8 +63,8 @@ class EmailVerifyViewModel:ViewModel() {
                         _codeState.value = true
                     }
                 } else {
-                    it.errorBody()?.let {
-                        it1 -> networkUtil.getErrorResponse(it1)
+                    it.errorBody()?.let { it1 ->
+                        networkUtil.getErrorResponse(it1)
                     }
                     // 코드 전송 실패
                 }

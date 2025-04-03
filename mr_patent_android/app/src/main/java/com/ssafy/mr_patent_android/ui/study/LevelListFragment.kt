@@ -10,75 +10,93 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.cardview.widget.CardView
+import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import com.ssafy.mr_patent_android.R
+import com.ssafy.mr_patent_android.base.BaseFragment
+import com.ssafy.mr_patent_android.data.model.dto.LevelDto
 import com.ssafy.mr_patent_android.databinding.FragmentLevelListBinding
 
 private const val TAG = "FragmentLevelListBinding"
-class LevelListFragment : Fragment() {
-    lateinit var binding: FragmentLevelListBinding
+class LevelListFragment : BaseFragment<FragmentLevelListBinding>(FragmentLevelListBinding::bind ,R.layout.fragment_level_list) {
+    val viewModel: LevelListViewModel by viewModels()
+    val bgColor= arrayOf("#E5EEFF", "#D9E5FF", "#C6D9FF", "#ACC8FF", "#9BB9F3", "#6D9AF0")
+    val cardList= intArrayOf(R.id.card_level1, R.id.card_level2, R.id.card_level3, R.id.card_level4, R.id.card_level5, R.id.card_dictionary)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        binding = FragmentLevelListBinding.inflate(inflater, container, false)
-// Inflate the layout for this fragment
-        return binding.root
-    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-
-        setlevelCard(R.id.card_level1, "Lv.1", "학습완료 |90개", "#EFF4FF")
-        setlevelCard(R.id.card_level2, "Lv.2", "학습완료 |90개", "#E7F0FF")
-        setlevelCard(R.id.card_level3, "Lv.3", "학습완료 |90개", "#D4E5FF")
-        setlevelCard(R.id.card_level4, "Lv.4", "학습완료 |90개", "#C6DBFD")
-        setlevelCard(R.id.card_level5, "Lv.5", "", "#A0BFFB", true)
-        setlevelCard(R.id.card_dictionary, "단어장", "", "#6D9AF0")
+        initView()
+        initObserver()
 
     }
 
-    fun setlevelCard(
-        cardId: Int,
-        title: String,
-        description: String,
-        bgColor: String,
-        isLocked: Boolean = false
-    ) {
-        // 여기서 view는 onCreateView에서 인플레이트된 fragment의 루트 뷰입니다.
-        val cardView = view?.findViewById<CardView>(cardId)
-        Log.d(TAG, "setlevelCard: $cardView")
-        // cardView가 null이 아닌지 확인
+    fun initView(){
+        viewModel.getLevels()
+
+    }
+
+    fun initObserver(){
+        viewModel.levelList.observe(viewLifecycleOwner, {
+            it?.let {
+                for (i in it.levels.indices){
+                    val level = it.levels[i]
+                    setLevelCard(level, i)
+                }
+            }
+        })
+    }
+
+    fun setLevelCard(level: LevelDto.Level, index: Int ){
+        val cardView = view?.findViewById<CardView>(cardList[index])
         cardView?.let {
-            val card = it.findViewById<CardView>(cardId)
+            val card = it.findViewById<CardView>(cardList[index])
             val titleTv = it.findViewById<TextView>(R.id.tv_level_title)
             val descTv = it.findViewById<TextView>(R.id.tv_level_desc)
-            val iconIv = it.findViewById<ImageView>(R.id.iv_level_icon)
+            val lockIcon = it.findViewById<ImageView>(R.id.iv_lock_icon)
             val arrowIv = it.findViewById<ImageView>(R.id.iv_arrow)
-            val icon= it.findViewById<ImageView>(R.id.iv_icon)
+            val icon = it.findViewById<ImageView>(R.id.iv_icon)
 
-            card.setCardBackgroundColor(Color.parseColor(bgColor))
+            card.setCardBackgroundColor(Color.parseColor(bgColor[index]))
+            titleTv.text = level.level_name
 
-            titleTv.text = title
+            card.setOnClickListener{
+                if (level.is_accessible) {
+                    findNavController().navigate(LevelListFragmentDirections.actionNavFragmentStudyToLevelFragment(level.level_id))
+                }
+            }
 
-            if (description.isNotEmpty()) {
-                descTv.text = description
-                icon?.visibility = View.GONE
+            var text = ""
+            var color = ""
+            if (level.is_accessible) {
+                if (level.is_passed) {
+                    text = "학습완료 | ${level.best_score}점"
+                    color = "#1E54BC"
+                } else {
+                    if (level.best_score == 100) {
+                        text = "미응시"
+                        color="#9E9E9E"
+                    } else {
+                        text = "학습중 | ${level.best_score}점"
+                        color = "#FF6756"
+                    }
+                }
+                descTv.text = text
+                descTv.setTextColor(Color.parseColor(color))
             } else {
-                descTv.visibility = View.GONE
+                lockIcon.visibility = View.VISIBLE
+            }
+
+
+            if (index == 5) {
+                icon.visibility = View.VISIBLE
                 arrowIv.visibility = View.GONE
+                lockIcon.visibility = View.GONE
             }
-
-            if (isLocked) {
-                iconIv.visibility = View.VISIBLE
-            }
-
-
         }
     }
 

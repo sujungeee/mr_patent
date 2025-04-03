@@ -17,18 +17,18 @@ interface ChatService {
         @Body request: ChatRoomRequest
     ) : Response<BaseResponse<String>>
 
-    @GET("chat/rooms/{userid}")
+    @GET("chat/rooms/{userId}")
     suspend fun getChatRoomList(
-        @Path("userid") userId: Int
+        @Path("userId") userId: Int
     ) : Response<BaseResponse<List<ChatRoomDto>>>
 
-    @GET("chat/messages/{roomid}?lastMessageid={lastmessageid}")
+    @GET("chat/rooms/messages/{roomId}?lastMessageid={lastmessageid}")
     suspend fun getChatMessageList(
-        @Path("roomid") roomId: String,
+        @Path("roomId") roomId: String,
         @Query("lastmessageid") lastMessageId: Int?
     ) : Response<BaseResponse<List<ChatMessageDto>>>
 
-    @GET("chat/messages/{roomid}")
+    @GET("chat/rooms/messages/{roomid}")
     suspend fun getFirstChatMessageList(
         @Path("roomid") roomId: String,
     ) : Response<BaseResponse<List<ChatMessageDto>>>

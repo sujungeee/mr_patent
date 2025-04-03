@@ -14,8 +14,8 @@
             android:id="@+id/action_nav_fragment_home_to_patentAttorneyListFragment"
             app:destination="@id/patentAttorneyListFragment" />
         <action
-            android:id="@+id/action_nav_fragment_home_to_nav_fragment_chat"
-            app:destination="@id/nav_fragment_chat" />
+            android:id="@+id/action_nav_fragment_home_to_chatFragment"
+            app:destination="@id/chatFragment" />
     </fragment>
     <fragment
         android:id="@+id/nav_fragment_study"
@@ -61,6 +61,11 @@
         android:name="com.ssafy.mr_patent_android.ui.study.LevelFragment"
         android:label="fragment_level"
         tools:layout="@layout/fragment_level">
+        <argument
+            android:name="level_id"
+            android:defaultValue="-1"
+            app:argType="integer" />
+
         <action
             android:id="@+id/action_levelFragment_to_studyCardFragment"
             app:destination="@id/studyCardFragment" />
@@ -73,6 +78,10 @@
         android:name="com.ssafy.mr_patent_android.ui.study.StudyCardFragment"
         android:label="fragment_study_card"
         tools:layout="@layout/fragment_study_card">
+        <argument
+            android:name="level_id"
+            android:defaultValue="-1"
+            app:argType="integer" />
         <action
             android:id="@+id/action_studyCardFragment_to_studyAllFragment"
             app:destination="@id/studyAllFragment" />
@@ -81,12 +90,21 @@
         android:id="@+id/studyAllFragment"
         android:name="com.ssafy.mr_patent_android.ui.study.StudyAllFragment"
         android:label="fragment_study_all"
-        tools:layout="@layout/fragment_study_all" />
+        tools:layout="@layout/fragment_study_all" >
+        <argument
+            android:name="level_id"
+            android:defaultValue="-1"
+            app:argType="integer" />
+    </fragment>
     <fragment
         android:id="@+id/quizFragment"
         android:name="com.ssafy.mr_patent_android.ui.study.QuizFragment"
         android:label="fragment_quiz"
         tools:layout="@layout/fragment_quiz">
+        <argument
+            android:name="level_id"
+            android:defaultValue="-1"
+            app:argType="integer" />
         <action
             android:id="@+id/action_quizFragment_to_quizResultFragment"
             app:destination="@id/quizResultFragment" />
