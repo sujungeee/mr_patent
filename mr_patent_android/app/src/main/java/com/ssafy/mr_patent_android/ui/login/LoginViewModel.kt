@@ -1,5 +1,6 @@
 package com.ssafy.mr_patent_android.ui.login
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -11,6 +12,7 @@ import com.ssafy.mr_patent_android.data.model.dto.UserDto
 import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.authService
 import kotlinx.coroutines.launch
 
+private const val TAG = "LoginViewModel"
 class LoginViewModel:ViewModel() {
     private val _loginState = MutableLiveData<Boolean>()
     val loginState: LiveData<Boolean>
@@ -28,19 +30,18 @@ class LoginViewModel:ViewModel() {
                 // 로그인 성공
                 if (it.isSuccessful) {
                     // 로그인 성공
-                    it.body()?.data?.let { res ->
-                        // 토큰 저장
+                    it.body()?.let { res ->
                         sharedPreferences.addAToken(res.accessToken)
+
                         sharedPreferences.addRToken(res.refreshToken)
                         // 사용자 정보 저장
-                        sharedPreferences.addUser(UserDto(res.userId,res.userName,res.userRole))
+//                        sharedPreferences.addUser(UserDto(res.userId,res.userName,res.userRole))
                         _loginState.value = true
                     }
                 } else {
                     it.errorBody()?.let {
                         it1 -> networkUtil.getErrorResponse(it1)
                     }
-                    // 로그인 실패
                 }
 
             }.onFailure {

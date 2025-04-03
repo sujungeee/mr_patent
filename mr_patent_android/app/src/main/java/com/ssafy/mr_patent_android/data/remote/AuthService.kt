@@ -38,7 +38,7 @@ interface AuthService {
     @POST("user/login")
     suspend fun login(
         @Body loginRequest: LoginRequest
-    ): Response<BaseResponse<LoginResponse>>
+    ): Response<LoginResponse>
 
     @POST("user/expert")
     suspend fun joinExpert(
