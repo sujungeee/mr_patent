@@ -34,7 +34,18 @@ class MyPageFragment : BaseFragment<FragmentMyPageBinding>(
         // TODO
 
         binding.tvProfileUpdate.setOnClickListener { // 프로필 수정
-
+            when (sharedPreferences.getUser().userRole) {
+                0 -> {
+                    findNavController().navigate(MyPageFragmentDirections.actionNavFragmentMypageToProfileEditFragment(
+                        "member", sharedPreferences.getUser().userId
+                    ))
+                }
+                1-> findNavController().navigate(R.id.patentAttorneyFragment)
+            }
+            // TODO: delete
+            findNavController().navigate(MyPageFragmentDirections.actionNavFragmentMypageToProfileEditFragment(
+                "member", sharedPreferences.getUser().userId
+            ))
         }
 
         // 특허 분석 리포트

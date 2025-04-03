@@ -3,6 +3,7 @@ package com.ssafy.mr_patent_android.data.remote
 import com.ssafy.mr_patent_android.base.BaseResponse
 import com.ssafy.mr_patent_android.data.model.dto.EmailCodeRequest
 import com.ssafy.mr_patent_android.data.model.dto.LoginRequest
+import com.ssafy.mr_patent_android.data.model.dto.ProfileEditRequest
 import com.ssafy.mr_patent_android.data.model.response.LoginResponse
 import com.ssafy.mr_patent_android.data.model.dto.PwdChangeRequest
 import com.ssafy.mr_patent_android.data.model.dto.UserDto
@@ -21,4 +22,12 @@ interface UserService {
     suspend fun getExpert(
         @Path("expert_id") expert_id: Int
     ): Response<BaseResponse<UserDto>>
+
+    @GET("user/me")
+    suspend fun getMember(): Response<BaseResponse<UserDto>>
+
+    @PATCH("user/me")
+    suspend fun editUserInfo(
+        @Body profileEditRequest : ProfileEditRequest
+    ): Response<BaseResponse<Boolean>>
 }
