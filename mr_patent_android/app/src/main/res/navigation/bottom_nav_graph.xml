@@ -49,6 +49,12 @@
         <action
             android:id="@+id/action_nav_fragment_mypage_to_patentFolderFragment"
             app:destination="@id/patentFolderFragment" />
+        <action
+            android:id="@+id/action_nav_fragment_mypage_to_patentAttorneyFragment2"
+            app:destination="@id/patentAttorneyFragment" />
+        <action
+            android:id="@+id/action_nav_fragment_mypage_to_profileEditFragment"
+            app:destination="@id/profileEditFragment" />
     </fragment>
     <fragment
         android:id="@+id/levelFragment"
@@ -166,9 +172,18 @@
         android:name="com.ssafy.mr_patent_android.ui.mypage.ProfileEditFragment"
         android:label="fragment_profile_edit"
         tools:layout="@layout/fragment_profile_edit">
+        <argument
+            android:name="role"
+            android:defaultValue="-1"
+            app:argType="string" />
+        <argument
+            android:name="id"
+            android:defaultValue="-1"
+            app:argType="integer" />
         <action
-            android:id="@+id/action_profileEditFragment_to_addressChangeFragment"
-            app:destination="@id/pwdEditFragment" />
+            android:id="@+id/action_profileEditFragment_to_addressSearchFragment"
+            app:destination="@id/addressSearchFragment" />
+
     </fragment>
     <fragment
         android:id="@+id/pwdEditFragment"
@@ -271,4 +286,9 @@
         android:name="com.ssafy.mr_patent_android.ui.mypage.ReportResultFragment"
         android:label="fragment_report_result"
         tools:layout="@layout/fragment_report_result" />
+    <fragment
+        android:id="@+id/addressSearchFragment"
+        android:name="com.ssafy.mr_patent_android.ui.address.AddressSearchFragment"
+        android:label="fragment_address_search"
+        tools:layout="@layout/fragment_address_search" />
 </navigation>

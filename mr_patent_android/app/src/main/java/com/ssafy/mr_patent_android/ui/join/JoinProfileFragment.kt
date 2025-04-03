@@ -35,16 +35,16 @@ class JoinProfileFragment : BaseFragment<FragmentJoinProfileBinding>(
             joinViewModel.setUserImage(uri.toString())
             Glide.with(requireContext())
                 .load(uri)
+                .fallback(R.drawable.user_profile)
+                .error(R.drawable.image_load_error_icon)
                 .into(binding.ivProfile)
         }
         
         binding.tvBefore.setOnClickListener {
-            joinViewModel.setUserImage("android.resource://com.ssafy.mr_patent_android/drawable/user_profile")
             findNavController().popBackStack()
         }
 
         binding.btnPass.setOnClickListener {
-            joinViewModel.setUserImage("android.resource://com.ssafy.mr_patent_android/drawable/user_profile")
             if (joinViewModel.userRole.value == 0)
                 findNavController().navigate(R.id.nav_joinMemberFragment)
             else {
