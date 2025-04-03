@@ -17,7 +17,6 @@ import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.bumptech.glide.Glide
 import com.google.android.material.chip.Chip
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.ssafy.mr_patent_android.R
@@ -26,10 +25,10 @@ import com.ssafy.mr_patent_android.databinding.FragmentJoinExpertBinding
 import com.ssafy.mr_patent_android.ui.address.AddressViewModel
 import com.ssafy.mr_patent_android.ui.login.EmailVerifyViewModel
 import com.ssafy.mr_patent_android.ui.login.LoginActivity
-import com.ssafy.mr_patent_android.ui.patent.FileViewModel
 import com.ssafy.mr_patent_android.util.FilePicker
 import com.ssafy.mr_patent_android.util.FileUtil
 import kotlinx.coroutines.launch
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -41,7 +40,6 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
     private val joinViewModel: JoinViewModel by activityViewModels()
     private val emailVerifyViewModel: EmailVerifyViewModel by activityViewModels()
     private val addressViewModel : AddressViewModel by activityViewModels()
-    private val fileViewModel : FileViewModel by activityViewModels()
 
     private lateinit var filePickerUtil: FilePicker
 
@@ -64,7 +62,9 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
     }
 
     private fun initView() {
-        filePickerUtil = FilePicker(this) { uri, fileName, fileSize ->
+        filePickerUtil = FilePicker(this) { uri ->
+            val fileName = FileUtil().getFileName(requireContext(), uri)
+            val fileSize = FileUtil().getFileSize(requireContext(), uri)
             if(fileSize >= 1024 * 1024 * 5) {
                 setDialogSizeOver()
                 return@FilePicker
@@ -105,8 +105,7 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
                 && isValidDescription(binding.etDescription.text.toString())
             ) {
                 binding.etIdentificationFront.text.toString() + "-" + binding.etIdentificationBack.text.toString()
-                binding.etAddress1.text.toString() + " " + binding.etAddress2.text.toString()
-                categories = mutableListOf<String>()
+                binding.etAddress1.text.toString() + "\\" + binding.etAddress2.text.toString()
                 for (i in 0 until binding.cgFilter.childCount) {
                     val chip = binding.cgFilter.getChildAt(i) as Chip
                     if (chip.isChecked) {
