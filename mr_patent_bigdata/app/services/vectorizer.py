@@ -119,37 +119,45 @@ def get_bert_vector(text: str, max_length: int = 512) -> np.ndarray:
         logger.error(f"BERT 벡터 생성 중 오류: {e}")
         return np.zeros(768)  # 오류 발생 시 영벡터 반환
 
-# 이전 코드와의 호환성을 위한 별칭
-get_kobert_vector = get_bert_vector
-
-def generate_vectors(patent_data):
+def generate_vectors(patent_data, with_bert=False):  # 기본값을 False로 변경
     """특허 데이터의 필드별 벡터 생성"""
     title = patent_data.get("title", "")
     summary = patent_data.get("summary", "")
     claims = patent_data.get("claims", "")
     
-    # 필드별 벡터 생성
+    # 필드별 TF-IDF 벡터 생성
     title_tfidf = get_tfidf_vector(title)
-    title_bert = get_bert_vector(title)
-    
     summary_tfidf = get_tfidf_vector(summary)
-    summary_bert = get_bert_vector(summary)
-    
     claim_tfidf = get_tfidf_vector(claims)
-    claim_bert = get_bert_vector(claims)
     
-    return {
+    result = {
         'title_tfidf_vector': title_tfidf,
-        'title_bert_vector': title_bert,
         'summary_tfidf_vector': summary_tfidf,
-        'summary_bert_vector': summary_bert,
-        'claim_tfidf_vector': claim_tfidf,
-        'claim_bert_vector': claim_bert
+        'claim_tfidf_vector': claim_tfidf
     }
+    
+    # BERT 벡터는 선택적으로 생성 (일반적으로 필요 없음)
+    if with_bert:
+        title_bert = get_bert_vector(title)
+        summary_bert = get_bert_vector(summary)
+        claim_bert = get_bert_vector(claims)
+        
+        result.update({
+            'title_bert_vector': title_bert,
+            'summary_bert_vector': summary_bert,
+            'claim_bert_vector': claim_bert
+        })
+    
+    return result
 
-def generate_field_vectors(field_text: str) -> Tuple[np.ndarray, np.ndarray]:
+def generate_field_vectors(field_text: str, with_bert=False) -> Tuple[np.ndarray, np.ndarray]:
     """특정 필드의 벡터 생성"""
     tfidf_vector = get_tfidf_vector(field_text)
-    bert_vector = get_bert_vector(field_text)
     
-    return tfidf_vector, bert_vector
+    # BERT 벡터는 선택적으로 생성
+    if with_bert:
+        bert_vector = get_bert_vector(field_text)
+        return tfidf_vector, bert_vector
+    else:
+        # TF-IDF 벡터만 반환
+        return tfidf_vector, None

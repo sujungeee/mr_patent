@@ -63,11 +63,11 @@ async def train_vectorizer_from_patents():
         update_query = """
         UPDATE patent SET
             patent_title_tfidf_vector = :title_tfidf,
-            patent_title_kobert_vector = :title_bert,
+            patent_title_bert_vector = :title_bert,
             patent_summary_tfidf_vector = :summary_tfidf,
-            patent_summary_kobert_vector = :summary_bert,
+            patent_summary_bert_vector = :summary_bert,
             patent_claim_tfidf_vector = :claim_tfidf,
-            patent_claim_kobert_vector = :claim_bert
+            patent_claim_bert_vector = :claim_bert
         WHERE patent_id = :patent_id
         """
         

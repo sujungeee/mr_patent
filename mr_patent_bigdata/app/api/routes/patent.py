@@ -118,7 +118,7 @@ async def process_patent_files(rtf_directory: str, task_id: str):
         
         # 3단계: Spark를 사용한 병렬 처리로 벡터화 수행
         logger.info(f"총 {len(all_patents)}개 특허 Spark 병렬 벡터화 시작")
-        total_processed = await process_patents_with_spark(all_patents)
+        total_processed = await process_patents_with_spark(all_patents, with_bert=False)
         
         # 작업 완료
         await database.execute(

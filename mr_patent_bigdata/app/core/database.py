@@ -44,7 +44,7 @@ expert = Table(
     Column("expert_category", String(50), nullable=True)
 )
 
-# 회원 특허 폴더 테이블 (user_patent_topic에서 이름 변경)
+# 회원 특허 폴더 테이블
 user_patent_folder = Table(
     "user_patent_folder",
     metadata,
@@ -66,15 +66,11 @@ patent = Table(
     Column("patent_summary", Text, nullable=False),
     Column("patent_claim", Text, nullable=False),
     Column("patent_title_tfidf_vector", LargeBinary, nullable=False),
-    Column("patent_title_kobert_vector", LargeBinary, nullable=False),
     Column("patent_summary_tfidf_vector", LargeBinary, nullable=False),
-    Column("patent_summary_kobert_vector", LargeBinary, nullable=False),
     Column("patent_claim_tfidf_vector", LargeBinary, nullable=False),
-    Column("patent_claim_kobert_vector", LargeBinary, nullable=False),
     Column("patent_created_at", TIMESTAMP, nullable=False, default=datetime.utcnow),
     Column("patent_updated_at", TIMESTAMP, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 )
-
 
 # 특허 초안 테이블
 patent_draft = Table(
@@ -92,28 +88,28 @@ patent_draft = Table(
     Column("patent_draft_summary", Text, nullable=False),
     Column("patent_draft_claim", Text, nullable=False),
     Column("patent_draft_title_tfidf_vector", LargeBinary, nullable=False),
-    Column("patent_draft_title_kobert_vector", LargeBinary, nullable=False),
+    Column("patent_draft_title_bert_vector", LargeBinary, nullable=False),
     Column("patent_draft_technical_field_tfidf_vector", LargeBinary, nullable=False),
-    Column("patent_draft_technical_field_kobert_vector", LargeBinary, nullable=False),
+    Column("patent_draft_technical_field_bert_vector", LargeBinary, nullable=False),
     Column("patent_draft_background_tfidf_vector", LargeBinary, nullable=False),
-    Column("patent_draft_background_kobert_vector", LargeBinary, nullable=False),
+    Column("patent_draft_background_bert_vector", LargeBinary, nullable=False),
     Column("patent_draft_problem_tfidf_vector", LargeBinary, nullable=False),
-    Column("patent_draft_problem_kobert_vector", LargeBinary, nullable=False),
+    Column("patent_draft_problem_bert_vector", LargeBinary, nullable=False),
     Column("patent_draft_solution_tfidf_vector", LargeBinary, nullable=False),
-    Column("patent_draft_solution_kobert_vector", LargeBinary, nullable=False),
+    Column("patent_draft_solution_bert_vector", LargeBinary, nullable=False),
     Column("patent_draft_effect_tfidf_vector", LargeBinary, nullable=False),
-    Column("patent_draft_effect_kobert_vector", LargeBinary, nullable=False),
+    Column("patent_draft_effect_bert_vector", LargeBinary, nullable=False),
     Column("patent_draft_detailed_tfidf_vector", LargeBinary, nullable=False),
-    Column("patent_draft_detailed_kobert_vector", LargeBinary, nullable=False),
+    Column("patent_draft_detailed_bert_vector", LargeBinary, nullable=False),
     Column("patent_draft_summary_tfidf_vector", LargeBinary, nullable=False),
-    Column("patent_draft_summary_kobert_vector", LargeBinary, nullable=False),
+    Column("patent_draft_summary_bert_vector", LargeBinary, nullable=False),
     Column("patent_draft_claim_tfidf_vector", LargeBinary, nullable=False),
-    Column("patent_draft_claim_kobert_vector", LargeBinary, nullable=False),
+    Column("patent_draft_claim_bert_vector", LargeBinary, nullable=False),
     Column("patent_draft_created_at", TIMESTAMP, nullable=False, default=datetime.utcnow),
     Column("patent_draft_updated_at", TIMESTAMP, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 )
 
-# 적합도 테이블 - 수정됨
+# 적합도 테이블
 fitness = Table(
     "fitness",
     metadata,
@@ -142,7 +138,7 @@ patent_public = Table(
     Column("patent_public_updated_at", TIMESTAMP, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 )
 
-# 유사도 테이블 - 수정됨
+# 유사도 테이블
 similarity = Table(
     "similarity",
     metadata,
@@ -167,7 +163,7 @@ similarity_patent = Table(
     Column("similarity_patent_updated_at", TIMESTAMP, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 )
 
-# 상세 비교 테이블 - 수정됨
+# 상세 비교 테이블
 detailed_comparison = Table(
     "detailed_comparison",
     metadata,

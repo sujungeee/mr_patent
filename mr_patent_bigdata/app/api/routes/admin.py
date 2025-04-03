@@ -1,5 +1,3 @@
-# app/api/routes/admin.py
-
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from typing import Dict
 

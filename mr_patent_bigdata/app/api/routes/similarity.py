@@ -64,7 +64,6 @@ async def run_similarity_check(patent_draft_id: int, background_tasks: Backgroun
     
     # 3. 백그라운드에서 분석 작업 실행
     background_tasks.add_task(
-        process_full_similarity_analysis, 
         patent_draft_id,
         similarity_id
     )
@@ -79,7 +78,7 @@ async def run_similarity_check(patent_draft_id: int, background_tasks: Backgroun
     }
 
 async def perform_similarity_analysis(patent_draft_id: int, similarity_id: int):
-    """특허 초안과 유사한 특허 분석"""
+    """특허 초안과 유사한 특허 분석 - 하이브리드 접근법 (TF-IDF로 필터링 후 BERT로 정밀 분석)"""
     # 특허 초안 조회
     draft_query = """
     SELECT * FROM patent_draft 
@@ -93,30 +92,25 @@ async def perform_similarity_analysis(patent_draft_id: int, similarity_id: int):
     if not draft:
         raise Exception("특허 초안을 찾을 수 없습니다.")
     
-    # 초안에서 TF-IDF와 BERT 벡터 모두 추출
+    # 초안에서 TF-IDF 벡터 추출
     draft_title_tfidf = np.frombuffer(draft["patent_draft_title_tfidf_vector"])
     draft_summary_tfidf = np.frombuffer(draft["patent_draft_summary_tfidf_vector"])
     draft_claim_tfidf = np.frombuffer(draft["patent_draft_claim_tfidf_vector"])
     
-    # BERT 벡터 추출
-    draft_title_bert = np.frombuffer(draft["patent_draft_title_bert_vector"])
-    draft_summary_bert = np.frombuffer(draft["patent_draft_summary_bert_vector"])
-    draft_claim_bert = np.frombuffer(draft["patent_draft_claim_bert_vector"])
-    
-    # 특허 검색 쿼리 (페이징 처리)
+    # 1단계: TF-IDF 기반 초기 유사도 계산 (모든 특허에 대해)
     limit = 1000
     offset = 0
-    top_similar_patents = []
+    all_tfidf_candidates = []
     now = datetime.now(timezone.utc)
     
     while True:
-        # 특허 배치 조회
+        # 특허 배치 조회 (TF-IDF 벡터만 가져옴 - 메모리 절약)
         patents_query = """
         SELECT patent_id, patent_title, patent_summary, patent_claim,
                patent_application_number, 
-               patent_title_tfidf_vector, patent_title_bert_vector,
-               patent_summary_tfidf_vector, patent_summary_bert_vector,
-               patent_claim_tfidf_vector, patent_claim_bert_vector
+               patent_title_tfidf_vector,
+               patent_summary_tfidf_vector,
+               patent_claim_tfidf_vector
         FROM patent
         LIMIT :limit OFFSET :offset
         """
@@ -129,58 +123,92 @@ async def perform_similarity_analysis(patent_draft_id: int, similarity_id: int):
         if not patents:
             break
             
-        # 각 특허와 유사도 계산
+        # 각 특허와 TF-IDF 유사도 계산
         for patent in patents:
             try:
-                # 필드별 벡터 추출 (없을 경우 영벡터 사용)
+                # TF-IDF 벡터 추출
                 zero_tfidf = np.zeros(1000)
-                zero_bert = np.zeros(768)
                 
                 patent_title_tfidf = np.frombuffer(patent["patent_title_tfidf_vector"]) if patent["patent_title_tfidf_vector"] else zero_tfidf
-                patent_title_bert = np.frombuffer(patent["patent_title_bert_vector"]) if patent["patent_title_bert_vector"] else zero_bert
-                
                 patent_summary_tfidf = np.frombuffer(patent["patent_summary_tfidf_vector"]) if patent["patent_summary_tfidf_vector"] else zero_tfidf
-                patent_summary_bert = np.frombuffer(patent["patent_summary_bert_vector"]) if patent["patent_summary_bert_vector"] else zero_bert
-                
                 patent_claim_tfidf = np.frombuffer(patent["patent_claim_tfidf_vector"]) if patent["patent_claim_tfidf_vector"] else zero_tfidf
-                patent_claim_bert = np.frombuffer(patent["patent_claim_bert_vector"]) if patent["patent_claim_bert_vector"] else zero_bert
                 
-                # 필드별 유사도 계산 - 같은 필드끼리 비교
+                # TF-IDF 기반 유사도 계산
                 title_tfidf_similarity = float(cosine_similarity([draft_title_tfidf], [patent_title_tfidf])[0][0])
                 summary_tfidf_similarity = float(cosine_similarity([draft_summary_tfidf], [patent_summary_tfidf])[0][0])
                 claim_tfidf_similarity = float(cosine_similarity([draft_claim_tfidf], [patent_claim_tfidf])[0][0])
                 
-                title_bert_similarity = float(cosine_similarity([draft_title_bert], [patent_title_bert])[0][0])
-                summary_bert_similarity = float(cosine_similarity([draft_summary_bert], [patent_summary_bert])[0][0])
-                claim_bert_similarity = float(cosine_similarity([draft_claim_bert], [patent_claim_bert])[0][0])
-                
-                # 가중치 적용 (TF-IDF 30%, BERT 70%)
-                title_similarity = 0.3 * title_tfidf_similarity + 0.7 * title_bert_similarity
-                summary_similarity = 0.3 * summary_tfidf_similarity + 0.7 * summary_bert_similarity
-                claim_similarity = 0.3 * claim_tfidf_similarity + 0.7 * claim_bert_similarity
-                
                 # 필드별 가중치 적용한 전체 유사도
-                overall_similarity = (0.3 * title_similarity + 0.3 * summary_similarity + 0.4 * claim_similarity)
+                overall_tfidf_similarity = (0.3 * title_tfidf_similarity + 0.3 * summary_tfidf_similarity + 0.4 * claim_tfidf_similarity)
                 
-                top_similar_patents.append({
+                all_tfidf_candidates.append({
                     "patent_id": patent["patent_id"],
+                    "patent_title": patent["patent_title"],
+                    "patent_summary": patent["patent_summary"],
+                    "patent_claim": patent["patent_claim"],
                     "patent_application_number": patent["patent_application_number"],
-                    "title_similarity": title_similarity,
-                    "summary_similarity": summary_similarity,
-                    "claim_similarity": claim_similarity,
-                    "overall_similarity": overall_similarity
+                    "tfidf_similarity": overall_tfidf_similarity
                 })
             except Exception as e:
-                print(f"특허 {patent['patent_id']} 유사도 계산 중 오류: {str(e)}")
+                print(f"특허 {patent['patent_id']} TF-IDF 유사도 계산 중 오류: {str(e)}")
                 continue
         
         offset += limit
     
-    # 유사도 기준 정렬
-    top_similar_patents.sort(key=lambda x: x["overall_similarity"], reverse=True)
+    # TF-IDF 유사도 기준 정렬
+    all_tfidf_candidates.sort(key=lambda x: x["tfidf_similarity"], reverse=True)
     
-    # 결과 저장 (상위 10개만)
-    for patent in top_similar_patents[:10]:
+    # 2단계: 상위 10개 후보에 대해서만 BERT 유사도 계산
+    top_10_candidates = all_tfidf_candidates[:10]
+    final_results = []
+    
+    for candidate in top_10_candidates:
+        # 실시간 BERT 벡터 생성 및 유사도 계산
+        # 텍스트 길이 제한 및 전처리
+        draft_title = draft["patent_draft_title"][:500]
+        draft_summary = draft["patent_draft_summary"][:500]
+        draft_claim = draft["patent_draft_claim"][:500]
+        
+        patent_title = candidate["patent_title"][:500] if candidate["patent_title"] else ""
+        patent_summary = candidate["patent_summary"][:500] if candidate["patent_summary"] else ""
+        patent_claim = candidate["patent_claim"][:500] if candidate["patent_claim"] else ""
+        
+        # BERT 벡터 생성
+        draft_title_bert = get_bert_vector(draft_title)
+        draft_summary_bert = get_bert_vector(draft_summary)
+        draft_claim_bert = get_bert_vector(draft_claim)
+        
+        patent_title_bert = get_bert_vector(patent_title)
+        patent_summary_bert = get_bert_vector(patent_summary)
+        patent_claim_bert = get_bert_vector(patent_claim)
+        
+        # BERT 유사도 계산
+        title_bert_similarity = float(cosine_similarity([draft_title_bert], [patent_title_bert])[0][0])
+        summary_bert_similarity = float(cosine_similarity([draft_summary_bert], [patent_summary_bert])[0][0])
+        claim_bert_similarity = float(cosine_similarity([draft_claim_bert], [patent_claim_bert])[0][0])
+        
+        # 최종 유사도 계산 (TF-IDF 30%, BERT 70%)
+        title_similarity = 0.3 * candidate["tfidf_similarity"] + 0.7 * title_bert_similarity
+        summary_similarity = 0.3 * candidate["tfidf_similarity"] + 0.7 * summary_bert_similarity
+        claim_similarity = 0.3 * candidate["tfidf_similarity"] + 0.7 * claim_bert_similarity
+        
+        # 필드별 가중치 적용한 전체 유사도
+        overall_similarity = (0.3 * title_similarity + 0.3 * summary_similarity + 0.4 * claim_similarity)
+        
+        final_results.append({
+            "patent_id": candidate["patent_id"],
+            "patent_application_number": candidate["patent_application_number"],
+            "title_similarity": title_similarity,
+            "summary_similarity": summary_similarity,
+            "claim_similarity": claim_similarity,
+            "overall_similarity": overall_similarity
+        })
+    
+    # 최종 유사도 기준 정렬
+    final_results.sort(key=lambda x: x["overall_similarity"], reverse=True)
+    
+    # 결과 저장 (전체 10개)
+    for patent in final_results:
         similarity_patent_query = """
         INSERT INTO similarity_patent (
             patent_id,
@@ -220,7 +248,7 @@ async def perform_similarity_analysis(patent_draft_id: int, similarity_id: int):
         # ID 추가
         patent["similarity_patent_id"] = similarity_patent_id
     
-    return top_similar_patents
+    return final_results
 
 def check_context_fitness(text: str, field_type: str) -> float:
     """BERT 벡터를 활용한 문맥 적합도 검사"""

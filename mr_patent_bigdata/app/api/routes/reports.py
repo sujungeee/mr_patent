@@ -1,5 +1,3 @@
-# app/api/routes/reports.py
-
 from fastapi import APIRouter, HTTPException
 from typing import Dict, Any, List
 from datetime import datetime, timezone
@@ -32,7 +30,7 @@ async def get_folder_reports(user_patent_folder_id: int):
     
     reports = await database.fetch_all(
         query=query,
-        values={"folder_id": user_patent_topic_id}
+        values={"folder_id": user_patent_folder_id}
     )
     
     if not reports:

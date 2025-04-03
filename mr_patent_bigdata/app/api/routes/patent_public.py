@@ -1,5 +1,3 @@
-# app/api/routes/patent_public.py
-
 from fastapi import APIRouter, HTTPException, Response
 from typing import Dict, Any
 from datetime import datetime, timezone
