@@ -21,7 +21,9 @@ class ChatListViewModel : ViewModel() {
     val chatRoomList: LiveData<List<ChatRoomDto>>
         get() = _chatRoomList
 
-
+    fun setChatRoomList(chatRoomList: List<ChatRoomDto>) {
+        _chatRoomList.value = chatRoomList
+    }
     fun getChatRoomList(){
         viewModelScope.launch {
             runCatching {
@@ -44,6 +46,19 @@ class ChatListViewModel : ViewModel() {
                 Log.d(TAG, "getChatRoomList: ${_chatRoomList.value}")
             }
         }
+    }
+
+    fun updateChatList(newMessage: ChatRoomDto) {
+        val currentList = _chatRoomList.value?.toMutableList() ?: mutableListOf()
+
+        // 기존 채팅방이 있는지 확인하고 제거
+        currentList.removeAll { it.roomId == newMessage.roomId }
+
+        // 맨 앞에 추가
+        currentList.add(0, newMessage)
+
+        // 리스트 갱신
+        _chatRoomList.value = currentList
     }
 
 

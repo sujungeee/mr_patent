@@ -43,12 +43,12 @@
             android:layout_marginStart="10dp"
             android:text="파일명.확장자"
             android:paddingStart="10dp"
-            app:layout_constraintBottom_toTopOf="@+id/textView"
+            app:layout_constraintBottom_toTopOf="@+id/tv_file_size"
             app:layout_constraintStart_toEndOf="@+id/preview_image"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:id="@+id/textView"
+            android:id="@+id/tv_file_size"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="용량.mb"

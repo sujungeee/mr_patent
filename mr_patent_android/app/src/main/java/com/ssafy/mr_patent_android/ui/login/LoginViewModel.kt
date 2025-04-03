@@ -35,7 +35,7 @@ class LoginViewModel:ViewModel() {
 
                         sharedPreferences.addRToken(res.refreshToken)
                         // 사용자 정보 저장
-//                        sharedPreferences.addUser(UserDto(res.userId,res.userName,res.userRole))
+                       sharedPreferences.addUser(UserDto(res.userId,res.userName,res.userRole))
                         _loginState.value = true
                     }
                 } else {

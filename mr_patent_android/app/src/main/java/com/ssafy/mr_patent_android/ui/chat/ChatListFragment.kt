@@ -27,26 +27,50 @@ class ChatListFragment : BaseFragment<FragmentChatListBinding>(FragmentChatListB
         super.onCreate(savedInstanceState)
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
 
-//        initSse()
-        initView()
-        initObserver()
+    initSse()
+    initView()
+    initObserver()
+}
 
+fun initView() {
+    // 임시 데이터 추가
+    val dummyData = listOf(
+        ChatRoomDto(1,1, "User A","", "Hello!", "2025-04-02 10:00", "https://example.com/imageA.jpg",1),
+        ChatRoomDto(2,1, "User B","", "How are you?", "2025-04-02 09:45", "https://example.com/imageB.jpg",2),
+        ChatRoomDto(3,1, "User C","", "See you later", "2025-04-02 08:30", "https://example.com/imageC.jpg",3)
+    )
+    viewModel.setChatRoomList(dummyData)
+}
+
+private fun initObserver() {
+    val adapter = ChatListAdapter { roomDto ->
+        findNavController().navigate(
+            ChatListFragmentDirections.actionNavFragmentChatToChatFragment(
+                roomDto.userId, roomDto.expertId, roomDto.roomId, roomDto.userName, roomDto.userImage
+            )
+        )
     }
+    binding.rvChatList.adapter = adapter
 
+    viewModel.chatRoomList.observe(viewLifecycleOwner) { chatList ->
+        Log.d(TAG, "initObserver: $chatList")
+        adapter.submitList(chatList.sortedByDescending { it.lastMessageTime })
+    }
+}
     private fun initSse() {
         val eventSource: BackgroundEventSource = BackgroundEventSource
             .Builder(
-                SseEventHandler(),
+                SseEventHandler(viewModel),
                 EventSource.Builder(
                     ConnectStrategy
-                        .http(URL("{https://j12d208.p.ssafy.io/api/chat/rooms/subscribe/${sharedPreferences.getUser().userId}"))
+                        .http(URL("https://j12d208.p.ssafy.io/api/chat/rooms/subscribe/${sharedPreferences.getUser().userId}"))
                         // 커스텀 요청 헤더를 명시
                         .header(
                             "Authorization",
-                            "Bearer {token}"
+                            "Bearer ${sharedPreferences.getAToken()}"
                         )
                         .connectTimeout(3, TimeUnit.SECONDS)
                         // 최대 연결 유지 시간을 설정, 서버에 설정된 최대 연결 유지 시간보다 길게 설정
@@ -57,38 +81,5 @@ class ChatListFragment : BaseFragment<FragmentChatListBinding>(FragmentChatListB
             .build()
 
         eventSource.start()
-    }
-
-    private fun initView() {
-
-        val list= listOf(
-            ChatRoomDto(1,-1,"d","da","da","d","da",1),
-            ChatRoomDto(1,1,"d","da","da","d","da",1),
-            ChatRoomDto(1,1,"d","da","da","d","da",1),
-            ChatRoomDto(1,1,"d","da","da","d","da",1),
-            ChatRoomDto(1,1,"d","da","da","d","da",1),
-            ChatRoomDto(1,1,"d","da","da","d","da",1),
-            ChatRoomDto(1,1,"d","da","da","d","da",0),
-            ChatRoomDto(1,1,"d","da","da","d","da",0),
-            ChatRoomDto(1,1,"d","da","da","d","da",1),
-            ChatRoomDto(1,1,"d","da","da","d","da",1),
-        )
-        Log.d(TAG, "initView: $list ")
-        binding.rvChatList.adapter = ChatListAdapter(list){ it->
-            findNavController().navigate(ChatListFragmentDirections.actionNavFragmentChatToChatFragment(it.userId,it.expertId,it.roomId,it.userName, it.userImage))
-        }
-        Log.d(TAG, "initView: ${binding.rvChatList.adapter}")
-
-
-//        viewModel.getChatRoomList()
-    }
-
-    private fun initObserver() {
-        viewModel.chatRoomList.observe(viewLifecycleOwner) {
-            Log.d(TAG, "initObserver: $it")
-            binding.rvChatList.adapter = ChatListAdapter(it){ it ->
-                findNavController().navigate(ChatListFragmentDirections.actionNavFragmentChatToChatFragment(it.userId,it.expertId,it.roomId,it.userName, it.userImage))
-            }
-        }
     }
 }
