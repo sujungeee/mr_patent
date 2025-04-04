@@ -10,6 +10,9 @@ import os
 import torch
 import asyncio
 import psutil
+import shutil
+import glob
+import subprocess
 from transformers import AutoTokenizer, AutoModel
 
 from app.core.logging import logger
@@ -27,7 +30,7 @@ def load_bert_model():
     global _BERT_LOADED, _tokenizer, _model
     if not _BERT_LOADED:
         _tokenizer = AutoTokenizer.from_pretrained("klue/bert-base")
-        _model = AutoModel.from_pretrained("klue/bert-base", torchscript=True)  # torchscript=True 추가
+        _model = AutoModel.from_pretrained("klue/bert-base", torchscript=True)
         _BERT_LOADED = True
         logger.info("KLUE/BERT 모델 로드 완료")
 
@@ -42,7 +45,7 @@ def create_tfidf_udf():
             _VECTORIZER_LOADED = True
             logger.info(f"벡터라이저 로드 완료")
     
-    # TF-IDF 벡터화 UDF - useArrow 제거
+    # TF-IDF 벡터화 UDF
     @F.udf(BinaryType())
     def tfidf_vectorize(text):
         ensure_vectorizer_loaded()
@@ -63,7 +66,7 @@ def create_bert_udf():
         if not _BERT_LOADED:
             load_bert_model()
     
-    # BERT 벡터화 UDF - useArrow 제거
+    # BERT 벡터화 UDF
     @F.udf(BinaryType())
     def bert_vectorize(text):
         ensure_bert_loaded()
@@ -100,29 +103,90 @@ def check_memory_usage():
     logger.info(f"메모리 사용량: {mem.percent}%, 사용 가능: {mem.available / (1024**3):.2f}GB")
     return mem.percent
 
-async def process_patents_with_spark(all_patents, batch_size=2500, with_bert=False):  # 배치 크기를 1000으로 증가
-    """Spark를 사용한 특허 TF-IDF 벡터화 처리 (BERT는 별도 처리)
+def check_disk_usage():
+    """디스크 사용량 확인 및 로깅"""
+    disk = psutil.disk_usage('/')
+    logger.info(f"디스크 사용량: {disk.percent}%, 사용 가능: {disk.free / (1024**3):.2f}GB")
+    return disk.percent
+
+def clean_temp_files():
+    """임시 파일 정리 함수"""
+    logger.info("임시 파일 정리 시작...")
+    
+    # 1. /tmp 디렉토리 정리
+    tmp_patterns = [
+        "/tmp/ML*",           # PostgreSQL 임시 파일
+        "/tmp/spark*",        # Spark 임시 파일
+        "/tmp/blockmgr-*",    # Spark 블록 매니저 파일
+        "/tmp/hive*",         # Hive 임시 파일
+        "/tmp/*.tmp",         # 일반 임시 파일
+        "/tmp/hadoop-*"       # Hadoop 관련 임시 파일
+    ]
+    
+    total_removed = 0
+    for pattern in tmp_patterns:
+        try:
+            files = glob.glob(pattern)
+            for f in files:
+                try:
+                    if os.path.isfile(f):
+                        os.remove(f)
+                        total_removed += 1
+                    elif os.path.isdir(f):
+                        shutil.rmtree(f, ignore_errors=True)
+                        total_removed += 1
+                except Exception as e:
+                    logger.warning(f"파일 삭제 실패 {f}: {str(e)}")
+        except Exception as e:
+            logger.warning(f"패턴 {pattern} 파일 검색 실패: {str(e)}")
+    
+    # 2. 패키지 캐시 정리
+    try:
+        subprocess.run("apt-get clean -y", shell=True)
+        logger.info("APT 캐시 정리 완료")
+    except Exception as e:
+        logger.warning(f"APT 캐시 정리 실패: {str(e)}")
+    
+    logger.info(f"임시 파일 정리 완료: {total_removed}개 항목 제거됨")
+    
+    # 정리 후 디스크 공간 확인
+    disk_usage = check_disk_usage()
+    return disk_usage
+
+async def process_patents_with_spark(all_patents, batch_size=2000, with_bert=False):
+    """Spark를 사용한 특허 TF-IDF 벡터화 처리 (최적화 버전)
     
     Args:
         all_patents: 처리할 특허 데이터 목록
-        batch_size: 배치 크기 (기본값: 1000)
+        batch_size: 배치 크기 (기본값: 2000)
         with_bert: BERT 벡터화 함께 수행 여부 (기본값: False)
     """
+    # 초기 디스크 및 메모리 사용량 확인
+    disk_usage = check_disk_usage()
+    memory_usage = check_memory_usage()
+    
     # 임시 디렉토리 확인 및 생성
-    temp_dir = "/tmp/spark-temp"  # Linux 경로로 변경
+    temp_dir = "/tmp/spark-temp"
     if not os.path.exists(temp_dir):
         os.makedirs(temp_dir, exist_ok=True)
         logger.info(f"임시 디렉토리 생성됨: {temp_dir}")
     
-    # Spark 세션 설정 - EC2 인스턴스에 최적화
+    # 시작 전 임시 파일 정리
+    clean_temp_files()
+    
+    # Spark 세션 설정 (병렬 처리 확대)
     spark = SparkSession.builder \
         .appName("PatentVectorizer") \
-        .config("spark.driver.memory", "110g") \
-        .config("spark.sql.execution.arrow.maxRecordsPerBatch", "10000") \
-        .config("spark.default.parallelism", "32") \
-        .config("spark.sql.shuffle.partitions", "200") \
+        .config("spark.driver.memory", "60g") \
+        .config("spark.sql.execution.arrow.maxRecordsPerBatch", "20000") \
+        .config("spark.default.parallelism", "64") \
+        .config("spark.sql.shuffle.partitions", "128") \
         .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer") \
-        .master("local[16]") \
+        .config("spark.kryoserializer.buffer.max", "1024m") \
+        .config("spark.memory.fraction", "0.8") \
+        .config("spark.memory.storageFraction", "0.3") \
+        .config("spark.local.dir", temp_dir) \
+        .master("local[32]") \
         .getOrCreate()
     
     # TF-IDF 및 BERT 벡터화 UDF 함수 생성
@@ -164,15 +228,27 @@ async def process_patents_with_spark(all_patents, batch_size=2500, with_bert=Fal
         
         # 특허 데이터를 배치로 처리
         for batch_idx in range(last_processed_batch, num_batches):
-            # 메모리 사용량 확인
-            memory_usage = check_memory_usage()
-            if memory_usage > 85:
-                logger.warning(f"메모리 사용량이 높습니다 ({memory_usage}%). 잠시 대기 후 GC 실행...")
-                await asyncio.sleep(5)
+            # 메모리 및 디스크 사용량 확인
+            pre_batch_memory = check_memory_usage()
+            pre_batch_disk = check_disk_usage()
+            
+            # 디스크 용량이 85% 이상이면 정리 수행
+            if pre_batch_disk > 85:
+                logger.warning(f"디스크 사용량이 높습니다 ({pre_batch_disk}%). 임시 파일 정리 수행...")
+                clean_temp_files()
+                
+                # 정리 후에도 90% 이상이면 경고
+                if check_disk_usage() > 90:
+                    logger.error(f"정리 후에도 디스크 공간이 부족합니다. 처리가 중단될 수 있습니다.")
+            
+            # 메모리 사용량이 높으면 GC 실행
+            if pre_batch_memory > 80:
+                logger.warning(f"메모리 사용량이 높습니다 ({pre_batch_memory}%). GC 실행...")
                 import gc
                 gc.collect()
                 if torch.cuda.is_available():
                     torch.cuda.empty_cache()
+                await asyncio.sleep(2)
             
             batch_start = time.time()
             start_idx = batch_idx * batch_size
@@ -181,7 +257,7 @@ async def process_patents_with_spark(all_patents, batch_size=2500, with_bert=Fal
             
             logger.info(f"배치 {batch_idx+1}/{num_batches} 처리 중 ({len(batch_patents)}개 특허)")
             
-            # 배치를 Spark DataFrame으로 변환
+            # 배치를 Spark DataFrame으로 변환 (리스트 컴프리헨션 최적화)
             batch_data = [(
                 p.get("title", ""),
                 p.get("summary", ""),
@@ -192,22 +268,33 @@ async def process_patents_with_spark(all_patents, batch_size=2500, with_bert=Fal
             
             df = spark.createDataFrame(batch_data, schema=schema)
             
+            # DataFrame 캐싱으로 성능 향상
+            df.cache()
+            
             # TF-IDF 벡터화 적용
             result_df = df.withColumn("title_tfidf_vector", tfidf_vectorize(F.col("title"))) \
                           .withColumn("summary_tfidf_vector", tfidf_vectorize(F.col("summary"))) \
                           .withColumn("claim_tfidf_vector", tfidf_vectorize(F.col("claims")))
+            
+            # 결과 DataFrame 캐싱
+            result_df.cache()
             
             # BERT 벡터화 추가 적용 (옵션에 따라)
             if with_bert:
                 result_df = result_df.withColumn("title_bert_vector", bert_vectorize(F.col("title"))) \
                                     .withColumn("summary_bert_vector", bert_vectorize(F.col("summary"))) \
                                     .withColumn("claim_bert_vector", bert_vectorize(F.col("claims")))
+                result_df.cache()
             
             # 결과를 파이썬 객체로 변환
             patent_rows = result_df.collect()
             
+            # 캐시 해제
+            result_df.unpersist()
+            df.unpersist()
+            
             # 데이터베이스에 더 작은 배치 단위로 저장 (메모리 부담 감소)
-            db_batch_size = 20  # 더 작게 설정
+            db_batch_size = 25  # 배치 크기 최적화
             db_batches = [patent_rows[i:i+db_batch_size] for i in range(0, len(patent_rows), db_batch_size)]
             
             for db_idx, db_batch in enumerate(db_batches):
@@ -237,6 +324,14 @@ async def process_patents_with_spark(all_patents, batch_size=2500, with_bert=Fal
                         "patent_updated_at": datetime.utcnow()
                     }
                     
+                    # BERT 벡터 추가 (옵션에 따라)
+                    if with_bert:
+                        patent_data.update({
+                            "patent_title_bert_vector": row.title_bert_vector,
+                            "patent_summary_bert_vector": row.summary_bert_vector,
+                            "patent_claim_bert_vector": row.claim_bert_vector,
+                        })
+                    
                     db_values.append(patent_data)
                 
                 try:
@@ -260,8 +355,15 @@ async def process_patents_with_spark(all_patents, batch_size=2500, with_bert=Fal
                         except Exception as inner_e:
                             logger.error(f"개별 삽입 중 오류: {str(inner_e)}")
                 
+                # DB 배치 저장 후 메모리 정리
+                db_values = None
+                
                 # DB 배치 간 짧은 대기 추가
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(0.2)
+            
+            # 배치 처리 후 메모리/디스크 사용량 확인
+            post_batch_memory = check_memory_usage()
+            post_batch_disk = check_disk_usage()
             
             # 성능 지표 계산 및 로깅
             batch_duration = time.time() - batch_start
@@ -275,20 +377,24 @@ async def process_patents_with_spark(all_patents, batch_size=2500, with_bert=Fal
             remaining_batches = num_batches - (batch_idx + 1)
             est_time_remaining = avg_time_per_batch * remaining_batches
             
-            logger.info(f"진행 상황: {batch_idx+1}/{num_batches} 배치. 예상 남은 시간: {est_time_remaining/60:.2f}분")
+            logger.info(f"진행 상황: {batch_idx+1}/{num_batches} 배치 ({(batch_idx+1)/num_batches*100:.1f}%). 예상 남은 시간: {est_time_remaining/60:.2f}분")
             
             # 체크포인트 저장
             with open(checkpoint_file, 'w') as f:
                 f.write(str(batch_idx + 1))
             
+            # 배치 처리 후 임시 파일 정리 (매우 중요)
+            clean_temp_files()
+            
             # 메모리 정리를 위해 배치마다 GC 실행
+            patent_rows = None
             import gc
             gc.collect()
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
             
-            # 배치 사이에 짧은 휴식
-            await asyncio.sleep(2)
+            # 다음 배치 시작 전 짧은 휴식
+            await asyncio.sleep(1)
         
         total_duration = time.time() - start_time
         logger.info(f"Spark {vectorization_type} 처리 완료: {total_processed}개 특허를 {total_duration/60:.2f}분에 처리")
@@ -296,6 +402,9 @@ async def process_patents_with_spark(all_patents, batch_size=2500, with_bert=Fal
         # 처리 완료 후 체크포인트 파일 삭제
         if os.path.exists(checkpoint_file):
             os.remove(checkpoint_file)
+        
+        # 최종 임시 파일 정리
+        clean_temp_files()
     
     except Exception as e:
         logger.error(f"Spark 처리 중 오류: {str(e)}")
