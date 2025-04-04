@@ -13,7 +13,8 @@ import psutil
 import shutil
 import glob
 import subprocess
-from transformers import AutoTokenizer, AutoModel
+import platform
+import tempfile
 
 from app.core.logging import logger
 from app.core.database import database, patent
@@ -24,6 +25,9 @@ _VECTORIZER_LOADED = False
 _BERT_LOADED = False
 _tokenizer = None
 _model = None
+
+# 운영체제 확인
+IS_WINDOWS = platform.system() == 'Windows'
 
 def load_bert_model():
     """KLUE BERT 모델 로드"""
@@ -45,8 +49,8 @@ def create_tfidf_udf():
             _VECTORIZER_LOADED = True
             logger.info(f"벡터라이저 로드 완료")
     
-    # TF-IDF 벡터화 UDF
-    @F.udf(BinaryType())
+    # TF-IDF 벡터화 UDF - Arrow 최적화 적용
+    @F.udf(BinaryType(), useArrow=True)
     def tfidf_vectorize(text):
         ensure_vectorizer_loaded()
         if text is None or text == "":
@@ -67,7 +71,7 @@ def create_bert_udf():
             load_bert_model()
     
     # BERT 벡터화 UDF
-    @F.udf(BinaryType())
+    @F.udf(BinaryType(), useArrow=True)
     def bert_vectorize(text):
         ensure_bert_loaded()
         if text is None or text == "":
@@ -105,47 +109,77 @@ def check_memory_usage():
 
 def check_disk_usage():
     """디스크 사용량 확인 및 로깅"""
-    disk = psutil.disk_usage('/')
+    # Windows/Linux 호환성
+    path = "C:\\" if IS_WINDOWS else "/"
+    disk = psutil.disk_usage(path)
     logger.info(f"디스크 사용량: {disk.percent}%, 사용 가능: {disk.free / (1024**3):.2f}GB")
     return disk.percent
 
 def clean_temp_files():
-    """임시 파일 정리 함수"""
+    """임시 파일 정리 함수 - Windows/Linux 호환"""
     logger.info("임시 파일 정리 시작...")
     
-    # 1. /tmp 디렉토리 정리
-    tmp_patterns = [
-        "/tmp/ML*",           # PostgreSQL 임시 파일
-        "/tmp/spark*",        # Spark 임시 파일
-        "/tmp/blockmgr-*",    # Spark 블록 매니저 파일
-        "/tmp/hive*",         # Hive 임시 파일
-        "/tmp/*.tmp",         # 일반 임시 파일
-        "/tmp/hadoop-*"       # Hadoop 관련 임시 파일
-    ]
-    
     total_removed = 0
-    for pattern in tmp_patterns:
-        try:
-            files = glob.glob(pattern)
-            for f in files:
-                try:
-                    if os.path.isfile(f):
-                        os.remove(f)
-                        total_removed += 1
-                    elif os.path.isdir(f):
-                        shutil.rmtree(f, ignore_errors=True)
-                        total_removed += 1
-                except Exception as e:
-                    logger.warning(f"파일 삭제 실패 {f}: {str(e)}")
-        except Exception as e:
-            logger.warning(f"패턴 {pattern} 파일 검색 실패: {str(e)}")
     
-    # 2. 패키지 캐시 정리
-    try:
-        subprocess.run("apt-get clean -y", shell=True)
-        logger.info("APT 캐시 정리 완료")
-    except Exception as e:
-        logger.warning(f"APT 캐시 정리 실패: {str(e)}")
+    # 임시 디렉토리 경로 (OS 호환)
+    temp_dir = tempfile.gettempdir()
+    
+    if IS_WINDOWS:
+        # Windows 환경
+        patterns = [
+            os.path.join(temp_dir, "spark*"),
+            os.path.join(temp_dir, "blockmgr-*"),
+            os.path.join(temp_dir, "*.tmp")
+        ]
+        
+        for pattern in patterns:
+            try:
+                files = glob.glob(pattern)
+                for f in files:
+                    try:
+                        if os.path.isfile(f):
+                            os.remove(f)
+                            total_removed += 1
+                        elif os.path.isdir(f):
+                            shutil.rmtree(f, ignore_errors=True)
+                            total_removed += 1
+                    except Exception as e:
+                        logger.warning(f"파일 삭제 실패 {f}: {str(e)}")
+            except Exception as e:
+                logger.warning(f"패턴 {pattern} 파일 검색 실패: {str(e)}")
+    else:
+        # Linux 환경
+        tmp_patterns = [
+            "/tmp/ML*",
+            "/tmp/spark*",
+            "/tmp/blockmgr-*",
+            "/tmp/hive*",
+            "/tmp/*.tmp",
+            "/tmp/hadoop-*"
+        ]
+        
+        for pattern in tmp_patterns:
+            try:
+                files = glob.glob(pattern)
+                for f in files:
+                    try:
+                        if os.path.isfile(f):
+                            os.remove(f)
+                            total_removed += 1
+                        elif os.path.isdir(f):
+                            shutil.rmtree(f, ignore_errors=True)
+                            total_removed += 1
+                    except Exception as e:
+                        logger.warning(f"파일 삭제 실패 {f}: {str(e)}")
+            except Exception as e:
+                logger.warning(f"패턴 {pattern} 파일 검색 실패: {str(e)}")
+        
+        # Linux에서만 apt 캐시 정리
+        try:
+            subprocess.run("apt-get clean -y", shell=True)
+            logger.info("APT 캐시 정리 완료")
+        except Exception as e:
+            logger.warning(f"APT 캐시 정리 실패: {str(e)}")
     
     logger.info(f"임시 파일 정리 완료: {total_removed}개 항목 제거됨")
     
@@ -153,20 +187,20 @@ def clean_temp_files():
     disk_usage = check_disk_usage()
     return disk_usage
 
-async def process_patents_with_spark(all_patents, batch_size=2000, with_bert=False):
-    """Spark를 사용한 특허 TF-IDF 벡터화 처리 (최적화 버전)
+async def process_patents_with_spark(all_patents, batch_size=2500, with_bert=False):
+    """Spark를 사용한 특허 TF-IDF 벡터화 처리 (로컬 PC 최적화 버전)
     
     Args:
         all_patents: 처리할 특허 데이터 목록
-        batch_size: 배치 크기 (기본값: 2000)
+        batch_size: 배치 크기 (기본값: 2500)
         with_bert: BERT 벡터화 함께 수행 여부 (기본값: False)
     """
     # 초기 디스크 및 메모리 사용량 확인
     disk_usage = check_disk_usage()
     memory_usage = check_memory_usage()
     
-    # 임시 디렉토리 확인 및 생성
-    temp_dir = "/tmp/spark-temp"
+    # 임시 디렉토리 확인 및 생성 (OS 호환성)
+    temp_dir = os.path.join(tempfile.gettempdir(), "spark-temp")
     if not os.path.exists(temp_dir):
         os.makedirs(temp_dir, exist_ok=True)
         logger.info(f"임시 디렉토리 생성됨: {temp_dir}")
@@ -174,19 +208,23 @@ async def process_patents_with_spark(all_patents, batch_size=2000, with_bert=Fal
     # 시작 전 임시 파일 정리
     clean_temp_files()
     
-    # Spark 세션 설정 (병렬 처리 확대)
+    # CPU 코어 수 확인
+    cpu_cores = os.cpu_count() or 8
+    parallel_tasks = cpu_cores * 2  # 하이퍼스레딩 고려
+    
+    # Spark 세션 설정 (로컬 PC 최적화)
     spark = SparkSession.builder \
         .appName("PatentVectorizer") \
-        .config("spark.driver.memory", "60g") \
-        .config("spark.sql.execution.arrow.maxRecordsPerBatch", "20000") \
-        .config("spark.default.parallelism", "64") \
-        .config("spark.sql.shuffle.partitions", "128") \
+        .config("spark.driver.memory", "24g") \
+        .config("spark.sql.execution.arrow.maxRecordsPerBatch", "25000") \
+        .config("spark.default.parallelism", str(parallel_tasks)) \
+        .config("spark.sql.shuffle.partitions", str(parallel_tasks * 2)) \
         .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer") \
         .config("spark.kryoserializer.buffer.max", "1024m") \
         .config("spark.memory.fraction", "0.8") \
         .config("spark.memory.storageFraction", "0.3") \
         .config("spark.local.dir", temp_dir) \
-        .master("local[32]") \
+        .master(f"local[{cpu_cores}]") \
         .getOrCreate()
     
     # TF-IDF 및 BERT 벡터화 UDF 함수 생성
@@ -242,13 +280,13 @@ async def process_patents_with_spark(all_patents, batch_size=2000, with_bert=Fal
                     logger.error(f"정리 후에도 디스크 공간이 부족합니다. 처리가 중단될 수 있습니다.")
             
             # 메모리 사용량이 높으면 GC 실행
-            if pre_batch_memory > 80:
+            if pre_batch_memory > 75:  # 로컬 PC에서는 낮은 임계값 사용
                 logger.warning(f"메모리 사용량이 높습니다 ({pre_batch_memory}%). GC 실행...")
                 import gc
                 gc.collect()
                 if torch.cuda.is_available():
                     torch.cuda.empty_cache()
-                await asyncio.sleep(2)
+                await asyncio.sleep(1)
             
             batch_start = time.time()
             start_idx = batch_idx * batch_size
@@ -294,7 +332,7 @@ async def process_patents_with_spark(all_patents, batch_size=2000, with_bert=Fal
             df.unpersist()
             
             # 데이터베이스에 더 작은 배치 단위로 저장 (메모리 부담 감소)
-            db_batch_size = 25  # 배치 크기 최적화
+            db_batch_size = 50  # 증가: 25 → 50
             db_batches = [patent_rows[i:i+db_batch_size] for i in range(0, len(patent_rows), db_batch_size)]
             
             for db_idx, db_batch in enumerate(db_batches):
@@ -359,7 +397,11 @@ async def process_patents_with_spark(all_patents, batch_size=2000, with_bert=Fal
                 db_values = None
                 
                 # DB 배치 간 짧은 대기 추가
-                await asyncio.sleep(0.2)
+                await asyncio.sleep(0.1)  # 감소: 0.2 → 0.1
+                
+                # 매 10번째 DB 배치마다 임시 파일 정리
+                if db_idx % 10 == 0:
+                    clean_temp_files()
             
             # 배치 처리 후 메모리/디스크 사용량 확인
             post_batch_memory = check_memory_usage()
@@ -394,7 +436,7 @@ async def process_patents_with_spark(all_patents, batch_size=2000, with_bert=Fal
                 torch.cuda.empty_cache()
             
             # 다음 배치 시작 전 짧은 휴식
-            await asyncio.sleep(1)
+            await asyncio.sleep(0.5)  # 감소: 1 → 0.5
         
         total_duration = time.time() - start_time
         logger.info(f"Spark {vectorization_type} 처리 완료: {total_processed}개 특허를 {total_duration/60:.2f}분에 처리")
