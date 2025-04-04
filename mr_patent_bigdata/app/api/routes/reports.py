@@ -21,9 +21,9 @@ async def get_folder_reports(user_patent_folder_id: int):
     SELECT s.similarity_id, pd.patent_draft_id, s.similarity_created_at,
            COUNT(sp.similarity_patent_id) as similar_patents_count
     FROM similarity s
-    JOIN patent_draft pd ON s.patent_draft_id = pd.patent_draft_id  # 연결 관계 변경
+    JOIN patent_draft pd ON s.patent_draft_id = pd.patent_draft_id
     LEFT JOIN similarity_patent sp ON s.similarity_id = sp.similarity_id
-    WHERE pd.user_patent_folder_id = :folder_id  # 쿼리 조건 변경
+    WHERE pd.user_patent_folder_id = :folder_id
     GROUP BY s.similarity_id
     ORDER BY s.similarity_created_at DESC
     """
@@ -56,9 +56,33 @@ async def get_folder_reports(user_patent_folder_id: int):
         "timestamp": get_current_timestamp()
     }
 
-@router.get("/patent/{user_patent_id}/report/download")
-async def download_report(user_patent_id: int):
-    """특허 분석 리포트 다운로드"""
+@router.get("/patent/{patent_draft_id}/report")
+async def download_draft_report(patent_draft_id: int):
+    """특허 초안 분석 리포트 다운로드"""
+    # 초안 정보 조회
+    draft_query = """
+    SELECT * FROM patent_draft
+    WHERE patent_draft_id = :draft_id
+    """
+    
+    draft = await database.fetch_one(
+        query=draft_query,
+        values={"draft_id": patent_draft_id}
+    )
+    
+    if not draft:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "code": "DRAFT_NOT_FOUND",
+                "message": "해당 특허 초안을 찾을 수 없습니다.",
+                "timestamp": get_current_timestamp()
+            }
+        )
+    
+    # 초안 ID를 사용하여 각종 데이터 조회
+    draft_dict = dict(draft)
+    
     # 폴더 정보 조회
     folder_query = """
     SELECT * FROM user_patent_folder
@@ -67,51 +91,20 @@ async def download_report(user_patent_id: int):
     
     folder = await database.fetch_one(
         query=folder_query,
-        values={"folder_id": user_patent_id}
+        values={"folder_id": draft_dict["user_patent_folder_id"]}
     )
-    
-    if not folder:
-        raise HTTPException(
-            status_code=404,
-            detail={
-                "code": "FOLDER_NOT_FOUND",
-                "message": "해당 폴더를 찾을 수 없습니다.",
-                "timestamp": get_current_timestamp()
-            }
-        )
-    
-    # 초안 정보 조회
-    draft_query = """
-    SELECT * FROM patent_draft
-    WHERE user_patent_folder_id = :folder_id
-    """
-    
-    draft = await database.fetch_one(
-        query=draft_query,
-        values={"folder_id": user_patent_id}
-    )
-    
-    if not draft:
-        raise HTTPException(
-            status_code=404,
-            detail={
-                "code": "DRAFT_NOT_FOUND",
-                "message": "해당 폴더의 특허 초안을 찾을 수 없습니다.",
-                "timestamp": get_current_timestamp()
-            }
-        )
     
     # 유사도 분석 결과 조회
     similarity_query = """
     SELECT * FROM similarity
-    WHERE user_patent_folder_id = :folder_id
+    WHERE patent_draft_id = :draft_id
     ORDER BY similarity_created_at DESC
     LIMIT 1
     """
     
     similarity = await database.fetch_one(
         query=similarity_query,
-        values={"folder_id": user_patent_id}
+        values={"draft_id": patent_draft_id}
     )
     
     if not similarity:
@@ -140,45 +133,45 @@ async def download_report(user_patent_id: int):
     
     # 상세 비교 결과 조회
     comparison_query = """
-    SELECT dc.*
-    FROM detailed_comparison dc
-    WHERE dc.user_patent_folder_id = :folder_id
+    SELECT * FROM detailed_comparison
+    WHERE patent_draft_id = :draft_id
+    ORDER BY detailed_comparison_total_score DESC
     """
     
     comparisons = await database.fetch_all(
         query=comparison_query,
-        values={"folder_id": user_patent_id}
+        values={"draft_id": patent_draft_id}
     )
     
     # 적합도 결과 조회
     fitness_query = """
     SELECT * FROM fitness
-    WHERE user_patent_folder_id = :folder_id
+    WHERE patent_draft_id = :draft_id
     ORDER BY fitness_created_at DESC
     LIMIT 1
     """
     
     fitness = await database.fetch_one(
         query=fitness_query,
-        values={"folder_id": user_patent_id}
+        values={"draft_id": patent_draft_id}
     )
     
     # 리포트 PDF 생성
     report_data = {
-        "folder": dict(folder),
-        "draft": dict(draft),
-        "similarity": dict(similarity),
+        "folder": dict(folder) if folder else {},
+        "draft": draft_dict,
+        "similarity": dict(similarity) if similarity else {},
         "similar_patents": [dict(patent) for patent in similar_patents],
         "comparisons": [dict(comp) for comp in comparisons],
         "fitness": dict(fitness) if fitness else {}
     }
     
-    # PDF 파일 생성 (report_generator.py에 구현 필요)
+    # PDF 파일 생성
     pdf_path = await generate_report_pdf(report_data)
     
     # 파일 다운로드 응답
     return FileResponse(
         path=pdf_path,
-        filename=f"patent_report_{user_patent_id}.pdf",
+        filename=f"patent_report_draft_{patent_draft_id}.pdf",
         media_type="application/pdf"
     )
