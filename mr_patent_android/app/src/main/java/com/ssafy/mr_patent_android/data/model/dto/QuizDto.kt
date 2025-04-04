@@ -1,6 +1,7 @@
 package com.ssafy.mr_patent_android.data.model.dto
 
+import com.google.gson.annotations.SerializedName
+
 data class QuizDto(
-    val level_id: Int,
-    val questions: List<Question>
+    @SerializedName("questions")val questions: List<Question>
 )

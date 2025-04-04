@@ -77,9 +77,11 @@ class XAccessTokenInterceptor : Interceptor {
     @Throws(IOException::class)
     override fun intercept(chain: Interceptor.Chain): Response {
         val builder: Request.Builder = chain.request().newBuilder()
-        val jwtToken: String? = sharedPreferences.getString(ACCESS_TOKEN)
-        if (jwtToken != null) {
-            builder.addHeader("ACCESS-TOKEN", jwtToken)
+        val jwtToken: String? = sharedPreferences.getAToken()
+        if (!jwtToken.isNullOrEmpty()) {
+            builder.addHeader("Authorization", "Bearer $jwtToken")
+        } else {
+            Log.w("TOKEN_WARNING", "JWT 토큰이 존재하지 않습니다!")
         }
         return chain.proceed(builder.build())
     }

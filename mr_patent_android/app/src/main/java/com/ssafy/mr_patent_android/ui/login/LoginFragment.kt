@@ -44,10 +44,10 @@ class LoginFragment : BaseFragment<FragmentLoginBinding>(FragmentLoginBinding::b
         }
 
         binding.btnLogin.setOnClickListener {
-            if(checkEmail(binding.etEmail.text.toString()) && binding.etPwd.text.length >=8){
+            if(checkEmail(binding.etEmail.text.toString()) && binding.etPwd.text.length >=6){
                 viewModel.login(binding.etEmail.text.toString(), binding.etPwd.text.toString())
             }
-            (requireActivity() as LoginActivity).navigateToMain()
+//            (requireActivity() as LoginActivity).navigateToMain()
 
 
         }
@@ -63,8 +63,8 @@ class LoginFragment : BaseFragment<FragmentLoginBinding>(FragmentLoginBinding::b
         }
         binding.etPwd.onFocusChangeListener = View.OnFocusChangeListener { v, hasFocus ->
             if (!hasFocus) {
-                if (binding.etPwd.text.length <8) {
-                    binding.etPwd.error = "8자 이상 입력해주세요."
+                if (binding.etPwd.text.length <6) {
+                    binding.etPwd.error = "6자 이상 입력해주세요."
                 }
             }
         }
@@ -83,7 +83,7 @@ class LoginFragment : BaseFragment<FragmentLoginBinding>(FragmentLoginBinding::b
         }
 
         binding.etPwd.addTextChangedListener {
-            if (binding.etPwd.text.length >= 8) {
+            if (binding.etPwd.text.length >= 6) {
                 pwdFlag = true
             } else {
                 pwdFlag = false
@@ -100,6 +100,7 @@ class LoginFragment : BaseFragment<FragmentLoginBinding>(FragmentLoginBinding::b
         viewModel.loginState.observe(viewLifecycleOwner, {
             if (it){
                 // 로그인
+                Log.d(TAG, "로그인 성공")
                 val intent= Intent(requireContext(), MainActivity::class.java)
                 intent.flags= Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 startActivity(intent)

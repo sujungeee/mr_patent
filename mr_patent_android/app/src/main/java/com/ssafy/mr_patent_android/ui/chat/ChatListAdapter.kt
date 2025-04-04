@@ -3,8 +3,11 @@ package com.ssafy.mr_patent_android.ui.chat
 import android.os.Build
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.RequiresApi
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.ssafy.mr_patent_android.R
@@ -14,43 +17,56 @@ import com.ssafy.mr_patent_android.databinding.ListItemChatRoomBinding
 import com.ssafy.mr_patent_android.databinding.ListItemExpertBinding
 
 private const val TAG = "ChatListAdapter"
-class ChatListAdapter(val chatRoomList: List<ChatRoomDto>, val itemClickListener:ItemClickListener) : RecyclerView.Adapter<ChatListAdapter.ChatListAdapter>() {
+class ChatListAdapter(private val itemClickListener: ItemClickListener) :
+    ListAdapter<ChatRoomDto, ChatListAdapter.ChatViewHolder>(ChatRoomDiffCallback()) {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChatListAdapter {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChatViewHolder {
         val binding = ListItemChatRoomBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return ChatListAdapter(binding)
+        return ChatViewHolder(binding)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    override fun onBindViewHolder(holder: ChatListAdapter, position: Int) {
-        holder.bind(position)
+    override fun onBindViewHolder(holder: ChatViewHolder, position: Int) {
+        holder.bind(getItem(position))
     }
-
-    override fun getItemCount(): Int = chatRoomList.size
 
     fun interface ItemClickListener {
         fun onItemClick(roomDto: ChatRoomDto)
     }
 
-    inner class ChatListAdapter(private val binding: ListItemChatRoomBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(position: Int) {
-            Log.d(TAG, "bind: ${chatRoomList[position]}")
-            binding.tvName.text = chatRoomList[position].userName
-            binding.tvChatPreview.text = chatRoomList[position].lastMessage
-            binding.tvTime.text = chatRoomList[position].lastMessageTime
-            if(chatRoomList[position].unreadCount > 0){
-                binding.tvUnreadCount.visibility = ViewGroup.VISIBLE
-                binding.tvUnreadCount.text = chatRoomList[position].unreadCount.toString()
+    inner class ChatViewHolder(private val binding: ListItemChatRoomBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(chatRoom: ChatRoomDto) {
+            Log.d(TAG, "bind: $chatRoom")
+            binding.tvName.text = chatRoom.userName
+            binding.tvChatPreview.text = chatRoom.lastMessage
+            binding.tvTime.text = chatRoom.lastMessageTime
+
+            if (chatRoom.unreadCount > 0) {
+                binding.tvUnreadCount.visibility = View.VISIBLE
+                binding.tvUnreadCount.text = chatRoom.unreadCount.toString()
+            } else {
+                binding.tvUnreadCount.visibility = View.GONE
             }
+
             Glide.with(binding.root)
-                .load(chatRoomList[position].userImage)
+                .load(chatRoom.userImage)
                 .fallback(R.drawable.user_profile)
                 .error(R.drawable.image_load_error_icon)
                 .into(binding.ivPatentAttorney)
 
             binding.listItemChatRoom.setOnClickListener {
-                itemClickListener.onItemClick(chatRoomList[position])
+                itemClickListener.onItemClick(chatRoom)
             }
         }
     }
+
+    class ChatRoomDiffCallback : DiffUtil.ItemCallback<ChatRoomDto>() {
+        override fun areItemsTheSame(oldItem: ChatRoomDto, newItem: ChatRoomDto): Boolean {
+            return oldItem.roomId == newItem.roomId
+        }
+
+        override fun areContentsTheSame(oldItem: ChatRoomDto, newItem: ChatRoomDto): Boolean {
+            return oldItem == newItem
+        }
+    }
 }
+

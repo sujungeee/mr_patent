@@ -49,18 +49,23 @@ private const val TAG = "ChatFragment"
 
 class ChatFragment :
     BaseFragment<FragmentChatBinding>(FragmentChatBinding::bind, R.layout.fragment_chat) {
-        private lateinit var messageListAdapter: MessageListAdapter
-        val viewModel: ChatViewModel by viewModels()
-        private val roomId: String  by lazy {
-        navArgs<ChatFragmentArgs>().value.roomId }
-        private val userId: Int by lazy {
-            navArgs<ChatFragmentArgs>().value.userId }
-        private val expertId: Int by lazy {
-            navArgs<ChatFragmentArgs>().value.expertId }
-        private val userName: String by lazy {
-            navArgs<ChatFragmentArgs>().value.userName }
-        private val userImage: String by lazy {
-            navArgs<ChatFragmentArgs>().value.userImage }
+    private lateinit var messageListAdapter: MessageListAdapter
+    val viewModel: ChatViewModel by viewModels()
+    private val roomId: String by lazy {
+        navArgs<ChatFragmentArgs>().value.roomId
+    }
+    private val userId: Int by lazy {
+        navArgs<ChatFragmentArgs>().value.userId
+    }
+    private val expertId: Int by lazy {
+        navArgs<ChatFragmentArgs>().value.expertId
+    }
+    private val userName: String by lazy {
+        navArgs<ChatFragmentArgs>().value.userName
+    }
+    private val userImage: String by lazy {
+        navArgs<ChatFragmentArgs>().value.userImage
+    }
     lateinit var stompClient: StompClient
 
     val url = "wss://j12d208.p.ssafy.io/"
@@ -84,29 +89,32 @@ class ChatFragment :
 
     fun initObserver() {
         // 어댑터를 한 번만 생성
-        messageListAdapter = MessageListAdapter(UserDto(userName, userImage),listOf(), object : MessageListAdapter.ItemClickListener {
-            override fun onItemClick() {
-                Log.d(TAG, "onFileClick: $expertId")
-                if (expertId != -1) {
-                    initUserDialog(expertId)
+        messageListAdapter = MessageListAdapter(
+            UserDto(userName, userImage),
+            listOf(),
+            object : MessageListAdapter.ItemClickListener {
+                override fun onItemClick() {
+                    Log.d(TAG, "onFileClick: $expertId")
+                    if (expertId != -1) {
+                        initUserDialog(expertId)
+                    }
                 }
-            }
 
-            override fun onFileClick(url: String) {
+                override fun onFileClick(url: String) {
 
 
-            }
+                }
 
-            override fun onPhotoClick(url: String) {
-                initDialog(url)
-            }
-        })
+                override fun onPhotoClick(url: String) {
+                    initDialog(url)
+                }
+            })
 
         // RecyclerView에 어댑터 설정 (한 번만)
         binding.rvChat.adapter = messageListAdapter
 
-        viewModel.messageList.observe(viewLifecycleOwner){
-            messageListAdapter.updateMessages(viewModel.messageList.value?: listOf())
+        viewModel.messageList.observe(viewLifecycleOwner) {
+            messageListAdapter.updateMessages(viewModel.messageList.value ?: listOf())
         }
 
     }
@@ -123,65 +131,84 @@ class ChatFragment :
                         .subscribe({ topicMessage ->
                             try {
                                 Log.d(TAG, topicMessage.getPayload())
-                                val message = Gson().fromJson(topicMessage.getPayload(), ChatMessageDto::class.java)
+                                val message = Gson().fromJson(
+                                    topicMessage.getPayload(),
+                                    ChatMessageDto::class.java
+                                )
                                 Log.d(TAG, "initStomp: $message")
                                 viewModel.addMessage(message)
                             } catch (e: Exception) {
                                 Log.e(TAG, "Failed to process message", e)
                             }
                         }, { error ->
-                            Log.e("SUBSCRIPTION_ERROR", "Topic subscription error: ${error.message}")
+                            Log.e(
+                                "SUBSCRIPTION_ERROR",
+                                "Topic subscription error: ${error.message}"
+                            )
                         })
 
                 }
+
                 LifecycleEvent.Type.CLOSED -> {
                     Log.i("CLOSED", "스톰프 연결 종료")
 
                 }
+
                 LifecycleEvent.Type.ERROR -> {
                     Log.i("ERROR", "스톰프 연결 에러")
                     Log.e("CONNECT ERROR", lifecycleEvent.exception.toString())
                 }
-                else ->{
+
+                else -> {
                     Log.i("ELSE", lifecycleEvent.message)
                 }
             }
         }
 
-        headerList.add(StompHeader("roomId",  roomId.toString()))
+        headerList.add(StompHeader("roomId", roomId.toString()))
         headerList.add(StompHeader("userId", sharedPreferences.getUser().userId.toString()))
         stompClient.connect(headerList)
 
 
     }
-    fun initView(){
+
+    fun initView() {
         viewModel.getMessageList(roomId)
         binding.btnSend.isEnabled = false
-        binding.etMessage.addTextChangedListener{
-            if(it.toString().isNotEmpty()){
+        binding.tvChatHeader.text = userName
+        binding.etMessage.addTextChangedListener {
+            if (it.toString().isNotEmpty()) {
                 binding.btnSend.isEnabled = true
-            }else{
+            } else {
                 binding.btnSend.isEnabled = false
             }
         }
 
         binding.btnSend.setOnClickListener {
             Log.d(TAG, "initView: asdasdhaskjdh")
-            viewModel.sendMessage(roomId, binding.etMessage.text.toString(), null, requireContext(), stompClient)
-            viewModel.addMessageFront(ChatMessageDto(
-                chatId = null,
-                isRead = false,
-                message = binding.etMessage.text.toString(),
-                receiverId = null,
-                roomId = roomId,
-                timestamp = null,
-                type = "CHAT",
-                userId = sharedPreferences.getUser().userId+1,
-                fileName = null,
-                fileUrl = null,
-                fileUri = Uri.EMPTY,
-                messageType = "TEXT"
-            ))
+            viewModel.sendMessage(
+                roomId,
+                binding.etMessage.text.toString(),
+                null,
+                requireContext(),
+                stompClient
+            )
+            viewModel.addMessageFront(
+                ChatMessageDto(
+                    chatId = null,
+                    isRead = false,
+                    message = binding.etMessage.text.toString(),
+                    receiverId = null,
+                    roomId = roomId,
+                    timestamp = null,
+                    type = "CHAT",
+                    userId = sharedPreferences.getUser().userId + 1,
+                    fileName = null,
+                    fileUrl = null,
+                    fileUri = Uri.EMPTY,
+                    messageType = "TEXT"
+                )
+            )
             Log.d(TAG, "initView: ${viewModel.messageList.value}")
 //            viewModel.setSendState(true)
 //            viewModel.setSendState(false)
@@ -206,16 +233,19 @@ class ChatFragment :
 
     }
 
-    fun initDialog(urls: String){
+    fun initDialog(urls: String) {
         val dialog = Dialog(requireContext())
 
-        val dialogBinding= ItemPhotoPreviewBinding.inflate(layoutInflater)
+        val dialogBinding = ItemPhotoPreviewBinding.inflate(layoutInflater)
 
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
 
         dialog.setContentView(dialogBinding.root)
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+        dialog.window?.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
         dialogBinding.btnDelete.visibility = View.VISIBLE
         dialogBinding.previewImage.setOnClickListener {
             dialog.dismiss()
@@ -228,12 +258,13 @@ class ChatFragment :
         dialog.show()
 
     }
-    fun initUserDialog(expertId: Int){
+
+    fun initUserDialog(expertId: Int) {
         val dialog = Dialog(requireContext())
 
-        val dialogBinding= DialogChatProfileBinding.inflate(layoutInflater)
+        val dialogBinding = DialogChatProfileBinding.inflate(layoutInflater)
 
-        viewModel.user.observe(viewLifecycleOwner){
+        viewModel.user.observe(viewLifecycleOwner) {
             dialogBinding.tvName.text = it.userName
             dialogBinding.tvDescription.text = it.expertDescription
             dialogBinding.tvAddress.text = it.expertAddress
@@ -246,7 +277,7 @@ class ChatFragment :
 
             if (it.expertCategory.isNotEmpty()) {
                 it.expertCategory.forEach { category ->
-                    when(category){
+                    when (category) {
                         "기계공학" -> dialogBinding.tvFieldMecha.visibility = View.VISIBLE
                         "전기/전자" -> dialogBinding.tvFieldElec.visibility = View.VISIBLE
                         "화학공학" -> dialogBinding.tvFieldChemi.visibility = View.VISIBLE
@@ -267,7 +298,6 @@ class ChatFragment :
         dialog.show()
 
 
-
     }
 
     fun initBottomSheet() {
@@ -282,9 +312,11 @@ class ChatFragment :
         }
 
         bottomBinding.btnGallery.setOnClickListener {
-            val intent = Intent(Intent.ACTION_PICK)
-            intent.type = "image/*"
-            intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+            val intent = Intent(Intent.ACTION_PICK).apply {
+                type = "image/*"
+                putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/jpeg", "image/png"))
+                putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+            }
             activityResult.launch(intent)
         }
 
@@ -292,12 +324,19 @@ class ChatFragment :
             val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
                 type = "*/*"
-                putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
+                putExtra(
+                    Intent.EXTRA_MIME_TYPES,
+                    arrayOf(
+                        "application/pdf",
+                        "application/msword",
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    )
+                )
             }
             startActivityForResult(intent, 1)
         }
 
-        viewModel.file.observe(viewLifecycleOwner){
+        viewModel.file.observe(viewLifecycleOwner) {
             Log.d(TAG, "initBottomSheet: $it")
             if (it != null) {
                 bottomBinding.btnSend.isEnabled = true
@@ -308,15 +347,18 @@ class ChatFragment :
                 }
                 bottomBinding.chatBottomSheetMenu.visibility = View.GONE
                 bottomBinding.previewImage.root.visibility = View.VISIBLE
-                FileUtil().getFileExtension(requireContext(),it)?.let { it1 ->
+                FileUtil().getFileExtension(requireContext(), it)?.let { it1 ->
                     if (it1 == "pdf") {
                         bottomBinding.previewImage.previewImage.setImageResource(R.drawable.pdf_icon)
                     } else if (it1 == "doc" || it1 == "docx") {
                         bottomBinding.previewImage.previewImage.setImageResource(R.drawable.word_icon)
                     }
                 }
-                bottomBinding.previewImage.tvFileName.text = FileUtil().getFileName(requireContext(),it)
-            } else{
+                bottomBinding.previewImage.tvFileSize.text =
+                    FileUtil().formatFileSize(FileUtil().getFileSize(requireContext(), it))
+                bottomBinding.previewImage.tvFileName.text =
+                    FileUtil().getFileName(requireContext(), it)
+            } else {
 
                 bottomBinding.btnSend.isEnabled = false
                 bottomBinding.chatBottomSheetMenu.visibility = View.VISIBLE
@@ -329,33 +371,45 @@ class ChatFragment :
             val image = viewModel.image.value
             val files = mutableListOf<ChatMessageDto.Files>()
             if (file != null) {
-                files.add(ChatMessageDto.Files(FileUtil().getFileName(requireContext(),file)!!, "", file))
-            }else {
+                files.add(
+                    ChatMessageDto.Files(
+                        FileUtil().getFileName(requireContext(), file)!!,
+                        "",
+                        file
+                    )
+                )
+            } else {
                 if (image != null) {
                     files.addAll(image)
                 }
 
             }
 
-            viewModel.sendMessage(roomId, binding.etMessage.text.toString(), files, requireContext(), stompClient)
+            viewModel.sendMessage(
+                roomId,
+                binding.etMessage.text.toString(),
+                files,
+                requireContext(),
+                stompClient
+            )
             viewModel.setFile(null)
             viewModel.deleteImage()
         }
 
 
 
-        viewModel.image.observe(viewLifecycleOwner){
+        viewModel.image.observe(viewLifecycleOwner) {
             if (!it.isNullOrEmpty()) {
                 bottomBinding.btnSend.isEnabled = true
                 bottomBinding.chatBottomSheetMenu.visibility = View.GONE
                 bottomBinding.rvImage.visibility = View.VISIBLE
                 bottomBinding.rvImage.adapter = it?.let { it1 ->
                     Log.d(TAG, "initBottomSheet: $it1")
-                    PhotoAdapter(1, it1){
+                    PhotoAdapter(1, it1) {
                         viewModel.removeImage(it)
                     }
                 }
-            } else{
+            } else {
                 bottomBinding.btnSend.isEnabled = false
                 bottomBinding.chatBottomSheetMenu.visibility = View.VISIBLE
                 bottomBinding.rvImage.visibility = View.GONE
@@ -370,15 +424,25 @@ class ChatFragment :
     private val activityResult: ActivityResultLauncher<Intent> = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK) {
             val clipData = result.data?.clipData
+            val currentCount = viewModel.image.value?.size ?: 0
+            val remainingSlots = 5 - currentCount
+
             if (clipData != null) {
+                var addedCount = 0
                 for (i in 0 until clipData.itemCount) {
+                    if (addedCount >= remainingSlots) break
+
                     val uri = clipData.getItemAt(i).uri
-                    viewModel.addImage(ChatMessageDto.Files("name","", uri))
+                    if (FileUtil().isFileSizeValid(requireContext(),uri)) {
+                        viewModel.addImage(ChatMessageDto.Files("name", "", uri))
+                        addedCount++
+                    }
                 }
             } else {
                 val uri = result.data?.data
-                viewModel.addImage(ChatMessageDto.Files("name","", uri!!))
-                Log.d(TAG, "activityResult: $uri")
+                if (uri != null && currentCount < 5 && FileUtil().isFileSizeValid(requireContext(),uri)) {
+                    viewModel.addImage(ChatMessageDto.Files("name", "", uri))
+                }
             }
         }
     }
@@ -392,14 +456,18 @@ class ChatFragment :
         }
 
     }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
         if (requestCode == 1 && resultCode == RESULT_OK) {
-            if (data != null) {
-                val uri = data.data
-                viewModel.setFile(uri)
-                Log.e("uri", uri.toString())
+            data?.data?.let { uri ->
+                if (FileUtil().isFileSizeValid(requireContext(),uri)) {
+                    viewModel.setFile(uri)
+                    Log.d("uri", "파일 선택됨: $uri")
+                } else {
+                    Log.d("uri", "파일 크기 초과")
+                }
             }
         }
     }

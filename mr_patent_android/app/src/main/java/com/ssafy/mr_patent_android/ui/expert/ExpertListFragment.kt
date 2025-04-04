@@ -129,7 +129,7 @@ class ExpertListFragment : BaseFragment<FragmentExpertListBinding>(
     }
 
     private fun initExpertView() {
-
+        viewModel.getExpertList()
         binding.cgFilter.setOnCheckedStateChangeListener { group, checkedIds ->
             viewModel.setFilterState(checkedIds.map { categoryMap[it] })
         }
