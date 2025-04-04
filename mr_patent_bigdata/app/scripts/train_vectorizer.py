@@ -53,21 +53,15 @@ async def train_vectorizer_from_patents():
         
         # 각 필드별 벡터 생성
         title_tfidf = get_tfidf_vector(title)
-        title_bert = get_bert_vector(title)
         summary_tfidf = get_tfidf_vector(summary)
-        summary_bert = get_bert_vector(summary)
         claim_tfidf = get_tfidf_vector(claim)
-        claim_bert = get_bert_vector(claim)
         
         # 필드별 벡터 업데이트 (통합 벡터 필드 제거)
         update_query = """
         UPDATE patent SET
             patent_title_tfidf_vector = :title_tfidf,
-            patent_title_bert_vector = :title_bert,
             patent_summary_tfidf_vector = :summary_tfidf,
-            patent_summary_bert_vector = :summary_bert,
-            patent_claim_tfidf_vector = :claim_tfidf,
-            patent_claim_bert_vector = :claim_bert
+            patent_claim_tfidf_vector = :claim_tfidf
         WHERE patent_id = :patent_id
         """
         
@@ -75,11 +69,8 @@ async def train_vectorizer_from_patents():
             query=update_query,
             values={
                 "title_tfidf": title_tfidf.tobytes(),
-                "title_bert": title_bert.tobytes(),
                 "summary_tfidf": summary_tfidf.tobytes(),
-                "summary_bert": summary_bert.tobytes(),
                 "claim_tfidf": claim_tfidf.tobytes(),
-                "claim_bert": claim_bert.tobytes(),
                 "patent_id": patent_id
             }
         )
