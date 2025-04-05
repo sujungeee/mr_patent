@@ -14,6 +14,10 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.ssafy.mr_patent_android.base.BaseActivity
 import com.ssafy.mr_patent_android.databinding.ActivityMainBinding
 import com.ssafy.mr_patent_android.ui.home.HomeFragmentDirections
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 private const val TAG = "MainActivity_Mr_Patent"
 class MainActivity : BaseActivity<ActivityMainBinding>(ActivityMainBinding::inflate)  {
