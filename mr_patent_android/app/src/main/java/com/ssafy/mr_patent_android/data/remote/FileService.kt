@@ -18,6 +18,12 @@ interface FileService {
         @Query("contenttype") contentType: String
     ): Response<BaseResponse<String>>
 
+//    @GET("user/profile-image/upload-url")
+//    suspend fun getImagePreSignedUrl(
+//        @Query("filename") fileName: String,
+//        @Query("contenttype") contentType: String
+//    ): Response<BaseResponse>
+
     @PUT
     suspend fun uploadFile(@Url url: String, @Body file: RequestBody?): Response<Unit>
 
