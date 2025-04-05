@@ -6,6 +6,8 @@ import android.provider.OpenableColumns
 import android.util.Log
 import android.webkit.MimeTypeMap
 import androidx.core.content.ContentProviderCompat.requireContext
+import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
 import java.io.File
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -32,25 +34,68 @@ class FileUtil {
 
     fun getFileExtension(context: Context, uri: Uri): String? {
         val contentResolver = context.contentResolver
-        val mimeType = contentResolver.getType(uri) ?: return null
+        val mimeType = contentResolver.getType(uri)
 
-        return MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
-    }
+        // MIME 타입으로 확장자 추출 시도
+        if (mimeType != null) {
+            return MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
+        }
 
-    fun getFileName(context: Context, uri: Uri): String? {
-        val contentResolver = context.contentResolver
-        val cursor = contentResolver.query(uri, null, null, null, null)
-
-        cursor?.use {
-            if (it.moveToFirst()) {
-                val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                if (nameIndex != -1) {
-                    return it.getString(nameIndex)
-                }
+        if (uri.scheme == "file" || uri.scheme == "content") {
+            val fileName = uri.lastPathSegment ?: return null
+            val dotIndex = fileName.lastIndexOf('.')
+            if (dotIndex != -1 && dotIndex < fileName.length - 1) {
+                return fileName.substring(dotIndex + 1)
             }
         }
+
         return null
     }
+
+    fun getMimeType(fileType: String): MediaType {
+        return when (fileType.lowercase()) {
+            "image", "jpg", "jpeg" -> "image/jpeg".toMediaType()
+            "png" -> "image/png".toMediaType()
+            "pdf" -> "application/pdf".toMediaType()
+            "doc" -> "application/msword".toMediaType()
+            "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document".toMediaType()
+            else -> "application/octet-stream".toMediaType() // default fallback
+        }
+    }
+
+    fun formatType(fileType: String) : String {
+        return when (fileType.lowercase()) {
+            "image", "jpg", "jpeg","png"-> "IMAGE"
+            "doc","docx" -> "WORD"
+            "pdf" -> "PDF"
+            else -> "TEXT" // default fallback
+        }
+    }
+
+
+    fun getFileName(context: Context, uri: Uri): String? {
+        return when (uri.scheme) {
+            "content" -> {
+                val cursor = context.contentResolver.query(uri, null, null, null, null)
+                cursor?.use {
+                    if (it.moveToFirst()) {
+                        val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                        if (nameIndex != -1) {
+                            return it.getString(nameIndex)
+                        }
+                    }
+                }
+                null
+            }
+
+            "file" -> {
+                File(uri.path!!).name
+            }
+
+            else -> null
+        }
+    }
+
 
     fun getFileSize(context: Context, uri: Uri): Long {
         var size = 0L
