@@ -1,12 +1,16 @@
 package com.ssafy.mr_patent_android.ui.join
 
+import android.app.Dialog
 import android.graphics.Bitmap
-import android.graphics.ImageDecoder
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.util.Log
 import android.view.View
+import android.view.WindowManager
+import android.widget.Button
+import android.widget.TextView
 import androidx.activity.addCallback
 import androidx.core.content.FileProvider
 import androidx.fragment.app.activityViewModels
@@ -50,6 +54,11 @@ class JoinProfileFragment : BaseFragment<FragmentJoinProfileBinding>(
     private fun initView() {
         loadingDialog = LoadingDialog(requireContext())
         imagePickerUtil = ImagePicker(this) { uri ->
+            if (FileUtil().isFileSizeValid(requireContext(), uri) == false) {
+                setDialogSizeOver()
+                return@ImagePicker
+            }
+
             val extension = FileUtil().getFileExtension(requireContext(), uri)
             val bitmap = MediaStore.Images.Media.getBitmap(requireContext().contentResolver,  uri)
 
@@ -106,7 +115,6 @@ class JoinProfileFragment : BaseFragment<FragmentJoinProfileBinding>(
 
     private fun initObserver() {
         joinViewModel.userImage.observe(viewLifecycleOwner, {
-            loadingDialog.dismiss()
             Glide.with(requireContext())
                 .load(it)
                 .fallback(R.drawable.user_profile)
@@ -121,6 +129,7 @@ class JoinProfileFragment : BaseFragment<FragmentJoinProfileBinding>(
             ImageCompressor(requireContext()).compressImage(uri, 500 * 1024)?.let { bytes ->
                 val compressedUri = byteArrayToUri(bytes, extension)
                 joinViewModel.setUserImage(compressedUri.toString())
+                loadingDialog.dismiss()
             } ?: run {
                 showCustomToast("이미지 처리 실패")
             }
@@ -148,6 +157,29 @@ class JoinProfileFragment : BaseFragment<FragmentJoinProfileBinding>(
                 "${requireContext().packageName}.fileprovider",
                 file
             )
+        }
+    }
+
+    private fun setDialogSizeOver() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_size_over, null)
+        val overTextView = dialogView.findViewById<TextView>(R.id.tv_text2)
+        overTextView.setText("5mb 이상의 이미지는 업로드가 불가능해요.")
+        val dialogBuilder = Dialog(requireContext())
+        dialogBuilder.setContentView(dialogView)
+        dialogBuilder.create()
+        dialogBuilder.window?.apply {
+            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            setLayout(
+                ((context.resources.displayMetrics.widthPixels) * 0.8).toInt(),
+                WindowManager.LayoutParams.WRAP_CONTENT
+            )
+        }
+        dialogBuilder.show()
+
+        val dlBtnYes = dialogView.findViewById<Button>(R.id.dl_btn_yes)
+
+        dlBtnYes.setOnClickListener {
+            dialogBuilder.dismiss()
         }
     }
 

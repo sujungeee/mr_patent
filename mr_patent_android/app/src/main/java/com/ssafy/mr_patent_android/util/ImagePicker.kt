@@ -40,7 +40,6 @@ class ImagePicker(
                     onImageSelected(it)
                 }
                 else -> {
-                    Log.d(TAG, ":type: ${FileUtil().getFileExtension(fragment.requireContext(), it)} ")
                     Toast.makeText(fragment.requireContext(), "지원하지 않는 이미지 형식입니다.", Toast.LENGTH_SHORT).show()
                 }
             }
