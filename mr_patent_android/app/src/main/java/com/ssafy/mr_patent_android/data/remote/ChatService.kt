@@ -22,13 +22,13 @@ interface ChatService {
         @Path("userId") userId: Int
     ) : Response<BaseResponse<List<ChatRoomDto>>>
 
-    @GET("chat/rooms/messages/{roomId}?lastMessageid={lastmessageid}")
+    @GET("chat/rooms/message/{roomId}?lastMessageid={lastmessageid}")
     suspend fun getChatMessageList(
         @Path("roomId") roomId: String,
         @Query("lastmessageid") lastMessageId: Int?
     ) : Response<BaseResponse<List<ChatMessageDto>>>
 
-    @GET("chat/rooms/messages/{roomid}")
+    @GET("chat/rooms/message/{roomid}")
     suspend fun getFirstChatMessageList(
         @Path("roomid") roomId: String,
     ) : Response<BaseResponse<List<ChatMessageDto>>>
