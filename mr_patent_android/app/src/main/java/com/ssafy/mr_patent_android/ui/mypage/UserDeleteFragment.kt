@@ -30,14 +30,6 @@ class UserDeleteFragment : BaseFragment<FragmentUserDeleteBinding>(
     private fun initView() {
         binding.btnUserDelete.setOnClickListener {
             userRemoveViewModel.deleteUser()
-            // TODO: delete
-            showCustomToast("탈퇴가 완료되었습니다.")
-            sharedPreferences.clearToken()
-            val intent = Intent(requireContext(), LoginActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            }
-            startActivity(intent)
-            requireActivity().finish()
         }
 
         binding.btnCancel.setOnClickListener {
@@ -46,7 +38,6 @@ class UserDeleteFragment : BaseFragment<FragmentUserDeleteBinding>(
     }
 
     private fun initObserver() {
-        // 로그인 화면으로 이동
         userRemoveViewModel.toastMsg.observe(viewLifecycleOwner) {
             if (it == "탈퇴가 완료되었습니다.") {
                 showCustomToast(it)
