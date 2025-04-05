@@ -74,6 +74,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="이메일을 입력해주세요"
+                android:inputType="textEmailAddress"
                 android:paddingStart="8dp"
                 android:textSize="15sp"
                 android:layout_marginTop="6dp"
@@ -110,8 +111,8 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/cl_verify"
             android:visibility="gone"
+            android:id="@+id/cl_verify"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
@@ -176,7 +177,7 @@
                 app:layout_constraintBottom_toBottomOf="@+id/et_code"
                 app:layout_constraintEnd_toEndOf="@id/et_code"
                 app:layout_constraintTop_toTopOf="@+id/tv_verify"
-                app:layout_constraintVertical_bias="0.8" />
+                app:layout_constraintVertical_bias="0.75" />
 
             <TextView
                 android:id="@+id/tv_verify_status"
@@ -311,7 +312,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
-                android:hint="한글/영어/특수문자 포함 8~16자로 입력해주세요."
+                android:hint="영어/숫자/특수문자 포함 8~16자로 입력해주세요."
                 android:inputType="textPassword"
                 android:maxLength="16"
                 android:paddingStart="8dp"
@@ -684,7 +685,7 @@
                 android:id="@+id/tv_license_upload"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/tv_license_edit"
+                android:text="@string/tv_license_register"
                 android:textSize="16sp"
                 android:textColor="@color/mr_gray_dark"
                 app:layout_constraintTop_toBottomOf="@id/cl_license_upload"
