@@ -107,4 +107,6 @@ dependencies {
 
     //EasyFlipView
     implementation ("com.wajahatkarim:EasyFlipView:3.0.3")
+
+    implementation ("io.github.ParkSangGwon:tedimagepicker:1.4.3")
 }

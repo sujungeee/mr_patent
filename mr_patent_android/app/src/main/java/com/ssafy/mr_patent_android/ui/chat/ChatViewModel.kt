@@ -17,6 +17,7 @@ import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.chatServic
 import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.fileService
 import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.userService
 import com.ssafy.mr_patent_android.util.FileUtil
+import com.ssafy.mr_patent_android.util.TimeUtil
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -25,6 +26,7 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import ua.naiksoftware.stomp.StompClient
+import ua.naiksoftware.stomp.dto.StompHeader
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -52,12 +54,13 @@ class ChatViewModel : ViewModel() {
         get() = _image
 
 
-    private val _sendState = MutableLiveData<Boolean>()
-    val sendState: LiveData<Boolean>
-        get() = _sendState
+    private val _state = MutableLiveData<Boolean>(false)
+    val state: LiveData<Boolean>
+        get() = _state
 
-    fun setSendState(state:Boolean){
-        _sendState.value = state
+
+    fun setState(newState: Boolean) {
+        _state.postValue(newState) // <- 이걸로 변경
     }
 
     fun setUser(user: UserDto){
@@ -67,10 +70,11 @@ class ChatViewModel : ViewModel() {
     fun addMessage(message: ChatMessageDto) {
         val currentList = _messageList.value?.toMutableList() ?: mutableListOf()
 
-        currentList.add(message)
+        currentList.add(0, message)
 
-        _messageList.value = currentList
+        _messageList.postValue(currentList)
     }
+
 
     fun addMessageFront(message: ChatMessageDto) {
         val currentList = _messageList.value?.toMutableList() ?: mutableListOf()
@@ -96,41 +100,33 @@ class ChatViewModel : ViewModel() {
         _image.value = _image.value?.filterIndexed { index, _ -> index != image }
     }
 
-    fun sendMessage(roomId: String, message: String?, files: List<ChatMessageDto.Files>?, context: Context, stompClient: StompClient) {
-        var fileExtension="TEXT"
+    fun sendMessage(receiverId:Int,roomId: String, message: String?, files: List<ChatMessageDto.Files>?, context: Context, stompClient: StompClient) {
+       var fileType = "TEXT"
         viewModelScope.launch {
             val uploadedFiles = mutableListOf<String>() // 업로드된 파일 URL 저장
-
             if (!files.isNullOrEmpty()) {
                 // 파일 업로드 처리
                 files.forEach { file ->
-                    fileExtension = FileUtil().getFileExtension(context, file.fileUri) ?: return@forEach
+                    fileType = FileUtil().getFileExtension(context, file.fileUri) ?: return@forEach
+                    val fileExtension = FileUtil().getMimeType(fileType)
                     val fileName = FileUtil().getFileName(context, file.fileUri) ?: "unknown_file"
-
                     try {
-                        val response = fileService.getPreSignedUrl(fileName, fileExtension)
+                        val response = fileService.getPreSignedUrl(fileName, fileExtension.toString())
                         val presignedUrl = response.body()?.data
 
                         Log.d("Presigned URL", "URL: $presignedUrl")
 
                         val success =
                             presignedUrl?.let {
-                                uploadFileToS3(context, file.fileUri, it, fileExtension, fileName) }
+                                uploadFileToS3(context, file.fileUri, it, fileType, fileName) }
 
                         if (success == true) {
                             Log.d("S3 Upload", "File uploaded successfully!")
-                            file.fileUrl = presignedUrl // 업로드된 파일 경로 저장
+                            file.fileUrl = presignedUrl
 
-                            if (fileExtension == "pdf") {
-                                // STOMP를 통해 업로드된 파일 정보 전송
-                                fileExtension="PDF"
-                            } else if (fileExtension == "doc" || fileExtension == "docx") {
-                                // STOMP를 통해 메시지만 전송
-                                fileExtension="WORD"
-                            }
+                            file.fileName= fileName
 
-                            // STOMP를 통해 업로드된 파일 정보 전송
-                            sendStompMessage(stompClient, roomId, null, file, fileExtension)
+                            sendStompMessage(receiverId,stompClient, roomId, null, file, FileUtil().formatType(fileType))
 
                         } else {
                             Log.e("S3 Upload", "File upload failed!")
@@ -144,7 +140,7 @@ class ChatViewModel : ViewModel() {
 
             } else if (!message.isNullOrBlank()) {
                 // STOMP를 통해 메시지만 전송
-                sendStompMessage(stompClient, roomId, message, null, fileExtension)
+                sendStompMessage(receiverId,stompClient, roomId, message, null, fileType)
             }
         }
     }
@@ -155,21 +151,7 @@ class ChatViewModel : ViewModel() {
             viewModelScope.launch {
                 runCatching {
                     val file = FileUtil().getFileFromUri(context, fileUri, fileName, fileType)
-                    var requestBody = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
-                    when(fileType){
-                        "image" -> {
-                            requestBody = file.asRequestBody("image/jpeg".toMediaType())
-                        }
-                        "pdf" -> {
-                            requestBody = file.asRequestBody("application/pdf".toMediaType())
-                        }
-                        "doc" -> {
-                            requestBody = file.asRequestBody("application/msword".toMediaType())
-                        }
-                        "docx" -> {
-                            requestBody = file.asRequestBody("application/vnd.openxmlformats-officedocument.wordprocessingml.document".toMediaType())
-                        }
-                    }
+                    var requestBody = file.asRequestBody(FileUtil().getMimeType(fileType))
 
                     fileService.uploadFile(presignedUrl, requestBody)
                 }.onSuccess {
@@ -188,32 +170,30 @@ class ChatViewModel : ViewModel() {
         }
     }
 
-    fun sendStompMessage(stompClient: StompClient, roomId: String, message: String?, file: ChatMessageDto.Files?, fileType:String) {
-        val chatMessage=ChatMessageDto(
+    fun sendStompMessage(receiverId: Int,stompClient: StompClient, roomId: String, message: String?, file: ChatMessageDto.Files?, fileType:String) {
+        val chatMessage = ChatMessageDto(
+            status = 0,
             chatId = null,
-            isRead = false,
+            isRead = state.value?: false,
             message = message,
-            receiverId = null,
+            receiverId = receiverId,
             roomId = roomId,
             timestamp = null,
             type = "CHAT",
             userId = sharedPreferences.getUser().userId,
             fileName = file?.fileName,
             fileUrl = file?.fileUrl,
-            fileUri = Uri.EMPTY,
+            fileUri = file?.fileUri,
             messageType = fileType
         )
 
 
         val jsonMessage = Gson().toJson(chatMessage)
+        Log.d(TAG, "sendStompMessage: $jsonMessage")
         try {
-            stompClient.send("/chat/$roomId/send", jsonMessage).subscribe()
-            Log.d(TAG, "sendStompMessage: $jsonMessage")
-//            _messageList.value = _messageList.value?.plus(chatMessage)
-            _sendState.value = true
-            }catch (e:Exception){
-                Log.d("ChatViewModel", "sendStompMessage: ${e.message}")
-            }
+            stompClient.send("/pub/chat/message", jsonMessage).subscribe()
+        } catch (e: Exception) {
+        }
     }
 
 
@@ -231,12 +211,17 @@ class ChatViewModel : ViewModel() {
                 if (it.isSuccessful) {
                     it.body()?.data?.let { messageList ->
                         val currentMessages = _messageList.value?.toMutableList() ?: mutableListOf()
-
+                        var lastTime = ""
                         messageList.forEach {
                             // 타임스탬프가 다르면 구분선 추가
-                            val lastTime = currentMessages.lastOrNull()?.timestamp
-                            if (lastTime != it.timestamp) {
-                                currentMessages.add(ChatMessageDto(messageType = "DIVIDER"))
+                            val cur= it.timestamp?.substring(0,10)
+                            if (it.timestamp != null && lastTime.isNotEmpty()) {
+                                if (cur != lastTime) {
+                                    currentMessages.add(ChatMessageDto(it.timestamp, messageType = "DIVIDER"))
+                                    lastTime= cur!!
+                                }
+                            }else{
+                                lastTime = cur!!
                             }
 
                             // 메시지를 리스트에 추가
@@ -249,7 +234,7 @@ class ChatViewModel : ViewModel() {
                 } else {
                     it.errorBody()?.let { error ->
                         networkUtil.getErrorResponse(error)?.let { errorResponse ->
-                            Log.d("ChatViewModel", "getMessageList: $errorResponse")
+                            Log.d("ChatViewModel", "gwetMessageList: $errorResponse")
                         }
                     }
                 }

@@ -78,11 +78,17 @@ class XAccessTokenInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val builder: Request.Builder = chain.request().newBuilder()
         val jwtToken: String? = sharedPreferences.getAToken()
-        if (!jwtToken.isNullOrEmpty()) {
-            builder.addHeader("Authorization", "Bearer $jwtToken")
-        } else {
-            Log.w("TOKEN_WARNING", "JWT 토큰이 존재하지 않습니다!")
+        if (chain.request().url.toString()
+                .contains("mr-patent.s3.ap-northeast-2.amazonaws.com")
+        ) {
+            return chain.proceed(builder.build())
+        }else {
+            if (!jwtToken.isNullOrEmpty()) {
+                builder.addHeader("Authorization", "Bearer $jwtToken")
+            } else {
+                Log.w("TOKEN_WARNING", "JWT 토큰이 존재하지 않습니다!")
+            }
+            return chain.proceed(builder.build())
         }
-        return chain.proceed(builder.build())
     }
 }
