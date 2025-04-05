@@ -3,6 +3,7 @@ package com.ssafy.mr_patent_android.ui.mypage
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.ssafy.mr_patent_android.R
 import com.ssafy.mr_patent_android.base.BaseFragment
@@ -11,7 +12,7 @@ import com.ssafy.mr_patent_android.databinding.FragmentPwdEditBinding
 class PwdEditFragment : BaseFragment<FragmentPwdEditBinding>(
     FragmentPwdEditBinding::bind, R.layout.fragment_pwd_edit
 ) {
-    private val pwdEditViewModel : PwdEditViewModel by activityViewModels()
+    private val pwdEditViewModel : PwdEditViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

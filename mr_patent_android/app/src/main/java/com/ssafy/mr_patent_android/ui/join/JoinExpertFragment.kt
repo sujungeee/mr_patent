@@ -6,29 +6,27 @@ import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.TextView
+import androidx.activity.addCallback
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.chip.Chip
+import com.google.android.material.datepicker.CalendarConstraints
+import com.google.android.material.datepicker.DateValidatorPointBackward
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.ssafy.mr_patent_android.R
 import com.ssafy.mr_patent_android.base.BaseFragment
+import com.ssafy.mr_patent_android.data.model.dto.JoinExpertRequest
 import com.ssafy.mr_patent_android.databinding.FragmentJoinExpertBinding
 import com.ssafy.mr_patent_android.ui.address.AddressViewModel
 import com.ssafy.mr_patent_android.ui.login.EmailVerifyViewModel
-import com.ssafy.mr_patent_android.ui.login.LoginActivity
 import com.ssafy.mr_patent_android.util.FilePicker
 import com.ssafy.mr_patent_android.util.FileUtil
 import kotlinx.coroutines.launch
-import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -46,9 +44,11 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
     private lateinit var license : String
     private lateinit var identification : String
     private lateinit var address : String
-    private lateinit var categories : MutableList<String>
+    private lateinit var categories : MutableList<JoinExpertRequest.Category>
 
     private var emailFlag : Boolean = false
+
+    private lateinit var timer : CountDownTimer
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,7 +65,11 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
         filePickerUtil = FilePicker(this) { uri ->
             val fileName = FileUtil().getFileName(requireContext(), uri)
             val fileSize = FileUtil().getFileSize(requireContext(), uri)
-            if(fileSize >= 1024 * 1024 * 5) {
+            val fileExtension = FileUtil().getFileExtension(requireContext(), uri)
+            if (fileExtension != "pdf") {
+                showCustomToast("PDF 파일만 업로드 가능합니다.")
+                return@FilePicker
+            } else if(fileSize >= 1024 * 1024 * 5) {
                 setDialogSizeOver()
                 return@FilePicker
             } else {
@@ -81,6 +85,16 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
         }
 
         binding.tvBefore.setOnClickListener {
+            if (joinViewModel.userImage.value == "") {
+                joinViewModel.setUserImage(requireContext().resources.getString(R.string.default_image))
+            }
+            findNavController().popBackStack()
+        }
+
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+            if (joinViewModel.userImage.value == "") {
+                joinViewModel.setUserImage(requireContext().resources.getString(R.string.default_image))
+            }
             findNavController().popBackStack()
         }
 
@@ -92,24 +106,21 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
             filePickerUtil.checkPermissionAndOpenStorage()
         }
 
-        // TODO: delete
         binding.btnJoinApply.setOnClickListener {
-            joinViewModel.setJoinState(true)
-        }
-
-        binding.btnJoinApply.setOnClickListener { // TODO: add
-            if ( emailFlag
+            if (emailFlag
                 && isFillInput()
                 && isValidName(binding.etName.text.toString())
                 && isValidPw(binding.etPw.text.toString())
+                && isValidPhone(binding.etPhone.text.toString())
                 && isValidDescription(binding.etDescription.text.toString())
             ) {
-                binding.etIdentificationFront.text.toString() + "-" + binding.etIdentificationBack.text.toString()
-                binding.etAddress1.text.toString() + "\\" + binding.etAddress2.text.toString()
+                identification = binding.etIdentificationFront.text.toString() + "-" + binding.etIdentificationBack.text.toString()
+                address = binding.etAddress1.text.toString() + "\\" + binding.etAddress2.text.toString()
                 for (i in 0 until binding.cgFilter.childCount) {
                     val chip = binding.cgFilter.getChildAt(i) as Chip
                     if (chip.isChecked) {
-                        categories.add(chip.text.toString())
+                        val category = JoinExpertRequest.Category(chip.text.toString())
+                        categories.add(category)
                     }
                 }
 
@@ -117,7 +128,7 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
                     // TODO: 확장자 추출
 
                     lifecycleScope.launch {
-                        joinViewModel.uploadFile(joinViewModel.userImage.value!!, "image/jpeg", requireActivity() as LoginActivity)
+                        joinViewModel.uploadFile(joinViewModel.userImage.value!!, "image/jpeg")
                     }
                 } else {
                     joinViewModel.joinExpert(
@@ -149,14 +160,11 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
         }
 
         binding.btnVerificationSend.setOnClickListener {
-            emailVerifyViewModel.sendCode((binding.etEmail.text.toString()))
+            emailVerifyViewModel.sendCode(binding.etEmail.text.toString())
         }
 
         binding.btnVerify.setOnClickListener {
-            emailVerifyViewModel.emailVerify(
-                binding.etEmail.text.toString(),
-                binding.etCode.text.toString()
-            )
+            emailVerifyViewModel.emailVerify(binding.etEmail.text.toString(), binding.etCode.text.toString())
         }
 
         binding.cgFilter.setOnCheckedStateChangeListener { group, index ->
@@ -182,12 +190,13 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
 
     private fun initObserver() {
         joinViewModel.checkDuplEmail.observe(viewLifecycleOwner, {
-            if (it) {
+            if (it == true) {
                 binding.tvIdDupl.visibility = View.VISIBLE
-                binding.btnVerificationSend.visibility = View.GONE
-            } else {
-                binding.btnVerificationSend.visibility = View.VISIBLE
+                binding.clVerify.visibility = View.GONE
+            } else if (it == false){
+                showCustomToast("사용 가능한 이메일입니다.")
                 binding.tvIdDupl.visibility = View.GONE
+                binding.clVerify.visibility = View.VISIBLE
             }
         })
 
@@ -207,6 +216,7 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
             } else {
                 // 시간 끝
                 binding.btnVerificationSend.isEnabled = true
+                binding.etCode.isEnabled = false
                 binding.btnVerify.isEnabled = false
             }
         })
@@ -215,6 +225,8 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
             if (it) {
                 showCustomToast("이메일 인증 성공")
                 emailFlag = true
+                binding.btnVerify.isEnabled = false
+                stopTimer()
             } else {
                 showCustomToast("이메일 인증 실패")
             }
@@ -227,7 +239,7 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
         joinViewModel.uploadImageState.observe (viewLifecycleOwner, {
             if (it) {
                 lifecycleScope.launch {
-                    joinViewModel.uploadFile(joinViewModel.file.value!!, "application/pdf", requireActivity() as LoginActivity)
+                    joinViewModel.uploadFile(joinViewModel.file.value!!, "application/pdf")
                 }
             }
         })
@@ -259,9 +271,12 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
     }
 
     fun showDatePickerDialog() {
+        val constraintsBuilder = CalendarConstraints.Builder().setValidator(DateValidatorPointBackward.now())
+
         val builder= MaterialDatePicker.Builder.datePicker()
         builder.setTheme(R.style.customDatePickerDialog)
             .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
+            .setCalendarConstraints(constraintsBuilder.build())
 
         val picker = builder.build()
 
@@ -275,17 +290,23 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
 
     fun startTimer() {
         binding.tvTime.visibility = View.VISIBLE
-        val timer = object : CountDownTimer(600000, 1000) {
+        timer = object : CountDownTimer(600000, 1000) {
             override fun onTick(time: Long) {
                 binding.tvTime.text = "남은 시간: ${time / 60000}분 ${(time % 60000) / 1000}초"
             }
 
             override fun onFinish() {
+                showCustomToast("인증 시간이 만료되었습니다. 다시 시도해주세요.")
                 binding.tvTime.text = ""
                 emailVerifyViewModel.setCodeState(false)
             }
         }
         timer.start()
+    }
+
+    fun stopTimer() {
+        timer?.cancel()
+        binding.tvTime.text= ""
     }
 
     private fun setDialogSizeOver() {
@@ -317,10 +338,9 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
                 && binding.etPw.text.toString().isNotBlank()
                 && binding.etPhone.text.toString().isNotBlank()
                 && binding.etAddress1.text.toString().isNotBlank()
-                && binding.etAddress2.text.toString().isNotBlank()
                 && binding.etDescription.text.toString().isNotBlank()
                 && binding.tvDateChoice.text.toString() != "날짜를 선택하세요."
-                && license.isNotBlank()
+                && ::license.isInitialized
         if (result) {
             return true
         } else {
@@ -348,11 +368,19 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
     }
 
     fun isValidDescription(description: String): Boolean {
-        if (description.length > 500) {
-            showCustomToast("최대 500자까지 작성 가능합니다.")
-            return false
+        if (description.length <= 500) {
+            return true
         }
-        return true
+        showCustomToast("최대 500자까지 작성 가능합니다.")
+        return false
+    }
+
+    fun isValidPhone(phone: String): Boolean {
+        if (phone.length in (9..11)) {
+            return true
+        }
+        showCustomToast("전화번호가 형식에 맞지 않습니다.")
+        return false
     }
 
     companion object {

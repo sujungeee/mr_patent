@@ -1,14 +1,18 @@
 package com.ssafy.mr_patent_android.ui.mypage
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.networkUtil
 import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.sharedPreferences
 import com.ssafy.mr_patent_android.data.model.dto.LogoutRequest
 import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.authService
+import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.userService
 import kotlinx.coroutines.launch
 
+private const val TAG = "UserLeaveViewModel_Mr_Patent"
 class UserLeaveViewModel : ViewModel() {
     private val _toastMsg = MutableLiveData<String>()
     val toastMsg: LiveData<String>
@@ -17,13 +21,11 @@ class UserLeaveViewModel : ViewModel() {
     fun deleteUser() {
         viewModelScope.launch {
             runCatching {
-                authService.deleteUser(sharedPreferences.getUser().userId)
+                userService.deleteUser()
             }.onSuccess {
                 if (it.isSuccessful) {
-                    it.body()?.let { response ->
-                        if (response.data != null) {
-                            _toastMsg.value = "탈퇴가 완료되었습니다."
-                        }
+                    it.body()?.data?.let { response ->
+                        _toastMsg.value = "탈퇴가 완료되었습니다."
                     }
                 }
             }.onFailure {
@@ -36,19 +38,19 @@ class UserLeaveViewModel : ViewModel() {
         viewModelScope.launch {
             runCatching {
                 authService.logout(
-                    LogoutRequest(sharedPreferences.getUser().userId
-                    , sharedPreferences.getRToken().toString())
+                    LogoutRequest(sharedPreferences.getRToken().toString())
                 )
             }.onSuccess {
                 if (it.isSuccessful) {
-                    it.body()?.let { response ->
-                        if (response.data != null) {
-                            _toastMsg.value = "로그아웃 되었습니다."
-                        }
+                    it.body()?.data?.let { response ->
+                        _toastMsg.value = "로그아웃 되었습니다."
+                    }
+                } else {
+                    it.errorBody()?.let {
+                        it1 -> networkUtil.getErrorResponse(it1)
                     }
                 }
             }.onFailure {
-
             }
         }
     }

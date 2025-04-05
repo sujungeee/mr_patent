@@ -8,5 +8,9 @@ data class ProfileEditRequest(
     @SerializedName("expert_description") var expertDescription: String?,
     @SerializedName("expert_address") var expertAddress: String?,
     @SerializedName("expert_phone") var expertPhone: String?,
-    @SerializedName("expert_categories") var expertCategories : List<String>?
-)
+    @SerializedName("expert_categories") var expertCategories : MutableList<Category>?
+) {
+    data class Category(
+        @SerializedName("category_name") val categoryName: String
+    )
+}

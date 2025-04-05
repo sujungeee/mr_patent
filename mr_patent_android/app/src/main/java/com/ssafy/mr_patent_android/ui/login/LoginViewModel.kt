@@ -30,7 +30,7 @@ class LoginViewModel:ViewModel() {
                 // 로그인 성공
                 if (it.isSuccessful) {
                     // 로그인 성공
-                    it.body()?.let { res ->
+                    it.body()?.data?.let { res ->
                         sharedPreferences.addAToken(res.accessToken)
 
                         sharedPreferences.addRToken(res.refreshToken)

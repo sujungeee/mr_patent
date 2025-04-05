@@ -29,6 +29,7 @@ class JoinBranchFragment : BaseFragment<FragmentJoinBranchBinding>(
         binding.tvBefore.setOnClickListener {
             findNavController().popBackStack()
             joinViewModel.setUserRole(-1)
+            joinViewModel.setUserImage(requireContext().resources.getString(R.string.default_image))
         }
 
         binding.clGeneralPerson.setOnClickListener {
@@ -51,6 +52,7 @@ class JoinBranchFragment : BaseFragment<FragmentJoinBranchBinding>(
 
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
             joinViewModel.setUserRole(-1)
+            joinViewModel.setUserImage(requireContext().resources.getString(R.string.default_image))
             findNavController().popBackStack()
         }
     }

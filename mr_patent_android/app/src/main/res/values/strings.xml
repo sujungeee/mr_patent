@@ -4,7 +4,7 @@
     <!-- 밑줄 긋기 -->
     <string name="tv_profile_register"><u>프로필 이미지 등록</u></string>
     <string name="tv_profile_edit"><u>프로필 이미지 수정</u></string>
-    <string name="tv_license_edit"><u>자격 증명서 수정</u></string>
+    <string name="tv_license_register"><u>자격 증명서 등록</u></string>
     <string name="tv_file_update"><u>명세서 파일 수정</u></string>
     <string name="tv_floor_plan"><u>도면 파일 수정</u></string>
     <string name="tv_change_next"><u>다음에 변경하기</u></string>
@@ -27,6 +27,8 @@
     <string name="tv_patent_similiarity">특허 유사도: %d%%</string>
     <string name="tv_patent_similiarity_id">특허 공고번호: %d</string>
     <string name="tv_patent_content_similiarity">구문 유사도: %d%%</string>
+
+    <string name="default_image">android.resource://com.ssafy.mr_patent_android/drawable/user_profile</string>
 
     <string name="api_key">AIzaSyDHAbGFLMIVr5neZktJWGoPcJlUFN4gKAE</string>
 </resources>

@@ -1,11 +1,15 @@
 package com.ssafy.mr_patent_android.ui.join
 
+import android.net.Uri
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.ssafy.mr_patent_android.R
@@ -13,6 +17,7 @@ import com.ssafy.mr_patent_android.base.BaseFragment
 import com.ssafy.mr_patent_android.databinding.FragmentJoinMemberBinding
 import com.ssafy.mr_patent_android.ui.login.EmailVerifyViewModel
 import com.ssafy.mr_patent_android.ui.login.LoginActivity
+import com.ssafy.mr_patent_android.util.FileUtil
 import kotlinx.coroutines.launch
 
 private const val TAG = "JoinMemberFragment_Mr_Patent"
@@ -20,9 +25,10 @@ class JoinMemberFragment : BaseFragment<FragmentJoinMemberBinding>(
     FragmentJoinMemberBinding::bind, R.layout.fragment_join_member
 ) {
     private val joinViewModel : JoinViewModel by activityViewModels()
-    private val emailVerifyViewModel : EmailVerifyViewModel by activityViewModels()
+    private val emailVerifyViewModel : EmailVerifyViewModel by viewModels()
 
     private var emailFlag : Boolean = false
+    private var timer: CountDownTimer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,6 +43,18 @@ class JoinMemberFragment : BaseFragment<FragmentJoinMemberBinding>(
 
     private fun initView() {
         binding.tvBefore.setOnClickListener {
+            if (joinViewModel.userImage.value == "") {
+                joinViewModel.setUserImage(requireContext().resources.getString(R.string.default_image))
+            }
+            joinViewModel.setCheckDuplEmail(null)
+            findNavController().popBackStack()
+        }
+
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+            if (joinViewModel.userImage.value == "") {
+                joinViewModel.setUserImage(requireContext().resources.getString(R.string.default_image))
+            }
+            joinViewModel.setCheckDuplEmail(null)
             findNavController().popBackStack()
         }
 
@@ -45,18 +63,15 @@ class JoinMemberFragment : BaseFragment<FragmentJoinMemberBinding>(
                 && isFillInput()
                 && isValidName(binding.etName.text.toString())
                 && isValidPw(binding.etPw.text.toString())) {
-                if (joinViewModel.userImage.value != null) {
-                    // TODO: 확장자 추출
-
+                if (joinViewModel.userImage.value != "") {
+                    val type = FileUtil().getFileExtension(requireContext(), Uri.parse(joinViewModel.userImage.value))
                     lifecycleScope.launch {
-                        joinViewModel.uploadFile(joinViewModel.userImage.value!!, "image/jpeg", requireActivity() as LoginActivity)
+                        joinViewModel.uploadFile(joinViewModel.userImage.value!!, type!!)
                     }
                 } else {
                     joinViewModel.joinMember(binding.etEmail.text.toString(), binding.etName.text.toString(), binding.etPw.text.toString(), "")
                 }
             }
-            // TODO: delete
-            findNavController().navigate(R.id.nav_joinFinishFragment)
         }
 
         binding.btnEmailDupl.setOnClickListener {
@@ -77,21 +92,25 @@ class JoinMemberFragment : BaseFragment<FragmentJoinMemberBinding>(
     }
 
     private fun initObserver() {
+        joinViewModel.toastMsg.observe(viewLifecycleOwner, {
+          showCustomToast(it)
+        })
+
         joinViewModel.checkDuplEmail.observe(viewLifecycleOwner,{
-            if (it) {
-                // 이메일 중복
+            if (it == true) {
                 binding.tvIdDupl.visibility = View.VISIBLE
                 binding.btnVerificationSend.visibility = View.GONE
-            } else {
-                // 이메일 중복 X
+            } else if (it == false) {
+                showCustomToast("사용 가능한 이메일입니다.")
                 binding.btnVerificationSend.visibility = View.VISIBLE
+                binding.clVerify.visibility = View.VISIBLE
                 binding.tvIdDupl.visibility = View.GONE
+                binding.btnVerify.isEnabled = false
             }
         })
 
         emailVerifyViewModel.codeState.observe(viewLifecycleOwner, {
             if(it) {
-                // 코드 전송 성공
                 startTimer()
                 binding.btnVerificationSend.isEnabled = false
                 binding.etCode.isEnabled = true
@@ -99,12 +118,11 @@ class JoinMemberFragment : BaseFragment<FragmentJoinMemberBinding>(
 
                 binding.etCode.addTextChangedListener {
                     val isEnable = binding.etCode.text.toString().length == 6
-                    // 코드 입력
                     binding.btnVerify.isEnabled = isEnable
                 }
             } else {
-                // 시간 끝
                 binding.btnVerificationSend.isEnabled = true
+                binding.etCode.isEnabled = false
                 binding.btnVerify.isEnabled = false
             }
         })
@@ -113,6 +131,8 @@ class JoinMemberFragment : BaseFragment<FragmentJoinMemberBinding>(
             if(it) {
                 showCustomToast("이메일 인증 성공")
                 emailFlag = true
+                binding.btnVerify.isEnabled = false
+                stopTimer()
             } else {
                 showCustomToast("이메일 인증 실패")
             }
@@ -134,17 +154,24 @@ class JoinMemberFragment : BaseFragment<FragmentJoinMemberBinding>(
 
     fun startTimer() {
         binding.tvTime.visibility = View.VISIBLE
-        val timer = object : CountDownTimer(600000, 1000) {
+        timer = object : CountDownTimer(600000, 1000) {
             override fun onTick(time: Long) {
                 binding.tvTime.text = "남은 시간: ${time/60000}분 ${(time%60000) / 1000}초"
             }
 
             override fun onFinish() {
+                showCustomToast("인증 시간이 만료되었습니다. 다시 시도해주세요.")
                 binding.tvTime.text=""
                 emailVerifyViewModel.setCodeState(false)
             }
         }
-        timer.start()
+        timer?.start()
+    }
+
+    fun stopTimer() {
+        timer?.cancel()
+        binding.tvTime.text = ""
+        timer = null
     }
 
     fun isFillInput(): Boolean {
@@ -176,6 +203,11 @@ class JoinMemberFragment : BaseFragment<FragmentJoinMemberBinding>(
             showCustomToast("비밀번호가 형식에 맞지 않습니다.")
         }
         return result
+    }
+
+    override fun onDestroyView() {
+        timer?.cancel()
+        super.onDestroyView()
     }
 
     companion object {
