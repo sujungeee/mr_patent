@@ -18,6 +18,7 @@ class ExpertListFragment : BaseFragment<FragmentExpertListBinding>(
     FragmentExpertListBinding::bind,
     R.layout.fragment_expert_list
 ) {
+    private lateinit var expertListAdapter: ExpertListAdapter
     val viewModel: ExpertListViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,18 +33,17 @@ class ExpertListFragment : BaseFragment<FragmentExpertListBinding>(
         initObserver()
 
     }
-
     private fun initAdapter() {
         viewModel.expertList.observe(viewLifecycleOwner) {
-            binding.rvPatentAttorneys.adapter = ExpertListAdapter(it) { id ->
+            expertListAdapter = ExpertListAdapter(it) { id ->
                 findNavController().navigate(
-                    ExpertListFragmentDirections.actionPatentAttorneyListFragmentToPatentAttorneyFragment(
-                        id
-                    )
+                    ExpertListFragmentDirections.actionPatentAttorneyListFragmentToPatentAttorneyFragment(id)
                 )
             }
+            binding.rvPatentAttorneys.adapter = expertListAdapter
         }
     }
+
 
     private fun initSort() {
         val items = resources.getStringArray(R.array.align_array)
@@ -69,11 +69,7 @@ class ExpertListFragment : BaseFragment<FragmentExpertListBinding>(
 
                         when (position) {
                             0 -> {
-                                Log.d(
-                                    TAG,
-                                    "onItemSelected: 최신순 ${expertList.sortedBy { it.expertCreatedAt }}"
-                                )
-                                viewModel.setNewExpertList(expertList.sortedBy { it.expertCreatedAt })
+                                viewModel.setNewExpertList(expertList.sortedBy { it.expertId })
                                 binding.rvPatentAttorneys.adapter = ExpertListAdapter(
                                     viewModel.newExpertList.value ?: listOf()
                                 ) { id ->
@@ -86,11 +82,7 @@ class ExpertListFragment : BaseFragment<FragmentExpertListBinding>(
                             }
 
                             1 -> {
-                                Log.d(
-                                    TAG,
-                                    "onItemSelected: 오래된순 ${expertList.sortedByDescending { it.expertCreatedAt }}"
-                                )
-                                viewModel.setNewExpertList(expertList.sortedByDescending { it.expertCreatedAt })
+                                viewModel.setNewExpertList(expertList.sortedByDescending { it.expertId })
                                 binding.rvPatentAttorneys.adapter = ExpertListAdapter(
                                     viewModel.newExpertList.value ?: listOf()
                                 ) { id ->
@@ -103,11 +95,7 @@ class ExpertListFragment : BaseFragment<FragmentExpertListBinding>(
                             }
 
                             else -> {
-                                Log.d(
-                                    TAG,
-                                    "onItemSelected: 경력순 ${expertList.sortedBy { it.expertGetDate }}"
-                                )
-                                viewModel.setNewExpertList(expertList.sortedByDescending { it.expertGetDate })
+                                viewModel.setNewExpertList(expertList.sortedBy { it.expertGetDate })
                                 binding.rvPatentAttorneys.adapter = ExpertListAdapter(
                                     viewModel.newExpertList.value ?: listOf()
                                 ) { id ->
@@ -136,24 +124,33 @@ class ExpertListFragment : BaseFragment<FragmentExpertListBinding>(
     }
 
     private fun initObserver() {
-        viewModel.filterState.observe(viewLifecycleOwner) {
-            Log.d(TAG, "initObserver: $it")
-            if (it.isEmpty()) {
-                viewModel.setNewExpertList(viewModel.expertList.value)
+
+        viewModel.filterState.observe(viewLifecycleOwner) { filters ->
+            Log.d(TAG, "initObserver: $filters")
+            val filteredList = if (filters.isEmpty()) {
+                viewModel.expertList.value
             } else {
-                viewModel.setNewExpertList(viewModel.expertList.value?.filter { its ->
-                    it.containsAll(its.expertCategory)
-                })
-            }
-            binding.rvPatentAttorneys.adapter =
-                ExpertListAdapter(viewModel.newExpertList.value ?: listOf()) { id ->
-                    findNavController().navigate(
-                        ExpertListFragmentDirections.actionPatentAttorneyListFragmentToPatentAttorneyFragment(
-                            id
-                        )
-                    )
+                viewModel.expertList.value?.filter { expert ->
+                    filters.any { filter -> expert.category.contains(filter) }
                 }
+            }
+
+            val sortedList = when (binding.spinnerPatentAttorneys.selectedItemPosition) {
+                0 -> filteredList?.sortedByDescending { it.expertCreatedAt } // 최신순
+                1 -> filteredList?.sortedBy { it.expertCreatedAt } // 오래된순
+                else -> filteredList?.sortedByDescending { it.expertGetDate } // 경력순
+            }
+
+            viewModel.setNewExpertList(sortedList)
+
+            expertListAdapter = ExpertListAdapter(sortedList ?: listOf()) { id ->
+                findNavController().navigate(
+                    ExpertListFragmentDirections.actionPatentAttorneyListFragmentToPatentAttorneyFragment(id)
+                )
+            }
+            binding.rvPatentAttorneys.adapter = expertListAdapter
         }
+
 
     }
 }
