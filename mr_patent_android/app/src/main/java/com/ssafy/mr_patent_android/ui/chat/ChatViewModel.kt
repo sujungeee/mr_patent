@@ -66,6 +66,10 @@ class ChatViewModel : ViewModel() {
     val isSend: LiveData<Boolean>
         get() = _isSend
 
+    private val _isLoading = MutableLiveData<Boolean>(false)
+    val isLoading: LiveData<Boolean>
+        get() = _isLoading
+
     fun setIsSend(isSend: Boolean) {
         _isSend.postValue(isSend)
     }
@@ -235,6 +239,8 @@ class ChatViewModel : ViewModel() {
 
 
     fun getMessageList(roomId: String, lastId: Int? = null) {
+        if(_isLoading.value == true) return
+        _isLoading.value = true
         viewModelScope.launch {
             runCatching {
                 if (lastId == null) {
@@ -286,6 +292,7 @@ class ChatViewModel : ViewModel() {
 
                         // 변경된 리스트로 LiveData 갱신
                         _messageList.value = currentMessages
+                        _isLoading.value = false
                     }
                 } else {
                     it.errorBody()?.let { error ->
@@ -293,9 +300,11 @@ class ChatViewModel : ViewModel() {
                             Log.d("ChatViewModel", "gwetMessageList: $errorResponse")
                         }
                     }
+                    _isLoading.value = false
                 }
             }.onFailure {
                 it.printStackTrace()
+                _isLoading.value = false
                 Log.d("ChatViewModel", "getMessageList: ${it.message}")
             }
         }

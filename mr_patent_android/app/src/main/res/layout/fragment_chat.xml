@@ -28,6 +28,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:reverseLayout="true"
+        app:stackFromEnd="true"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintTop_toBottomOf="@id/tv_chat_header"
         app:layout_constraintStart_toStartOf="parent"
@@ -49,6 +50,7 @@
         <ImageButton
             android:id="@+id/btn_add"
             android:layout_gravity="center"
+            android:padding="2dp"
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:scaleType="centerInside"
@@ -56,6 +58,7 @@
             android:contentDescription="Add"
             android:backgroundTint="@color/mr_white"
             android:background="@drawable/circle_shape"/>
+
 
         <EditText
             android:id="@+id/et_message"
@@ -74,8 +77,9 @@
 
         <ImageButton
             android:id="@+id/btn_send"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_gravity="center"
             android:backgroundTint="@color/selector_btn_color"
             android:src="@drawable/arrow_up"
             android:contentDescription="Send"

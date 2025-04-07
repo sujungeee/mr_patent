@@ -24,6 +24,7 @@
             android:layout_height="wrap_content">
 
         <View
+            android:id="@+id/view_user_message_photo_isread"
             android:layout_width="8dp"
             android:layout_height="8dp"
             android:background="@drawable/circle_shape"
@@ -40,20 +41,18 @@
         <!-- 사용자 메시지 -->
 
         <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="170dp"
+            android:layout_height="170dp"
             android:background="@drawable/rounded_background"
             android:backgroundTint="@color/white"
             android:padding="10dp">
         <ImageView
             android:id="@+id/iv_user_message_photo"
             android:layout_width="150dp"
-            android:layout_height="match_parent"
-            android:maxWidth="200dp"
-            android:scaleType="fitCenter"
+            android:layout_height="150dp"
+            android:scaleType="centerCrop"
             android:background="@drawable/rounded_background"
-            android:backgroundTint="@color/white"
-            android:src="@drawable/user_profile"/>
+            android:backgroundTint="@color/white"/>
 
         </LinearLayout>
 
@@ -79,7 +78,7 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:src="@drawable/user_profile"
-            android:background="@drawable/user_profile"
+            android:background="@drawable/circle_shape"
             android:backgroundTint="@color/mr_white"
             android:layout_gravity="center_vertical"/>
 
@@ -105,19 +104,17 @@
             android:layout_height="wrap_content">
 
             <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="170dp"
+                android:layout_height="170dp"
                 android:background="@drawable/rounded_background"
                 android:backgroundTint="@color/mr_blue"
+                android:layout_marginStart="50dp"
                 android:padding="10dp">
                 <ImageView
                     android:id="@+id/iv_other_message_photo"
                     android:layout_width="150dp"
-                    android:layout_height="match_parent"
-                    android:maxWidth="200dp"
-                    android:scaleType="fitCenter"
-                    android:background="@color/white"
-                    android:src="@drawable/user_profile"/>
+                    android:layout_height="150dp"
+                    android:scaleType="centerCrop"/>
 
             </LinearLayout>
 

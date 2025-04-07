@@ -64,6 +64,7 @@
         android:layout_margin="10dp"
         android:backgroundTint="@color/mr_blue"
         android:text="변리사 상담 바로가기 ->"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@id/iv_home_pic"
         app:layout_constraintStart_toStartOf="@+id/iv_home_pic"/>
 

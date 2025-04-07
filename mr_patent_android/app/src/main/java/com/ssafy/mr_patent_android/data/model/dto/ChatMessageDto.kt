@@ -22,6 +22,7 @@ data class ChatMessageDto(
 
     constructor(timestamp: String?,messageType: String): this(0,null, false, null, null, "", timestamp, "", 0, "", "", Uri.EMPTY, messageType)
 
+    constructor(chatId: Int?,timestamp: String?,messageType: String): this(0,chatId, false, null, null, "", timestamp, "", 0, "", "", Uri.EMPTY, messageType)
 
     data class Files(
         @SerializedName("file_name") var fileName: String,

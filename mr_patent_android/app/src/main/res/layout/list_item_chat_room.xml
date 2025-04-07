@@ -6,20 +6,29 @@
     android:id="@+id/list_item_chat_room"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:paddingHorizontal="30dp"
-    android:paddingVertical="20dp">
+    android:paddingVertical="10dp">
+
+    <Space
+        android:id="@+id/space"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintWidth_percent="0.05"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/iv_patent_attorney"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
         android:id="@+id/iv_patent_attorney"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintDimensionRatio="1:1"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
         android:background="@drawable/circle_shape"
         android:backgroundTint="@color/mr_white"
-        android:src="@drawable/user_profile"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintWidth_percent="0.2"/>
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintHeight_percent="1"
+        app:layout_constraintStart_toEndOf="@id/space"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/tv_name"
@@ -28,7 +37,7 @@
         android:layout_marginStart="20dp"
         android:ellipsize="end"
         android:maxLines="1"
-        android:text="킹왕짱 변리사"
+        android:text=""
         android:textSize="16sp"
         android:textStyle="bold"
         app:layout_constraintStart_toEndOf="@id/iv_patent_attorney"
@@ -41,7 +50,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="bottom"
-        android:text="2024-01-23 10:20"
+        android:text=""
         android:textColor="@color/mr_gray"
         android:textSize="10sp"
         app:layout_constraintBottom_toBottomOf="@+id/tv_name"
@@ -51,11 +60,11 @@
     <TextView
         android:id="@+id/tv_chat_preview"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="35dp"
         android:layout_marginTop="10dp"
         android:ellipsize="end"
         android:maxLines="2"
-        android:text="언제나 고객만을 생각하는 킹왕짱 변리사입니다. 언제든지 편하게 문의 주세요."
+        android:text=""
         android:textColor="@color/mr_gray"
         android:textSize="12sp"
         app:layout_constraintStart_toStartOf="@id/tv_name"

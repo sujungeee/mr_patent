@@ -26,6 +26,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -52,13 +53,14 @@ import ua.naiksoftware.stomp.StompClient
 import ua.naiksoftware.stomp.dto.LifecycleEvent
 import ua.naiksoftware.stomp.dto.StompHeader
 import java.util.concurrent.TimeUnit
+import kotlin.math.log
 
 
 private const val TAG = "ChatFragment"
 
 class ChatFragment :
     BaseFragment<FragmentChatBinding>(FragmentChatBinding::bind, R.layout.fragment_chat) {
-//    private lateinit var messageListAdapter: MessageListAdapter
+    private lateinit var messageListAdapter: MessageListAdapter
     val viewModel: ChatViewModel by viewModels()
     private val roomId: String by lazy {
         navArgs<ChatFragmentArgs>().value.roomId
@@ -105,8 +107,11 @@ class ChatFragment :
 
                                 Log.d(TAG, "initStomp: $message")
                                 if (message.type == "ENTER") {
-                                    if (message.status==2){
+                                    if (message.status>=2){
                                         viewModel.setState(true)
+                                        requireActivity().runOnUiThread {
+                                            messageListAdapter.setRead()
+                                        }
                                     }
                                     else{
                                         viewModel.setState(false)
@@ -114,6 +119,7 @@ class ChatFragment :
                                 }else if (message.type == "LEAVE") {
                                     viewModel.setState(false)
                                 }else {
+                                    viewModel.setIsSend(true)
                                     viewModel.addMessage(message)
                                 }
                             } catch (e: Exception) {
@@ -171,54 +177,47 @@ class ChatFragment :
 
     fun initObserver() {
         // 어댑터를 한 번만 생성
-//        messageListAdapter = MessageListAdapter(
-//            UserDto(userName, userImage),
-//            listOf(),
-//            object : MessageListAdapter.ItemClickListener {
-//                override fun onItemClick() {
-//                    Log.d(TAG, "onFileClick: $expertId")
-//                    if (expertId != -1) {
-//                        initUserDialog(expertId)
-//                    }
-//                }
-//
-//                override fun onFileClick(url: String) {
-//
-//
-//                }
-//
-//                override fun onPhotoClick(url: String) {
-//                    initDialog(url)
-//                }
-//            })
+        messageListAdapter = MessageListAdapter(
+            UserDto(userName, userImage),
+            emptyList(),
+            object : MessageListAdapter.ItemClickListener {
+                override fun onItemClick() {
+                    Log.d(TAG, "onFileClick: $expertId")
+                    if (expertId != -1) {
+                        initUserDialog(expertId)
+                    }
+                }
 
-        // RecyclerView에 어댑터 설정 (한 번만)
-//        binding.rvChat.adapter = messageListAdapter
+                override fun onFileClick(url: String) {
+
+
+                }
+
+                override fun onPhotoClick(url: String) {
+                    initDialog(url)
+                }
+            })
+
+//         RecyclerView에 어댑터 설정 (한 번만)
+        binding.rvChat.adapter = messageListAdapter
 
         viewModel.messageList.observe(viewLifecycleOwner) {
-            Log.d(TAG, "initObserver: $it")
-//            messageListAdapter.updateMessages(it)
-//            binding.rvChat.scrollToPosition(0)
-            binding.rvChat.adapter = MessageListAdapter(
-                UserDto(userName, userImage),
-                it,
-                object : MessageListAdapter.ItemClickListener {
-                    override fun onItemClick() {
-                        Log.d(TAG, "onFileClick: $expertId")
-                        if (expertId != -1) {
-                            initUserDialog(expertId)
-                        }
-                    }
+            if (viewModel.isSend.value == true) {
+                messageListAdapter.addMessage(it[0])
+                viewModel.setIsSend(false)
+                if (it!=null){
+                binding.rvChat.scrollToPosition(0)
+                }
 
-                    override fun onFileClick(url: String) {
+            }else {
+                requireActivity().runOnUiThread {
+                    messageListAdapter.updateMessages(it)
+                }
 
-
-                    }
-
-                    override fun onPhotoClick(url: String) {
-                        initDialog(url)
-                    }
-                })
+                if(it.size==10){
+                    binding.rvChat.scrollToPosition(0)
+                }
+            }
         }
 
     }
@@ -234,6 +233,7 @@ class ChatFragment :
                 binding.btnSend.isEnabled = false
             }
         }
+        binding.rvChat.scrollToPosition(0)
 
         binding.btnSend.setOnClickListener {
             viewModel.sendMessage(
@@ -249,20 +249,22 @@ class ChatFragment :
         }
 
         binding.rvChat.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                super.onScrollStateChanged(recyclerView, newState)
-                if (!binding.rvChat.canScrollVertically(-1)
-                    && newState == RecyclerView.SCROLL_STATE_IDLE
-                ) {
-                    /**
-                     * newState가 SCROLL_STATE_IDLE를 확인하여 중복 발생을 방지한다.
-                     */
-//                    viewModel.getMessageList(roomId, viewModel.messageList.value?.last()?.chatId)
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+
+                val layoutManager = recyclerView.layoutManager as? LinearLayoutManager ?: return
+                val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
+
+                // 최상단에서 3개 이하일 때 (즉, 거의 맨 위로 스크롤한 상황)
+                if (firstVisibleItemPosition <= 2) {
+                    // 이미 로딩 중이라면 중복 방지 로직 필요
+                    if (viewModel.isLoading.value == false) {
+                        Log.d(TAG, "onScrolled: ${viewModel.messageList.value}")
+                        viewModel.getMessageList(roomId, viewModel.messageList.value?.last()?.chatId)
+                    }
                 }
             }
         })
-
-
     }
 
     fun initDialog(urls: String) {
@@ -290,6 +292,8 @@ class ChatFragment :
         }
 
 
+
+
         dialog.show()
 
     }
@@ -310,8 +314,8 @@ class ChatFragment :
                 .into(dialogBinding.ivProfile)
 
 
-            if (it.expertCategory.isNotEmpty()) {
-                it.expertCategory.forEach { category ->
+            if (it.category.isNotEmpty()) {
+                it.category.forEach { category ->
                     when (category) {
                         "기계공학" -> dialogBinding.tvFieldMecha.visibility = View.VISIBLE
                         "전기/전자" -> dialogBinding.tvFieldElec.visibility = View.VISIBLE
@@ -435,6 +439,7 @@ class ChatFragment :
             )
             viewModel.setFile(null)
             viewModel.deleteImage()
+            modalBottomSheet!!.dismiss()
         }
 
 
