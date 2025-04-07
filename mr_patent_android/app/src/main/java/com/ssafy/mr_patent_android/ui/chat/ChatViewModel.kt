@@ -3,10 +3,14 @@ package com.ssafy.mr_patent_android.ui.chat
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import android.util.TimeFormatException
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.libraries.places.api.model.LocalDate
+import com.google.android.libraries.places.api.model.kotlin.localDate
+import com.google.android.libraries.places.api.model.kotlin.localTime
 import com.google.gson.Gson
 import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.networkUtil
 import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.sharedPreferences
@@ -58,9 +62,17 @@ class ChatViewModel : ViewModel() {
     val state: LiveData<Boolean>
         get() = _state
 
+    private val _isSend = MutableLiveData<Boolean>(false)
+    val isSend: LiveData<Boolean>
+        get() = _isSend
+
+    fun setIsSend(isSend: Boolean) {
+        _isSend.postValue(isSend)
+    }
+
 
     fun setState(newState: Boolean) {
-        _state.postValue(newState) // <- 이걸로 변경
+        _state.postValue(newState)
     }
 
     fun setUser(user: UserDto){
@@ -69,7 +81,30 @@ class ChatViewModel : ViewModel() {
 
     fun addMessage(message: ChatMessageDto) {
         val currentList = _messageList.value?.toMutableList() ?: mutableListOf()
+        Log.d(TAG, "addMessage: $message, ${currentList}")
+        if (currentList.isNullOrEmpty()) {
+            Log.d(TAG, "addMessage: 빈리스트")
+            currentList.add(0,
+                ChatMessageDto(
+                    chatId = 0,
+                    timestamp = message.timestamp,
+                    messageType = "DIVIDER"
+                )
+            )
+        }else{
+            Log.d(TAG, "addMessage: ${currentList.first()}")
+            val lastTime = currentList.last().timestamp
+            val cur = message.timestamp
 
+            if (cur != null && cur != lastTime) {
+                currentList.add(
+                    ChatMessageDto(
+                        timestamp = message.timestamp,
+                        messageType = "DIVIDER"
+                    )
+                )
+            }
+        }
         currentList.add(0, message)
 
         _messageList.postValue(currentList)
@@ -209,24 +244,45 @@ class ChatViewModel : ViewModel() {
                 }
             }.onSuccess {
                 if (it.isSuccessful) {
-                    it.body()?.data?.let { messageList ->
+                    it.body()?.data?.let { messageLists ->
                         val currentMessages = _messageList.value?.toMutableList() ?: mutableListOf()
-                        var lastTime = ""
-                        messageList.forEach {
+                        if(messageList.value?.lastOrNull()?.messageType == "DIVIDER"){
+                            return@launch
+                        }else if (messageLists.isEmpty()) {
+                            Log.d(TAG, "getMessageList: 리스트 비어있음")
+                            messageList.value?.lastOrNull()?.let { lastMessage ->
+                                currentMessages.add(
+                                    ChatMessageDto(
+                                        chatId = lastMessage.chatId,
+                                        timestamp = TimeUtil().parseUtcWithJavaTime(lastMessage.timestamp ?: "2001-08-23T00:00:00Z").toLocalDate().toString(),
+                                        messageType = "DIVIDER"
+                                    )
+                                )
+                            }
+                        }else{
+
+                        var lastTime = TimeUtil().parseUtcWithJavaTime(messageLists.first()?.timestamp?:"2001-08-23T00:00:00Z").toLocalDate()
+
+                        messageLists.forEach {message->
                             // 타임스탬프가 다르면 구분선 추가
-                            val cur= it.timestamp?.substring(0,10)
-                            if (it.timestamp != null && lastTime.isNotEmpty()) {
-                                if (cur != lastTime) {
-                                    currentMessages.add(ChatMessageDto(it.timestamp, messageType = "DIVIDER"))
-                                    lastTime= cur!!
-                                }
-                            }else{
-                                lastTime = cur!!
+
+                            val cur = TimeUtil().parseUtcWithJavaTime(message.timestamp ?: return@forEach)?.toLocalDate()
+
+                            // 날짜가 바뀌었으면 구분선 추가
+                            if (cur != null && cur != lastTime) {
+                                currentMessages.add(
+                                    ChatMessageDto(
+                                        timestamp = lastTime.toString(),
+                                        messageType = "DIVIDER"
+                                    )
+                                )
+                                lastTime = cur
+                            }
+                            currentMessages.add(message)
+                            Log.d(TAG, "getMessageList: ${message}")
+                        }
                             }
 
-                            // 메시지를 리스트에 추가
-                            currentMessages.add(it)
-                        }
 
                         // 변경된 리스트로 LiveData 갱신
                         _messageList.value = currentMessages
@@ -252,6 +308,9 @@ class ChatViewModel : ViewModel() {
             }.onSuccess {
                 if(it.isSuccessful){
                     it.body()?.data?.let { user ->
+                        user.expertCategory.forEach { category ->
+                            user.category.add(category.categoryName)
+                        }
                         setUser(user)
                     }
                 }
