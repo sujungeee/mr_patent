@@ -50,22 +50,9 @@ class PatentFolderDetailFragment : BaseFragment<FragmentPatentFolderDetailBindin
             findNavController().popBackStack()
         }
 
-        binding.btnPatentDelete.setOnClickListener {
-            patentFolderDetailViewModel.setDeleteFlag(true)
-            binding.rvFolderItems.adapter = PatentFolderDetailAdapter(true, patentFolderDetailViewModel.patents.value!!) { position ->
-                setDialogFolderDetailDelete()
-            }
-        }
-
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (patentFolderDetailViewModel.deleteFlag.value == true ) {
-                    findNavController().popBackStack()
-                    findNavController().navigate(R.id.patentFolderDetailFragment)
-                    patentFolderDetailViewModel.setDeleteFlag(false)
-                } else {
-                    findNavController().popBackStack()
-                }
+                findNavController().popBackStack()
             }
         })
     }
@@ -78,35 +65,6 @@ class PatentFolderDetailFragment : BaseFragment<FragmentPatentFolderDetailBindin
                     PatentFolderDetailFragmentDirections.actionPatentFolderDetailFragmentToPatentContentFragment(it[position].patentDraftId, "select")
                 )
             }
-        }
-    }
-
-    private fun setDialogFolderDetailDelete() {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_patent_delete, null)
-        val dialogBuilder = Dialog(requireContext())
-        dialogBuilder.setContentView(dialogView)
-        dialogBuilder.create()
-        dialogBuilder.window?.apply {
-            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-            setLayout(
-                ((context.resources.displayMetrics.widthPixels) * 0.6).toInt(),
-                ((context.resources.displayMetrics.heightPixels) * 0.14).toInt()
-            )
-        }
-        dialogBuilder.show()
-
-        val btnFolderDeleteConfirm = dialogView.findViewById<Button>(R.id.btn_patent_delete_confirm)
-        val btnFolderDeleteCancel = dialogView.findViewById<Button>(R.id.btn_patent_delete_cancel)
-
-        btnFolderDeleteConfirm.setOnClickListener {
-            // TODO: delete
-
-            showCustomToast("폴더가 삭제되었습니다.")
-            dialogBuilder.dismiss()
-        }
-
-        btnFolderDeleteCancel.setOnClickListener {
-            dialogBuilder.dismiss()
         }
     }
 
