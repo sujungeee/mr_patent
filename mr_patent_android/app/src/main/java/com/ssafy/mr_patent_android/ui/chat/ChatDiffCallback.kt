@@ -1,5 +1,6 @@
 package com.ssafy.mr_patent_android.ui.chat
 
+import android.util.Log
 import androidx.recyclerview.widget.DiffUtil
 import com.ssafy.mr_patent_android.data.model.dto.ChatMessageDto
 
@@ -21,6 +22,12 @@ class ChatDiffCallback(
 //    }
 
     override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-        return oldList[oldItemPosition] == newList[newItemPosition]
+        val old = oldList[oldItemPosition]
+        val new = newList[newItemPosition]
+        val result = old.chatId == new.chatId &&
+                old.isRead == new.isRead
+        Log.d("ChatDiffCallback", "areContentsTheSame($oldItemPosition, $newItemPosition): $result")
+
+        return result
     }
 }
