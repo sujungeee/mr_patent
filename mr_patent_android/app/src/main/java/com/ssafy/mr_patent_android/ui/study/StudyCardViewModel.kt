@@ -8,11 +8,28 @@ import androidx.lifecycle.viewModelScope
 import com.ssafy.mr_patent_android.data.model.dto.WordDto
 import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.studyService
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 class StudyCardViewModel : ViewModel() {
     private val _wordList = MutableLiveData<List<WordDto.Word>>()
     val wordList: LiveData<List<WordDto.Word>>
         get() = _wordList
+
+    private val _isLoading = MutableLiveData<Boolean>()
+    val isLoading: LiveData<Boolean>
+        get() = _isLoading
+
+    private val _bookmarkState = MutableLiveData<Boolean>()
+    val bookmarkState: LiveData<Boolean>
+        get() = _bookmarkState
+
+    fun setBookmarkState(state: Boolean) {
+        _bookmarkState.value = state
+    }
+
+    private val _total = MutableLiveData<Int>()
+    val total: LiveData<Int>
+        get() = _total
 
 
     fun getWordList(levelId:Int){
@@ -33,7 +50,54 @@ class StudyCardViewModel : ViewModel() {
                 Log.d("StudyCardViewModel", "getWordList: ${it.message}")
             }
         }
+    }
+    fun createBookmark(position: Int): Boolean {
+        val currentList = _wordList.value?.toMutableList() ?: return false
+        val word = currentList[position]
 
+        var result = false
+
+        runBlocking {
+            _isLoading.value = true
+            val response = if (word.is_bookmarked) {
+                studyService.deleteBookmark(word.bookmark_id)
+            } else {
+                studyService.postBookmark(word.word_id)
+            }
+
+            if (response.isSuccessful) {
+                // 성공했으면 리스트 갱신
+                val updatedWord = word.copy(
+                    is_bookmarked = !word.is_bookmarked,
+                    bookmark_id = response.body()?.data?.bookmark_id ?: 0
+                )
+                currentList[position] = updatedWord
+                _wordList.value = currentList
+                result = true
+            }
+            _isLoading.value = false
+        }
+
+        return result
+    }
+
+    fun getBookmarkWordList(levelId: Int){
+        viewModelScope.launch {
+            runCatching {
+                studyService.getBookmarkWords(levelId)
+            }.onSuccess { response ->
+                if(response.isSuccessful){
+                    response.body()?.let {
+                        _wordList.value = it.data?.words
+                        _total.value = it.data?.total
+                    }
+                }else{
+                    Log.d("StudyCardViewModel", "getWordList: ${response.errorBody()}")
+                }
+            }.onFailure {
+                Log.d("StudyCardViewModel", "getWordList: ${it.message}")
+            }
+        }
     }
 
 }
