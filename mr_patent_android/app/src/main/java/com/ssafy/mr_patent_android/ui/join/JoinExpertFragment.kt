@@ -3,6 +3,7 @@ package com.ssafy.mr_patent_android.ui.join
 import android.app.Dialog
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.net.Uri
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.util.Log
@@ -41,17 +42,23 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
 
     private lateinit var filePickerUtil: FilePicker
 
-    private lateinit var license : String
     private lateinit var identification : String
     private lateinit var address : String
     private lateinit var categories : MutableList<JoinExpertRequest.Category>
+    private lateinit var contentType : String
 
     private var emailFlag : Boolean = false
 
-    private lateinit var timer : CountDownTimer
+    private var timer : CountDownTimer?= null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+    }
+
+    override fun onDestroyView() {
+        Log.d(TAG, "onDestroyView: 호출됨! 타이머 증지.")
+        stopTimer()
+        super.onDestroyView()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -62,6 +69,9 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
     }
 
     private fun initView() {
+        Log.d(TAG, "initView: joinviewmodel image : ${joinViewModel.userImage.value}")
+        joinViewModel.setToastMsg(null)
+        emailVerifyViewModel.setToastMsg(null)
         filePickerUtil = FilePicker(this) { uri ->
             val fileName = FileUtil().getFileName(requireContext(), uri)
             val fileSize = FileUtil().getFileSize(requireContext(), uri)
@@ -74,13 +84,13 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
                 return@FilePicker
             } else {
                 joinViewModel.setFile(uri.toString())
+                joinViewModel.setUserFilePath(FileUtil().getFilePathFromUri(requireContext(), uri, fileExtension))
                 binding.ivLicenseUpload.visibility = View.GONE
                 binding.ivPdf.visibility = View.VISIBLE
                 binding.tvFileName.visibility = View.VISIBLE
                 binding.tvFileSize.visibility = View.VISIBLE
                 binding.tvFileName.text = fileName
                 binding.tvFileSize.text = FileUtil().formatFileSize(fileSize)
-                license = uri.toString()
             }
         }
 
@@ -88,6 +98,7 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
             if (joinViewModel.userImage.value == "") {
                 joinViewModel.setUserImage(requireContext().resources.getString(R.string.default_image))
             }
+            emailVerifyViewModel.reset()
             findNavController().popBackStack()
         }
 
@@ -95,6 +106,7 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
             if (joinViewModel.userImage.value == "") {
                 joinViewModel.setUserImage(requireContext().resources.getString(R.string.default_image))
             }
+            emailVerifyViewModel.reset()
             findNavController().popBackStack()
         }
 
@@ -116,6 +128,7 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
             ) {
                 identification = binding.etIdentificationFront.text.toString() + "-" + binding.etIdentificationBack.text.toString()
                 address = binding.etAddress1.text.toString() + "\\" + binding.etAddress2.text.toString()
+                categories = mutableListOf()
                 for (i in 0 until binding.cgFilter.childCount) {
                     val chip = binding.cgFilter.getChildAt(i) as Chip
                     if (chip.isChecked) {
@@ -123,27 +136,19 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
                         categories.add(category)
                     }
                 }
-
-                if (joinViewModel.userImage.value != null) {
-                    // TODO: 확장자 추출
-
+                if (joinViewModel.userImage.value != null && joinViewModel.userImage.value != "") {
+                    val fileName = FileUtil().getFileName(requireContext(), Uri.parse(joinViewModel.userImage.value))
+                    val extension = FileUtil().getFileExtension(requireContext(), Uri.parse(joinViewModel.userImage.value))
+                    if (extension == "jpg" || extension == "jpeg") {
+                        contentType = "image/jpeg"
+                    } else {
+                        contentType = "image/png"
+                    }
                     lifecycleScope.launch {
-                        joinViewModel.uploadFile(joinViewModel.userImage.value!!, "image/jpeg")
+                        joinViewModel.uploadFile(fileName!!, contentType)
                     }
                 } else {
-                    joinViewModel.joinExpert(
-                        binding.etEmail.text.toString()
-                        , binding.etPw.text.toString()
-                        , binding.etName.text.toString()
-                        ,""
-                        , identification
-                        , binding.etDescription.text.toString()
-                        , address
-                        , binding.etPhone.text.toString()
-                        , license
-                        , binding.tvDateChoice.text.toString()
-                        , categories
-                    )
+                    joinViewModel.setUploadImageState(true)
                 }
             }
         }
@@ -161,6 +166,7 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
 
         binding.btnVerificationSend.setOnClickListener {
             emailVerifyViewModel.sendCode(binding.etEmail.text.toString())
+            binding.btnVerificationSend.isEnabled = false
         }
 
         binding.btnVerify.setOnClickListener {
@@ -176,6 +182,8 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
         }
 
         binding.ivSearch.setOnClickListener {
+            stopTimer()
+            emailVerifyViewModel.setCodeState(false)
             findNavController().navigate(R.id.nav_addressSearchFragment)
         }
 
@@ -189,32 +197,36 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
     }
 
     private fun initObserver() {
+        joinViewModel.toastMsg.observe(viewLifecycleOwner,  {
+            it?.let { showCustomToast(it) }
+        })
+
+        emailVerifyViewModel.toastMsg.observe(viewLifecycleOwner, {
+            it?.let { showCustomToast(it) }
+        })
+
         joinViewModel.checkDuplEmail.observe(viewLifecycleOwner, {
             if (it == true) {
                 binding.tvIdDupl.visibility = View.VISIBLE
                 binding.clVerify.visibility = View.GONE
             } else if (it == false){
-                showCustomToast("사용 가능한 이메일입니다.")
                 binding.tvIdDupl.visibility = View.GONE
                 binding.clVerify.visibility = View.VISIBLE
+                binding.btnVerificationSend.isEnabled = true
             }
         })
 
         emailVerifyViewModel.codeState.observe(viewLifecycleOwner, {
             if (it) {
-                // 코드 전송 성공
                 startTimer()
                 binding.btnVerificationSend.isEnabled = false
                 binding.etCode.isEnabled = true
-                showCustomToast("코드 전송 성공")
 
                 binding.etCode.addTextChangedListener {
                     val isEnable = binding.etCode.text.toString().length == 6
-                    // 코드 입력
                     binding.btnVerify.isEnabled = isEnable
                 }
             } else {
-                // 시간 끝
                 binding.btnVerificationSend.isEnabled = true
                 binding.etCode.isEnabled = false
                 binding.btnVerify.isEnabled = false
@@ -223,12 +235,10 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
 
         emailVerifyViewModel.emailVerifyState.observe(viewLifecycleOwner, {
             if (it) {
-                showCustomToast("이메일 인증 성공")
                 emailFlag = true
                 binding.btnVerify.isEnabled = false
                 stopTimer()
             } else {
-                showCustomToast("이메일 인증 실패")
             }
         })
 
@@ -237,35 +247,43 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
         }
 
         joinViewModel.uploadImageState.observe (viewLifecycleOwner, {
-            if (it) {
-                lifecycleScope.launch {
-                    joinViewModel.uploadFile(joinViewModel.file.value!!, "application/pdf")
+            it?.let{
+                if (it) {
+                    val fileName = FileUtil().getFileName(requireContext(), Uri.parse(joinViewModel.file.value))
+                    Log.d(TAG, "initObserver: filename: ${fileName}")
+                    lifecycleScope.launch {
+                        joinViewModel.uploadFile(fileName!!, "application/pdf")
+                    }
                 }
             }
         })
 
         joinViewModel.uploadFileState.observe(viewLifecycleOwner, {
-            if (it) {
-                joinViewModel.joinExpert(
-                    binding.etEmail.text.toString()
-                    , binding.etPw.text.toString()
-                    , binding.etName.text.toString()
-                    , joinViewModel.userImage.value!!
-                    , identification
-                    , binding.etDescription.text.toString()
-                    , address
-                    , binding.etPhone.text.toString()
-                    , license
-                    , binding.tvDateChoice.text.toString()
-                    , categories
-                )
+            it?.let {
+                if (it) {
+                    joinViewModel.joinExpert(
+                        binding.etEmail.text.toString()
+                        , binding.etPw.text.toString()
+                        , binding.etName.text.toString()
+                        , joinViewModel.userImage.value!!
+                        , identification
+                        , binding.etDescription.text.toString()
+                        , address
+                        , binding.etPhone.text.toString()
+                        , binding.tvDateChoice.text.toString()
+                        , joinViewModel.file.value!!
+                        , categories
+                    )
+                }
             }
         })
 
         joinViewModel.joinState.observe(viewLifecycleOwner, {
-            if (it) {
-                findNavController().navigate(R.id.nav_joinFinishFragment)
-                joinViewModel.setJoinState(false)
+            it?.let {
+                if (it) {
+                    findNavController().navigate(R.id.nav_joinFinishFragment)
+                    joinViewModel.setJoinState(false)
+                }
             }
         })
     }
@@ -300,12 +318,12 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
                 binding.tvTime.text = ""
                 emailVerifyViewModel.setCodeState(false)
             }
-        }
-        timer.start()
+        }.also { it.start() }
     }
 
     fun stopTimer() {
         timer?.cancel()
+        timer = null
         binding.tvTime.text= ""
     }
 
@@ -340,7 +358,8 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
                 && binding.etAddress1.text.toString().isNotBlank()
                 && binding.etDescription.text.toString().isNotBlank()
                 && binding.tvDateChoice.text.toString() != "날짜를 선택하세요."
-                && ::license.isInitialized
+                && joinViewModel.file.value != ""
+                && joinViewModel.file.value != null
         if (result) {
             return true
         } else {

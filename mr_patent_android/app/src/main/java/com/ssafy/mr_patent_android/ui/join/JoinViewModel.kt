@@ -3,10 +3,12 @@ package com.ssafy.mr_patent_android.ui.join
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ssafy.mr_patent_android.R
 import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.networkUtil
 import com.ssafy.mr_patent_android.data.model.dto.JoinExpertRequest
 import com.ssafy.mr_patent_android.data.model.dto.JoinRequest
@@ -24,8 +26,8 @@ import kotlin.coroutines.suspendCoroutine
 
 private const val TAG = "JoinViewModel_Mr_Patent"
 class JoinViewModel: ViewModel() {
-    private val _toastMsg = MutableLiveData<String>()
-    val toastMsg: LiveData<String>
+    private val _toastMsg = MutableLiveData<String?>()
+    val toastMsg: LiveData<String?>
         get() = _toastMsg
 
     private val _userRole = MutableLiveData<Int>()
@@ -52,19 +54,27 @@ class JoinViewModel: ViewModel() {
     val checkDuplEmail: LiveData<Boolean?>
         get() = _checkDuplEmail
 
-    private val _uploadImageState = MutableLiveData<Boolean>()
-    val uploadImageState: LiveData<Boolean>
+    private val _uploadImageState = MutableLiveData<Boolean?>()
+    val uploadImageState: LiveData<Boolean?>
         get() = _uploadImageState
 
-    private val _uploadFileState = MutableLiveData<Boolean>()
-    val uploadFileState: LiveData<Boolean>
+    private val _uploadFileState = MutableLiveData<Boolean?>()
+    val uploadFileState: LiveData<Boolean?>
         get() = _uploadFileState
 
-    private val _joinState = MutableLiveData<Boolean>()
-    val joinState: LiveData<Boolean>
+    private val _joinState = MutableLiveData<Boolean?>()
+    val joinState: LiveData<Boolean?>
         get() = _joinState
 
-    fun setToastMsg(toastMsg: String) {
+    private val _userImagePath = MutableLiveData<String>()
+    val userImagePath: LiveData<String>
+        get() = _userImagePath
+
+    private val _userFilePath = MutableLiveData<String>()
+    val userFilePath: LiveData<String>
+        get() = _userFilePath
+
+    fun setToastMsg(toastMsg: String?) {
         _toastMsg.value = toastMsg
     }
 
@@ -84,8 +94,20 @@ class JoinViewModel: ViewModel() {
         _checkDuplEmail.value = checkDuplEmail
     }
 
+    fun setUploadImageState(uploadImageState: Boolean) {
+        _uploadImageState.value = uploadImageState
+    }
+
     fun setJoinState(joinState: Boolean) {
         _joinState.value = joinState
+    }
+
+    fun setUserImagePath(userImagePath: String) {
+        _userImagePath.value = userImagePath
+    }
+
+    fun setUserFilePath(userFilePath: String) {
+        _userFilePath.value = userFilePath
     }
 
     fun reset() {
@@ -94,11 +116,13 @@ class JoinViewModel: ViewModel() {
         _userName.value = ""
         _address.value = ""
         _file.value = ""
-        _checkDuplEmail.value = false
-        _uploadImageState.value = false
-        _uploadFileState.value = false
-        _joinState.value = false
+        _checkDuplEmail.value = null
+        _uploadImageState.value = null
+        _uploadFileState.value = null
+        _joinState.value = null
         _toastMsg.value = ""
+        _userImagePath.value = ""
+        _userFilePath.value = ""
     }
 
     fun joinMember(userEmail: String, userName: String, userPw: String, userImage: String) {
@@ -124,10 +148,9 @@ class JoinViewModel: ViewModel() {
                     it.errorBody()?.let {
                         it1 -> networkUtil.getErrorResponse(it1)
                     }
-
                 }
             }.onFailure {
-                _toastMsg.value = "회원가입에 실패했어요!"
+                it.printStackTrace()
             }
         }
     }
@@ -135,7 +158,7 @@ class JoinViewModel: ViewModel() {
 
     fun joinExpert(userEmail: String, userPw: String, userName: String, userImage: String
                    , expertIdentification: String, expertDescription: String, expertAddress: String, expertPhone: String
-                   , expertLicense: String, expertGetDate: String, expertCategory: MutableList<JoinExpertRequest.Category>) {
+                   ,expertGetDate: String, expertLicense: String, expertCategory: MutableList<JoinExpertRequest.Category>) {
         viewModelScope.launch {
             runCatching {
                 userService.joinExpert(
@@ -149,18 +172,16 @@ class JoinViewModel: ViewModel() {
                         , expertDescription
                         , expertAddress
                         , expertPhone
-                        , expertLicense
                         , expertGetDate
+                        , expertLicense
                         , expertCategory
                     )
                 )
             }.onSuccess {
                 if (it.isSuccessful) {
-                    it.body()?.let { response ->
-                        if (response.data != null) {
-                            _toastMsg.value = "회원가입에 성공했어요!"
-                            _joinState.value = true
-                        }
+                    it.body()?.data?.let { response ->
+                        _toastMsg.value = "회원가입에 성공했어요!"
+                        _joinState.value = true
                     }
                 } else {
                     it.errorBody()?.let {
@@ -168,7 +189,7 @@ class JoinViewModel: ViewModel() {
                     }
                 }
             }.onFailure {
-                _toastMsg.value = "회원가입에 실패했어요!"
+                it.printStackTrace()
             }
         }
     }
@@ -181,6 +202,7 @@ class JoinViewModel: ViewModel() {
                 if (it.isSuccessful) {
                     it.body()?.data?.let { response ->
                         if (response.available) {
+                            _toastMsg.value = "사용 가능한 이메일입니다."
                             _checkDuplEmail.value = false
                         } else {
                             _checkDuplEmail.value = true
@@ -192,7 +214,7 @@ class JoinViewModel: ViewModel() {
                     }
                 }
             }.onFailure {
-
+                it.printStackTrace()
             }
         }
     }
@@ -204,15 +226,22 @@ class JoinViewModel: ViewModel() {
 
             if (file != null) {
                 preSignedUrl = getPreSignedUrl(file, contentType)
-                response = uploadFileS3(preSignedUrl, file, contentType)
+                response = uploadFileS3(preSignedUrl, contentType)
             }
             if (response) {
-                _uploadImageState.value = true
-                _uploadFileState.value = true
+                Log.d(TAG, "uploadFile: response ${response}")
                 when (contentType) {
-                    "image/jpeg" -> _userImage.value = preSignedUrl
+                    "image/jpeg", "image/png" -> {
+                        Log.d(TAG, "uploadFile: image")
+                        _userImage.value = preSignedUrl.substringBefore("?")
+                        _uploadImageState.value = true
+                    }
 
-                    "pdf" -> _file.value = preSignedUrl
+                    "application/pdf" -> {
+                        Log.d(TAG, "uploadFile: pdf")
+                        _file.value = preSignedUrl.substringBefore("?")
+                        _uploadFileState.value = true
+                    }
                 }
             } else {
                 throw Exception("업로드 실패")
@@ -222,15 +251,15 @@ class JoinViewModel: ViewModel() {
         }
     }
 
-    suspend fun getPreSignedUrl(file: String, contentType: String) : String {
+    suspend fun getPreSignedUrl(fileName: String, contentType: String) : String {
         return suspendCoroutine { continuation ->
             viewModelScope.launch {
                 runCatching {
-                    fileService.getPreSignedUrl(file, contentType)
+                    fileService.getImagePreSignedUrl(fileName, contentType)
                 }.onSuccess {
                     if (it.isSuccessful) {
                         it.body()?.data?.let { response ->
-                            continuation.resume(response)
+                            continuation.resume(response.url)
                         }
                     } else {
                         continuation.resumeWithException(Exception("발급 실패"))
@@ -243,13 +272,21 @@ class JoinViewModel: ViewModel() {
         }
     }
 
-    suspend fun uploadFileS3(preSignedUrl: String, filePath: String, contentType: String) : Boolean {
+    suspend fun uploadFileS3(preSignedUrl: String, contentType: String) : Boolean {
         return suspendCoroutine { continuation ->
             viewModelScope.launch {
                 runCatching {
-                    val file = File(filePath)
-                    val requestBody = file.asRequestBody(contentType.toMediaType())
-                    fileService.uploadFile(preSignedUrl, requestBody)
+                    when (contentType) {
+                        "image/jpeg" -> {
+                            fileService.uploadFile(preSignedUrl, File(userImagePath.value!!).asRequestBody(contentType.toMediaType()))
+                        }
+                        "image/png" -> {
+                            fileService.uploadFile(preSignedUrl, File(userImagePath.value!!).asRequestBody(contentType.toMediaType()))
+                        }
+                        else -> { // "application/pdf"
+                            fileService.uploadFile(preSignedUrl, File(userFilePath.value!!).asRequestBody(contentType.toMediaType()))
+                        }
+                    }
                 }.onSuccess {
                     if (it.isSuccessful) {
                         continuation.resume(true)

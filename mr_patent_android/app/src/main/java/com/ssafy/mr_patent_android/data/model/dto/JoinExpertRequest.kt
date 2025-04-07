@@ -12,8 +12,8 @@ data class JoinExpertRequest(
     @SerializedName("expert_description") val expertDescription: String,
     @SerializedName("expert_address") val expertAddress: String,
     @SerializedName("expert_phone") val expertPhone: String,
-    @SerializedName("expert_license") val expertLicense: String,
     @SerializedName("expert_get_date") val expertGetDate: String,
+    @SerializedName("expert_license") val expertLicense: String,
     @SerializedName("expert_categories") val expertCategory: MutableList<Category>
 ) {
     data class Category(

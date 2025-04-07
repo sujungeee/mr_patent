@@ -23,9 +23,9 @@ interface UserService {
     @GET("expert")
     suspend fun getExpertList(): Response<BaseResponse<List<UserDto>>>
 
-    @GET("expert/{expert_id}")
+    @GET("expert/{expertId}")
     suspend fun getExpert(
-        @Path("expert_id") expert_id: Int
+        @Path("expertId") expertId: Int
     ): Response<BaseResponse<UserDto>>
 
     @POST("user")
@@ -44,15 +44,10 @@ interface UserService {
     @POST("user/expert")
     suspend fun joinExpert(
         @Body joinExpertRequest: JoinExpertRequest
-    ): Response<BaseResponse<Boolean?>>
+    ): Response<BaseResponse<MessageResponse>>
 
     @DELETE("user/me")
     suspend fun deleteUser(): Response<BaseResponse<MessageResponse>>
-
-    @PATCH("user/me")
-    suspend fun editUser(
-        @Body userDto: LoginResponse
-    ): Response<BaseResponse<Boolean?>>
 
     @PATCH("user/me/pw")
     suspend fun pwdEdit(
