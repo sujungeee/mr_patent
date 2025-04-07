@@ -206,7 +206,7 @@ class ProfileEditFragment : BaseFragment<FragmentProfileEditBinding>(
             binding.etPhone.setText(it.expertPhone)
             binding.etAddress1.setText(it.expertAddress.substringBefore("\\"))
             binding.etAddress2.setText(it.expertAddress.substringAfter("\\"))
-            for (category in it.expertCategory) {
+            for (category in it.category) {
                 when (category) {
                     "화학공학" -> binding.chipChemi.isChecked = true
                     "기계공학" -> binding.chipMecha.isChecked = true
