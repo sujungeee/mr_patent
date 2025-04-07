@@ -44,7 +44,7 @@ class LoginFragment : BaseFragment<FragmentLoginBinding>(FragmentLoginBinding::b
         }
 
         binding.btnLogin.setOnClickListener {
-            if(checkEmail(binding.etEmail.text.toString()) && binding.etPwd.text.length >=6){
+            if(checkEmail(binding.etEmail.text.toString()) && binding.etPwd.text.length >=2){
                 viewModel.login(binding.etEmail.text.toString(), binding.etPwd.text.toString())
             }
 //            (requireActivity() as LoginActivity).navigateToMain()
@@ -63,7 +63,7 @@ class LoginFragment : BaseFragment<FragmentLoginBinding>(FragmentLoginBinding::b
         }
         binding.etPwd.onFocusChangeListener = View.OnFocusChangeListener { v, hasFocus ->
             if (!hasFocus) {
-                if (binding.etPwd.text.length <6) {
+                if (binding.etPwd.text.length <2) {
                     binding.etPwd.error = "6자 이상 입력해주세요."
                 }
             }
@@ -83,7 +83,7 @@ class LoginFragment : BaseFragment<FragmentLoginBinding>(FragmentLoginBinding::b
         }
 
         binding.etPwd.addTextChangedListener {
-            if (binding.etPwd.text.length >= 6) {
+            if (binding.etPwd.text.length >= 2) {
                 pwdFlag = true
             } else {
                 pwdFlag = false

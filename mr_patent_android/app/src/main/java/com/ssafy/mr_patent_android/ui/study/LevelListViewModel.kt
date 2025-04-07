@@ -23,18 +23,20 @@ class LevelListViewModel : ViewModel() {
                 studyService.getLevels()
             }.onSuccess { response ->
                 if (response.isSuccessful) {
-                    response.body()?.data.let { levelList ->
-                        _levelList.value = levelList
+                    response.body()?.data?.let { levelDto ->
+                        val updatedLevels = levelDto.levels + LevelDto.Level(
+                            best_score = 0,
+                            is_accessible = true,
+                            is_passed = true,
+                            level_id = -1,
+                            level_name = "단어장",
+                            count = 0
+                        )
+                        _levelList.value = LevelDto(updatedLevels)
                     }
-                } else {
 
-                    _levelList.value = LevelDto(listOf(
-                        LevelDto.Level(8, true,true, 1, "Lv.1"),
-                        LevelDto.Level(8, true,true, 1, "Lv.2"),
-                        LevelDto.Level(100, true,false, 1, "Lv.3"),
-                        LevelDto.Level(4, true,false, 1, "Lv.4"),
-                        LevelDto.Level(100, false,false, 1, "Lv.5"),
-                        LevelDto.Level(100, false,false, 1, "단어장")))
+
+                } else {
                     Log.e("LevelListViewModel", "getLevels: ${response.errorBody()}")
                 }
             }.onFailure {

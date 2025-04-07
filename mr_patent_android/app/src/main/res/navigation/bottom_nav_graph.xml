@@ -16,6 +16,9 @@
         <action
             android:id="@+id/action_nav_fragment_home_to_chatFragment"
             app:destination="@id/chatFragment" />
+        <action
+            android:id="@+id/action_nav_fragment_home_to_patentAttorneyFragment"
+            app:destination="@id/patentAttorneyFragment" />
     </fragment>
     <fragment
         android:id="@+id/nav_fragment_study"
@@ -25,6 +28,9 @@
         <action
             android:id="@+id/action_nav_fragment_study_to_levelFragment"
             app:destination="@id/levelFragment" />
+        <action
+            android:id="@+id/action_nav_fragment_study_to_bookmarkListFragment"
+            app:destination="@id/bookmarkListFragment" />
     </fragment>
     <fragment
         android:id="@+id/nav_fragment_chat"
@@ -82,6 +88,10 @@
             android:name="level_id"
             android:defaultValue="-1"
             app:argType="integer" />
+        <argument
+            android:name="type"
+            android:defaultValue="study"
+            app:argType="string" />
         <action
             android:id="@+id/action_studyCardFragment_to_studyAllFragment"
             app:destination="@id/studyAllFragment" />
@@ -95,6 +105,13 @@
             android:name="level_id"
             android:defaultValue="-1"
             app:argType="integer" />
+        <argument
+            android:name="type"
+            android:defaultValue="study"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_studyAllFragment_to_studyCardFragment"
+            app:destination="@id/studyCardFragment" />
     </fragment>
     <fragment
         android:id="@+id/quizFragment"
@@ -114,10 +131,19 @@
         android:name="com.ssafy.mr_patent_android.ui.study.QuizResultFragment"
         android:label="fragment_quiz_result"
         tools:layout="@layout/fragment_quiz_result" >
-
+        <argument
+            android:name="level_id"
+            android:defaultValue="-1"
+            app:argType="integer" />
         <argument
             android:name="answer_dto"
             app:argType="integer[]" />
+        <action
+            android:id="@+id/action_quizResultFragment_to_nav_fragment_study"
+            app:destination="@id/nav_fragment_study" />
+        <action
+            android:id="@+id/action_quizResultFragment_to_quizFragment"
+            app:destination="@id/quizFragment" />
 
     </fragment>
     <fragment
@@ -163,7 +189,7 @@
         android:label="fragment_patent_attorney"
         tools:layout="@layout/fragment_expert">
         <argument
-            android:name="id"
+            android:name="expert_id"
             android:defaultValue="-1"
             app:argType="integer" />
         <argument
@@ -301,4 +327,13 @@
         android:name="com.ssafy.mr_patent_android.ui.address.AddressSearchFragment"
         android:label="fragment_address_search"
         tools:layout="@layout/fragment_address_search" />
+    <fragment
+        android:id="@+id/bookmarkListFragment"
+        android:name="com.ssafy.mr_patent_android.ui.study.BookmarkListFragment"
+        android:label="fragment_bookmark_list"
+        tools:layout="@layout/fragment_bookmark_list" >
+        <action
+            android:id="@+id/action_bookmarkListFragment_to_studyCardFragment"
+            app:destination="@id/studyCardFragment" />
+    </fragment>
 </navigation>

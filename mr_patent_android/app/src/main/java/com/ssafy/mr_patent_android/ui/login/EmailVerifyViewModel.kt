@@ -11,8 +11,8 @@ import kotlinx.coroutines.launch
 
 private const val TAG = "EmailVerifyViewModel_Mr_Patent"
 class EmailVerifyViewModel:ViewModel() {
-    private val _toastMsg = MutableLiveData<String>()
-    val toastMsg: LiveData<String>
+    private val _toastMsg = MutableLiveData<String?>()
+    val toastMsg: LiveData<String?>
         get() = _toastMsg
 
     private  val _codeState = MutableLiveData<Boolean>()
@@ -23,6 +23,10 @@ class EmailVerifyViewModel:ViewModel() {
     val emailVerifyState: LiveData<Boolean>
         get() = _emailVerifyState
 
+    fun setToastMsg(toastMsg: String?) {
+        _toastMsg.value = toastMsg
+    }
+
     fun setCodeState(state: Boolean) {
         _codeState.value = state
     }
@@ -31,12 +35,18 @@ class EmailVerifyViewModel:ViewModel() {
         _emailVerifyState.value = state
     }
 
+    fun reset() {
+        _codeState.value = false
+        _emailVerifyState.value = false
+    }
+
     fun emailVerify(email: String, code: String) {
         viewModelScope.launch {
             runCatching {
                 authService.emailVerify(email, code)
             }.onSuccess {
                 if (it.isSuccessful) {
+                    _toastMsg.value = "이메일 인증 성공"
                     _emailVerifyState.value = true
                 } else {
                     it.errorBody()?.let { it1 ->
@@ -44,6 +54,7 @@ class EmailVerifyViewModel:ViewModel() {
                     }
                 }
             }.onFailure {
+                it.printStackTrace()
             }
         }
     }
@@ -65,7 +76,7 @@ class EmailVerifyViewModel:ViewModel() {
                     }
                 }
             }.onFailure {
-                Log.d(TAG, "sendCode: failure")
+                it.printStackTrace()
             }
         }
     }

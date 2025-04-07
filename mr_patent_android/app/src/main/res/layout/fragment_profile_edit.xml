@@ -53,7 +53,6 @@
         android:layout_height="0dp"
         android:background="@drawable/circle_shape"
         android:padding="16dp"
-        android:src="@drawable/user_profile"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -89,6 +88,7 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/cl_profile_edit_items_expert"
+        android:visibility="gone"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintStart_toStartOf="parent"
@@ -108,7 +108,6 @@
             app:layout_constraintEnd_toEndOf="parent">
 
             <androidx.constraintlayout.widget.ConstraintLayout
-                android:visibility="gone"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 

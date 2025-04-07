@@ -32,17 +32,20 @@ class ChatListViewModel : ViewModel() {
                 if (it.isSuccessful) {
                     it.body()?.data?.let { chatRoomList ->
                         _chatRoomList.value = chatRoomList
+                        Log.d(TAG, "getChatRoomList: ${chatRoomList}")
                     }
                 }else{
                     it.errorBody()?.let { it1 ->
                         networkUtil.getErrorResponse(it1)?.let { errorResponse ->
-                            // 에러 처리
                         }
                     }
                 }
             }.onFailure {
                 it.printStackTrace()
-                _chatRoomList.value = listOf(ChatRoomDto(1,1,"d","da","da","d","da",1))
+                _chatRoomList.value= mutableListOf(
+                    ChatRoomDto(
+                    )
+                )
                 Log.d(TAG, "getChatRoomList: ${_chatRoomList.value}")
             }
         }
@@ -50,15 +53,9 @@ class ChatListViewModel : ViewModel() {
 
     fun updateChatList(newMessage: ChatRoomDto) {
         val currentList = _chatRoomList.value?.toMutableList() ?: mutableListOf()
-
-        // 기존 채팅방이 있는지 확인하고 제거
         currentList.removeAll { it.roomId == newMessage.roomId }
-
-        // 맨 앞에 추가
         currentList.add(0, newMessage)
-
-        // 리스트 갱신
-        _chatRoomList.value = currentList
+        _chatRoomList.postValue(currentList)
     }
 
 

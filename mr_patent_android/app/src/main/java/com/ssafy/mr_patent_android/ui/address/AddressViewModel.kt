@@ -13,10 +13,6 @@ class AddressViewModel : ViewModel() {
     val address: LiveData<String>
         get() = _address
 
-    fun setToastMsg(msg: String) {
-        _toastMsg.value = msg
-    }
-
     fun setAddress(address: String) {
         _address.value = address
     }

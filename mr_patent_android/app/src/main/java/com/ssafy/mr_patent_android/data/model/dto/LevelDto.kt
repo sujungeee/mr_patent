@@ -7,9 +7,10 @@ data class LevelDto(
 ){
     data class Level(
         @SerializedName("best_score")val best_score: Int,
-        @SerializedName("is_accessible")val is_accessible: Boolean,
-        @SerializedName("is_passed")val is_passed: Boolean,
+        @SerializedName("accessible")val is_accessible: Boolean,
+        @SerializedName("passed")val is_passed: Boolean,
         @SerializedName("level_id")val level_id: Int,
-        @SerializedName("level_name")val level_name: String
+        @SerializedName("level_name")val level_name: String,
+        @SerializedName("count")val count: Int=-1,
     )
 }

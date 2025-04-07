@@ -15,6 +15,7 @@ import com.ssafy.mr_patent_android.data.model.dto.ChatRoomDto
 import com.ssafy.mr_patent_android.data.model.dto.UserDto
 import com.ssafy.mr_patent_android.databinding.ListItemChatRoomBinding
 import com.ssafy.mr_patent_android.databinding.ListItemExpertBinding
+import com.ssafy.mr_patent_android.util.TimeUtil
 
 private const val TAG = "ChatListAdapter"
 class ChatListAdapter(private val itemClickListener: ItemClickListener) :
@@ -38,7 +39,7 @@ class ChatListAdapter(private val itemClickListener: ItemClickListener) :
             Log.d(TAG, "bind: $chatRoom")
             binding.tvName.text = chatRoom.userName
             binding.tvChatPreview.text = chatRoom.lastMessage
-            binding.tvTime.text = chatRoom.lastMessageTime
+            binding.tvTime.text = TimeUtil().formatLocalDateTimeToString(TimeUtil().parseUtcWithJavaTime(chatRoom.lastMessageTime))
 
             if (chatRoom.unreadCount > 0) {
                 binding.tvUnreadCount.visibility = View.VISIBLE

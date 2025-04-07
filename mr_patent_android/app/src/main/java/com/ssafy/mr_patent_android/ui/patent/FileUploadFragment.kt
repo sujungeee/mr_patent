@@ -77,8 +77,7 @@ class FileUploadFragment : BaseFragment<FragmentFileUploadBinding>(
 
         binding.btnSpecConfirm.setOnClickListener {
             if (fileViewModel.fileUri.value != null) {
-                // OCR API 호출
-                fileViewModel.getOcrContent()
+                fileViewModel.getOcrContent(File(fileViewModel.fileUri.value!!))
                 // TODO: delete
                 fileViewModel.setUploadState(true)
             } else {

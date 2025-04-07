@@ -31,13 +31,19 @@ class FirebaseMessageService : FirebaseMessagingService() {
             Log.d(TAG, "onMessageReceived: ${message} ")
             Log.d(TAG, "onMessageReceived: ${message.data} ")
             Log.d(TAG, "onMessageReceived: ${message.notification}")
-            val body = message.data["body"]
-            val title = message.data["title"]
-            val data = message.data["data"]
+            val body = message.notification?.body
+            val title = message.notification?.title
+            val roomId = message.data["roomId"]
+            val userId= message.data["userId"]
+            val userName = message.data["userName"]
+            val userImage = message.data["userImage"]
             val type = message.data["type"]
             Log.i("바디: ", body.toString())
             Log.i("타이틀: ", title.toString())
-            Log.i("데이터: ", data.toString())
+            Log.i("roomId: ", roomId.toString())
+            Log.i("userId: ", userId.toString())
+            Log.i("userName: ", userName.toString())
+            Log.i("userImage: ", userImage.toString())
             Log.i("타입: ", type.toString())
             sendNotification(message)
         }

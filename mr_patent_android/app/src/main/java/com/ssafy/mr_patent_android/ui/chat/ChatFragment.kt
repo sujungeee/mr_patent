@@ -16,21 +16,26 @@ import android.view.ViewGroup
 import android.view.Window
 import android.webkit.MimeTypeMap
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.ActionBar.LayoutParams
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.gson.Gson
 import com.ssafy.mr_patent_android.R
+import com.ssafy.mr_patent_android.base.ApplicationClass
 import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.sharedPreferences
 import com.ssafy.mr_patent_android.base.BaseFragment
+import com.ssafy.mr_patent_android.base.XAccessTokenInterceptor
 import com.ssafy.mr_patent_android.data.model.dto.ChatMessageDto
 import com.ssafy.mr_patent_android.data.model.dto.UserDto
 import com.ssafy.mr_patent_android.databinding.DialogChatProfileBinding
@@ -38,11 +43,17 @@ import com.ssafy.mr_patent_android.databinding.FragmentChatBinding
 import com.ssafy.mr_patent_android.databinding.FragmentChatBottomSheetBinding
 import com.ssafy.mr_patent_android.databinding.ItemPhotoPreviewBinding
 import com.ssafy.mr_patent_android.util.FileUtil
+import gun0912.tedimagepicker.builder.TedImagePicker
 import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
+import okhttp3.OkHttpClient.*
+import okhttp3.internal.http2.Header
 import ua.naiksoftware.stomp.Stomp
 import ua.naiksoftware.stomp.StompClient
 import ua.naiksoftware.stomp.dto.LifecycleEvent
 import ua.naiksoftware.stomp.dto.StompHeader
+import java.util.concurrent.TimeUnit
+import kotlin.math.log
 
 
 private const val TAG = "ChatFragment"
@@ -68,9 +79,86 @@ class ChatFragment :
     }
     lateinit var stompClient: StompClient
 
-    val url = "wss://j12d208.p.ssafy.io/"
+    val url = "wss://j12d208.p.ssafy.io/ws/chat"
     var headerList: MutableList<StompHeader> = mutableListOf()
     var modalBottomSheet: BottomSheetDialog? = null
+
+
+    @SuppressLint("CheckResult")
+    fun initStomp() {
+
+        stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, url)
+        headerList.add(StompHeader("Authorization", "Bearer ${sharedPreferences.getAToken()}"))
+        headerList.add(StompHeader("roomId", roomId))
+        headerList.add(StompHeader("userId", sharedPreferences.getUser().userId.toString()))
+
+        stompClient.lifecycle().subscribe { lifecycleEvent ->
+            when (lifecycleEvent.type) {
+                LifecycleEvent.Type.OPENED -> {
+                    Log.i("OPEND", "스톰프 연결 성공")
+                    stompClient.topic("/sub/chat/room/" + roomId, headerList)
+                        .subscribe({ topicMessage ->
+                            try {
+                                Log.d(TAG,"구독스${topicMessage.getPayload()}")
+                                val message = Gson().fromJson(
+                                    topicMessage.getPayload(),
+                                    ChatMessageDto::class.java
+                                )
+
+                                Log.d(TAG, "initStomp: $message")
+                                if (message.type == "ENTER") {
+                                    if (message.status>=2){
+                                        viewModel.setState(true)
+                                        requireActivity().runOnUiThread {
+                                            messageListAdapter.setRead()
+                                        }
+                                    }
+                                    else{
+                                        viewModel.setState(false)
+                                    }
+                                }else if (message.type == "LEAVE") {
+                                    viewModel.setState(false)
+                                }else {
+                                    viewModel.setIsSend(true)
+                                    viewModel.addMessage(message)
+                                }
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Failed to process message", e)
+                            }
+                        }, { error ->
+                            Log.e(
+                                "SUBSCRIPTION_ERROR",
+                                "Topic subscription error: ${error.message}"
+                            )
+                        })
+
+                }
+
+                LifecycleEvent.Type.CLOSED -> {
+                    Log.i("CLOSED", "스톰프 연결 종료")
+
+                }
+
+                LifecycleEvent.Type.ERROR -> {
+                    Log.i("ERROR", "스톰프 연결 에러")
+
+                    Log.e("CONNECT ERROR", lifecycleEvent.exception.toString())
+                }
+
+                else -> {
+                    Log.i("ELSE", lifecycleEvent.message)
+                }
+            }
+        }
+        stompClient.withClientHeartbeat(10000) // 10초마다 heartbeat 보내기
+        stompClient.withServerHeartbeat(10000) // 10초마다 서버 heartbeat 받기
+
+
+        stompClient.connect(headerList)
+
+
+    }
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,7 +179,7 @@ class ChatFragment :
         // 어댑터를 한 번만 생성
         messageListAdapter = MessageListAdapter(
             UserDto(userName, userImage),
-            listOf(),
+            emptyList(),
             object : MessageListAdapter.ItemClickListener {
                 override fun onItemClick() {
                     Log.d(TAG, "onFileClick: $expertId")
@@ -110,65 +198,27 @@ class ChatFragment :
                 }
             })
 
-        // RecyclerView에 어댑터 설정 (한 번만)
+//         RecyclerView에 어댑터 설정 (한 번만)
         binding.rvChat.adapter = messageListAdapter
 
         viewModel.messageList.observe(viewLifecycleOwner) {
-            messageListAdapter.updateMessages(viewModel.messageList.value ?: listOf())
-        }
-
-    }
-
-    @SuppressLint("CheckResult")
-    fun initStomp() {
-        stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, url)
-
-        stompClient.lifecycle().subscribe { lifecycleEvent ->
-            when (lifecycleEvent.type) {
-                LifecycleEvent.Type.OPENED -> {
-                    Log.i("OPEND", "스톰프 연결 성공")
-                    stompClient.topic("/chat" + roomId)
-                        .subscribe({ topicMessage ->
-                            try {
-                                Log.d(TAG, topicMessage.getPayload())
-                                val message = Gson().fromJson(
-                                    topicMessage.getPayload(),
-                                    ChatMessageDto::class.java
-                                )
-                                Log.d(TAG, "initStomp: $message")
-                                viewModel.addMessage(message)
-                            } catch (e: Exception) {
-                                Log.e(TAG, "Failed to process message", e)
-                            }
-                        }, { error ->
-                            Log.e(
-                                "SUBSCRIPTION_ERROR",
-                                "Topic subscription error: ${error.message}"
-                            )
-                        })
-
+            if (viewModel.isSend.value == true) {
+                messageListAdapter.addMessage(it[0])
+                viewModel.setIsSend(false)
+                if (it!=null){
+                binding.rvChat.scrollToPosition(0)
                 }
 
-                LifecycleEvent.Type.CLOSED -> {
-                    Log.i("CLOSED", "스톰프 연결 종료")
-
+            }else {
+                requireActivity().runOnUiThread {
+                    messageListAdapter.updateMessages(it)
                 }
 
-                LifecycleEvent.Type.ERROR -> {
-                    Log.i("ERROR", "스톰프 연결 에러")
-                    Log.e("CONNECT ERROR", lifecycleEvent.exception.toString())
-                }
-
-                else -> {
-                    Log.i("ELSE", lifecycleEvent.message)
+                if(it.size==10){
+                    binding.rvChat.scrollToPosition(0)
                 }
             }
         }
-
-        headerList.add(StompHeader("roomId", roomId.toString()))
-        headerList.add(StompHeader("userId", sharedPreferences.getUser().userId.toString()))
-        stompClient.connect(headerList)
-
 
     }
 
@@ -183,77 +233,66 @@ class ChatFragment :
                 binding.btnSend.isEnabled = false
             }
         }
+        binding.rvChat.scrollToPosition(0)
 
         binding.btnSend.setOnClickListener {
-            Log.d(TAG, "initView: asdasdhaskjdh")
             viewModel.sendMessage(
+                userId,
                 roomId,
                 binding.etMessage.text.toString(),
                 null,
                 requireContext(),
                 stompClient
             )
-            viewModel.addMessageFront(
-                ChatMessageDto(
-                    chatId = null,
-                    isRead = false,
-                    message = binding.etMessage.text.toString(),
-                    receiverId = null,
-                    roomId = roomId,
-                    timestamp = null,
-                    type = "CHAT",
-                    userId = sharedPreferences.getUser().userId + 1,
-                    fileName = null,
-                    fileUrl = null,
-                    fileUri = Uri.EMPTY,
-                    messageType = "TEXT"
-                )
-            )
-            Log.d(TAG, "initView: ${viewModel.messageList.value}")
-//            viewModel.setSendState(true)
-//            viewModel.setSendState(false)
 
             binding.etMessage.text.clear()
         }
 
         binding.rvChat.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                super.onScrollStateChanged(recyclerView, newState)
-                if (!binding.rvChat.canScrollVertically(-1)
-                    && newState == RecyclerView.SCROLL_STATE_IDLE
-                ) {
-                    /**
-                     * newState가 SCROLL_STATE_IDLE를 확인하여 중복 발생을 방지한다.
-                     */
-                    viewModel.getMessageList(roomId, viewModel.messageList.value?.last()?.chatId)
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+
+                val layoutManager = recyclerView.layoutManager as? LinearLayoutManager ?: return
+                val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
+
+                // 최상단에서 3개 이하일 때 (즉, 거의 맨 위로 스크롤한 상황)
+                if (firstVisibleItemPosition <= 2) {
+                    // 이미 로딩 중이라면 중복 방지 로직 필요
+                    if (viewModel.isLoading.value == false) {
+                        Log.d(TAG, "onScrolled: ${viewModel.messageList.value}")
+                        viewModel.getMessageList(roomId, viewModel.messageList.value?.last()?.chatId)
+                    }
                 }
             }
         })
-
-
     }
 
     fun initDialog(urls: String) {
         val dialog = Dialog(requireContext())
-
         val dialogBinding = ItemPhotoPreviewBinding.inflate(layoutInflater)
 
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        val wrapper = FrameLayout(requireContext())
+        wrapper.setPadding(200, 200, 200, 200)
+        wrapper.addView(dialogBinding.root)
 
-        dialog.setContentView(dialogBinding.root)
+        dialog.setContentView(wrapper)
+
+        dialog.window?.setLayout(LayoutParams.MATCH_PARENT,LayoutParams.MATCH_PARENT)
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialog.window?.setLayout(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
-        dialogBinding.btnDelete.visibility = View.VISIBLE
+
+        Glide.with(requireContext())
+            .load(urls)
+            .fallback(R.drawable.ic_launcher_background)
+            .error(R.drawable.ic_launcher_background)
+            .into(dialogBinding.previewImage)
+
+//        dialogBinding.btnDelete.visibility = View.VISIBLE
         dialogBinding.previewImage.setOnClickListener {
             dialog.dismiss()
         }
 
-        Glide.with(requireContext())
-            .load(urls)
-            .into(dialogBinding.previewImage)
+
+
 
         dialog.show()
 
@@ -275,8 +314,8 @@ class ChatFragment :
                 .into(dialogBinding.ivProfile)
 
 
-            if (it.expertCategory.isNotEmpty()) {
-                it.expertCategory.forEach { category ->
+            if (it.category.isNotEmpty()) {
+                it.category.forEach { category ->
                     when (category) {
                         "기계공학" -> dialogBinding.tvFieldMecha.visibility = View.VISIBLE
                         "전기/전자" -> dialogBinding.tvFieldElec.visibility = View.VISIBLE
@@ -307,18 +346,24 @@ class ChatFragment :
 // layout 파일 설정
         modalBottomSheet?.setContentView(bottomBinding.root)
 
+
         bottomBinding.btnDown.setOnClickListener {
             modalBottomSheet?.dismiss()
         }
 
         bottomBinding.btnGallery.setOnClickListener {
-            val intent = Intent(Intent.ACTION_PICK).apply {
-                type = "image/*"
-                putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/jpeg", "image/png"))
-                putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+        TedImagePicker.with(requireContext())
+            .max(5, "사진은 최대 5장까지 선택 가능합니다.")
+            .showCameraTile(false)
+            .startMultiImage { uriList ->
+                uriList.forEach { uri ->
+                    if (FileUtil().isFileSizeValid(requireContext(), uri)) {
+                        viewModel.addImage(ChatMessageDto.Files("", "", uri))
+                    }
+                }
             }
-            activityResult.launch(intent)
-        }
+
+    }
 
         bottomBinding.btnFile.setOnClickListener {
             val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
@@ -384,8 +429,8 @@ class ChatFragment :
                 }
 
             }
-
             viewModel.sendMessage(
+                userId,
                 roomId,
                 binding.etMessage.text.toString(),
                 files,
@@ -394,6 +439,7 @@ class ChatFragment :
             )
             viewModel.setFile(null)
             viewModel.deleteImage()
+            modalBottomSheet!!.dismiss()
         }
 
 

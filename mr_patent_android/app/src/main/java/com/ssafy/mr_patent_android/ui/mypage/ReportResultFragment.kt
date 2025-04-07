@@ -37,7 +37,7 @@ class ReportResultFragment : BaseFragment<FragmentReportResultBinding>(
         reportResultViewModel.getFitnessResult(reportResultViewModel.userPatentId.value!!)
         // TODO: delete
         reportResultViewModel.setFitnessResult("FAIL")
-        reportResultViewModel.setFitnessContents(FitnessResultResponse. FitnessContent(true, true, false, true, true, true, true, true, true))
+        reportResultViewModel.setFitnessContents(FitnessResultResponse. FitnessContent(true, true, false, true, true, true, true, true))
         reportResultViewModel.setSimiliarityResult(
             listOf(
                 SimiliarityResultResponse.Comparison(1, 2, 0.9, listOf(
@@ -95,15 +95,14 @@ class ReportResultFragment : BaseFragment<FragmentReportResultBinding>(
         reportResultViewModel.fitnessContents.observe(viewLifecycleOwner) {
             binding.rvSimiliarityResultFail.layoutManager = LinearLayoutManager(requireContext())
             binding.rvSimiliarityResultFail.adapter = ReportResultFailAdapter(listOf(
-                FitnessFrameDto(PatentTitleDto.PatentTitleExpDto().patentDraftTitleExp, it.patentDraftTitle)
-                , FitnessFrameDto(PatentTitleDto.PatentTitleExpDto().patentDraftTechnicalFieldExp, it.patentDraftTechnicalField)
-                , FitnessFrameDto(PatentTitleDto.PatentTitleExpDto().patentDraftBackgroundExp, it.patentDraftBackground)
-                , FitnessFrameDto(PatentTitleDto.PatentTitleExpDto().patentDraftProblemExp, it.patentDraftProblem)
-                , FitnessFrameDto(PatentTitleDto.PatentTitleExpDto().patentDraftSolutionExp, it.patentDraftSolution)
-                , FitnessFrameDto(PatentTitleDto.PatentTitleExpDto().patentDraftEffectExp, it.patentDraftEffect)
-                , FitnessFrameDto(PatentTitleDto.PatentTitleExpDto().patentDraftDetailedExp, it.patentDraftDetailed)
-                , FitnessFrameDto(PatentTitleDto.PatentTitleSummaryDto().patentDraftSummary, it.patentDraftSummary)
-                , FitnessFrameDto(PatentTitleDto.PatentTitleClaimDto().patentDraftClaim, it.patentDraftClaim)
+                FitnessFrameDto(PatentTitleDto.PatentTitleExpDto().patentDraftTechnicalFieldExp, it.technicalField)
+                , FitnessFrameDto(PatentTitleDto.PatentTitleExpDto().patentDraftBackgroundExp, it.background)
+                , FitnessFrameDto(PatentTitleDto.PatentTitleExpDto().patentDraftProblemExp, it.problem)
+                , FitnessFrameDto(PatentTitleDto.PatentTitleExpDto().patentDraftSolutionExp, it.solution)
+                , FitnessFrameDto(PatentTitleDto.PatentTitleExpDto().patentDraftEffectExp, it.effect)
+                , FitnessFrameDto(PatentTitleDto.PatentTitleExpDto().patentDraftDetailedExp, it.detailed)
+                , FitnessFrameDto(PatentTitleDto.PatentTitleSummaryDto().patentDraftSummary, it.summary)
+                , FitnessFrameDto(PatentTitleDto.PatentTitleClaimDto().patentDraftClaim, it.claim)
             ))
         }
 

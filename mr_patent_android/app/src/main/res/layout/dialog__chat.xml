@@ -70,6 +70,20 @@
         android:textSize="13sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/dl_btn_no"
+        app:layout_constraintTop_toBottomOf="@+id/tv_text2"
+        app:layout_constraintVertical_bias="1.0" />
+
+    <Button
+        android:id="@+id/dl_btn_no"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:layout_marginTop="20dp"
+        android:backgroundTint="@color/mr_gray_light"
+        android:text="취소"
+        android:textSize="13sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/dl_btn_yes"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tv_text2" />
 

@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.fragment.app.viewModels
@@ -57,7 +58,7 @@ class LevelListFragment : BaseFragment<FragmentLevelListBinding>(FragmentLevelLi
             val card = it.findViewById<CardView>(cardList[index])
             val titleTv = it.findViewById<TextView>(R.id.tv_level_title)
             val descTv = it.findViewById<TextView>(R.id.tv_level_desc)
-            val lockIcon = it.findViewById<ImageView>(R.id.iv_lock_icon)
+            val lockIcon = it.findViewById<LinearLayout>(R.id.iv_lock_icon)
             val arrowIv = it.findViewById<ImageView>(R.id.iv_arrow)
             val icon = it.findViewById<ImageView>(R.id.iv_icon)
 
@@ -96,6 +97,10 @@ class LevelListFragment : BaseFragment<FragmentLevelListBinding>(FragmentLevelLi
                 icon.visibility = View.VISIBLE
                 arrowIv.visibility = View.GONE
                 lockIcon.visibility = View.GONE
+                descTv.visibility = View.GONE
+                card.setOnClickListener {
+                    findNavController().navigate(LevelListFragmentDirections.actionNavFragmentStudyToBookmarkListFragment())
+                }
             }
         }
     }

@@ -3,6 +3,7 @@ package com.ssafy.mr_patent_android.ui.study
 import android.os.Build
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.RecyclerView
@@ -13,35 +14,73 @@ import com.ssafy.mr_patent_android.data.model.dto.WordDto
 import com.ssafy.mr_patent_android.databinding.ListItemCardBinding
 import com.ssafy.mr_patent_android.databinding.ListItemChatRoomBinding
 
-class WordCardAdapter(val word_list: List<WordDto.Word>, val itemClickListener:ItemClickListener) : RecyclerView.Adapter<WordCardAdapter.WordCardAdapter>() {
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WordCardAdapter {
+class WordCardAdapter(
+    val word_list: List<WordDto.Word>,
+    val itemClickListener: ItemClickListener
+) : RecyclerView.Adapter<WordCardAdapter.WordCardViewHolder>() {
+    var lastClickTime = 0L
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WordCardViewHolder {
         val binding =
             ListItemCardBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-
-
-        return WordCardAdapter(binding)
+        return WordCardViewHolder(binding)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    override fun onBindViewHolder(holder: WordCardAdapter, position: Int) {
+    override fun onBindViewHolder(holder: WordCardViewHolder, position: Int) {
         holder.bind(position)
     }
 
     override fun getItemCount(): Int = word_list.size
 
     fun interface ItemClickListener {
-        fun onItemClick(position: Int)
+        fun onItemClick(position: Int): Boolean
     }
 
-    inner class WordCardAdapter(private val binding: ListItemCardBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(position: Int) {
-            binding.flashCardWord.cardStudyText.text = word_list[position].word_name
-            binding.flashCardMean.cardStudyText.text = word_list[position].word_mean
-            binding.tBtnBookmark.setOnClickListener {
-                itemClickListener.onItemClick(position)
-            }
+    inner class WordCardViewHolder(private val binding: ListItemCardBinding) :
+        RecyclerView.ViewHolder(binding.root) {
 
+        fun bind(position: Int) {
+            val word = word_list[position]
+
+            binding.flashCardWord.cardStudyText.text = word.word_name
+            binding.flashCardMean.cardStudyText.text = word.word_mean
+
+            setBookmarkIcon(word.is_bookmarked)
+
+            binding.tBtnBookmark.setThrottleClickListener {
+                val toggled = !word.is_bookmarked
+
+                setBookmarkIcon(toggled)
+
+                val success = itemClickListener.onItemClick(position)
+                if (!success) {
+                    setBookmarkIcon(word.is_bookmarked)
+                }
+            }
+        }
+
+        private fun setBookmarkIcon(isBookmarked: Boolean) {
+            val resId = if (isBookmarked) {
+                R.drawable.bookmark_fill
+            } else {
+                R.drawable.bookmark_border
+            }
+            binding.tBtnBookmark.setBackgroundResource(resId)
         }
     }
+    fun updateBookmarkState(position: Int, updatedWord: WordDto.Word) {
+        (word_list as MutableList)[position] = updatedWord
+        notifyItemChanged(position)
+    }
+
+    fun View.setThrottleClickListener(interval: Long = 1000L, onClick: (View) -> Unit) {
+        setOnClickListener {
+            val currentTime = System.currentTimeMillis()
+            if (currentTime - lastClickTime >= interval) {
+                lastClickTime = currentTime
+                onClick(it)
+            }
+        }
+    }
+
 }
