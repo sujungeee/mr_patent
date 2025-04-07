@@ -15,6 +15,7 @@ import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.core.content.FileProvider
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
@@ -263,7 +264,7 @@ class ProfileEditFragment : BaseFragment<FragmentProfileEditBinding>(
         profileEditViewModel.expertInfo.observe(viewLifecycleOwner) {
             binding.clProfileEditItemsMember.visibility = View.GONE
             binding.clProfileEditItemsExpert.visibility = View.VISIBLE
-            for (categories in it.expertCategoryDto) {
+            for (categories in it.expertCategory) {
                 when (categories.categoryName) {
                     "화학공학" -> binding.chipChemi.isChecked = true
                     "기계공학" -> binding.chipMecha.isChecked = true
@@ -290,6 +291,8 @@ class ProfileEditFragment : BaseFragment<FragmentProfileEditBinding>(
         })
 
         profileEditViewModel.memberInfo.observe(viewLifecycleOwner) {
+            binding.clProfileEditItemsMember.visibility = View.VISIBLE
+            binding.clProfileEditItemsExpert.visibility = View.GONE
             binding.etName.setText(it.userName)
         }
 

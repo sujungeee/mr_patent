@@ -5,13 +5,21 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.libraries.places.api.model.kotlin.localDate
 import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.networkUtil
 import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.sharedPreferences
 import com.ssafy.mr_patent_android.data.model.dto.ProfileEditRequest
 import com.ssafy.mr_patent_android.data.model.dto.UserDto
 import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.authService
+import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.fileService
 import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.userService
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 private const val TAG = "ProfileEditViewModel_Mr_Patent"
 class ProfileEditViewModel : ViewModel() {
@@ -31,6 +39,10 @@ class ProfileEditViewModel : ViewModel() {
     val id: LiveData<Int>
         get() = _id
 
+    private val _expertId = MutableLiveData<Int>()
+    val expertId: LiveData<Int>
+        get() = _expertId
+
     private val _expertInfo = MutableLiveData<UserDto>()
     val expertInfo: LiveData<UserDto>
         get() = _expertInfo
@@ -39,9 +51,40 @@ class ProfileEditViewModel : ViewModel() {
     val memberInfo: LiveData<UserDto>
         get() = _memberInfo
 
-    private val _editState = MutableLiveData<Boolean>()
-    val editState: LiveData<Boolean>
+    private val _editState = MutableLiveData<Boolean?>()
+    val editState: LiveData<Boolean?>
         get() = _editState
+
+    private val _userImagePath = MutableLiveData<String>()
+    val userImagePath: LiveData<String>
+        get() = _userImagePath
+
+    private val _isExpanded = MutableLiveData<MutableList<Boolean>>()
+    val isExpanded: LiveData<MutableList<Boolean>>
+        get() = _isExpanded
+
+    /**
+     * binding
+     */
+    private val _editCategory = MutableLiveData<MutableList<UserDto.Category>>()
+    val editCategory: LiveData<MutableList<UserDto.Category>>
+        get() = _editCategory
+
+    private val _editDescription = MutableLiveData<String>()
+    val editDescription: LiveData<String>
+        get() = _editDescription
+
+    private val _editAddress1 = MutableLiveData<String>()
+    val editAddress1: LiveData<String>
+        get() = _editAddress1
+
+    private val _editAddress2 = MutableLiveData<String>()
+    val editAddress2: LiveData<String>
+        get() = _editAddress2
+
+    private val _editPhone = MutableLiveData<String>()
+    val editPhone: LiveData<String>
+        get() = _editPhone
 
     fun setProfileImage(uri: String) {
         _profileImage.value = uri
@@ -55,6 +98,45 @@ class ProfileEditViewModel : ViewModel() {
         _toastMsg.value = null
     }
 
+    fun setUserImagePath(userImagePath: String) {
+        _userImagePath.value = userImagePath
+    }
+
+    fun setExpertInfo(expertInfo: UserDto) {
+        _expertInfo.value = expertInfo
+    }
+
+    fun setEditState(editState: Boolean?) {
+        _editState.value = editState
+    }
+
+    /**
+     * set binding
+     */
+    fun setEditCategory(editCategory: MutableList<UserDto.Category>) {
+        _editCategory.value = editCategory
+    }
+
+    fun setEditDescription(editDescription: String) {
+        _editDescription.value = editDescription
+    }
+
+    fun setEditAddress1(editAddress1: String) {
+        _editAddress1.value = editAddress1
+    }
+
+    fun setEditAddress2(editAddress2: String) {
+        _editAddress2.value = editAddress2
+    }
+
+    fun setEditPhone(editPhone: String) {
+        _editPhone.value = editPhone
+    }
+
+    fun setIsExpanded(isExpanded: MutableList<Boolean>) {
+        _isExpanded.value = isExpanded.toMutableList()
+    }
+
     fun getExpertInfo(id: Int) {
         viewModelScope.launch {
             runCatching {
@@ -63,6 +145,11 @@ class ProfileEditViewModel : ViewModel() {
                 if (it.isSuccessful) {
                     it.body()?.data?.let { response ->
                         _expertInfo.value = response
+                        _editCategory.value = response.expertCategory
+                        _editDescription.value = response.expertDescription
+                        _editAddress1.value = response.expertAddress.substringBefore("\\")
+                        _editAddress2.value = response.expertAddress.substringAfter("\\")
+                        _editPhone.value = response.expertPhone
                         _profileImage.value = response.userImage
                     }
                 } else {
@@ -71,7 +158,7 @@ class ProfileEditViewModel : ViewModel() {
                     }
                 }
             }.onFailure {
-
+                it.printStackTrace()
             }
         }
     }
@@ -83,8 +170,10 @@ class ProfileEditViewModel : ViewModel() {
             }.onSuccess {
                 if (it.isSuccessful) {
                     it.body()?.data?.let { response ->
+                        Log.d(TAG, "getMemberInfo: ${response}")
                         _memberInfo.value = response
                         _profileImage.value = response.userImage
+                        _expertId.value = response.expertId
                     }
                 } else {
                     it.errorBody()?.let {
@@ -92,7 +181,7 @@ class ProfileEditViewModel : ViewModel() {
                     }
                 }
             }.onFailure {
-
+                it.printStackTrace()
             }
         }
     }
@@ -118,7 +207,70 @@ class ProfileEditViewModel : ViewModel() {
                     }
                 }
             }.onFailure {
+                it.printStackTrace()
+            }
+        }
+    }
 
+    suspend fun uploadFile(file: String, contentType: String) {
+        runCatching {
+            var response = false
+            var preSignedUrl = ""
+
+            if (file != null) {
+                preSignedUrl = getPreSignedUrl(file, contentType)
+                response = uploadFileS3(preSignedUrl, contentType)
+            }
+            if (response) {
+                when (contentType) {
+                    "image/jpeg", "image/png" -> _currentImage.value = preSignedUrl.substringBefore("?")
+                }
+            } else {
+                throw Exception("업로드 실패")
+            }
+        }.onFailure {
+            it.printStackTrace()
+        }
+    }
+
+    suspend fun getPreSignedUrl(fileName: String, contentType: String) : String {
+        return suspendCoroutine { continuation ->
+            viewModelScope.launch {
+                runCatching {
+                    fileService.getImagePreSignedUrl(fileName, contentType)
+                }.onSuccess {
+                    if (it.isSuccessful) {
+                        it.body()?.data?.let { response ->
+                            continuation.resume(response.url)
+                        }
+                    } else {
+                        continuation.resumeWithException(Exception("발급 실패"))
+                    }
+                }.onFailure {
+                    it.printStackTrace()
+                    continuation.resumeWithException(it)
+                }
+            }
+        }
+    }
+
+    suspend fun uploadFileS3(preSignedUrl: String, contentType: String) : Boolean {
+        return suspendCoroutine { continuation ->
+            viewModelScope.launch {
+                runCatching {
+                    val file = File(userImagePath.value!!)
+                    val requestBody = file.asRequestBody(contentType.toMediaType())
+                    fileService.uploadFile(preSignedUrl, requestBody)
+                }.onSuccess {
+                    if (it.isSuccessful) {
+                        continuation.resume(true)
+                    } else {
+                        continuation.resumeWithException(Exception("업로드 실패"))
+                    }
+                }.onFailure {
+                    it.printStackTrace()
+                    continuation.resumeWithException(it)
+                }
             }
         }
     }
