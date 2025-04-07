@@ -1,15 +1,19 @@
 package com.ssafy.mr_patent_android.ui.study
 
+import android.app.Dialog
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import androidx.activity.addCallback
 import androidx.fragment.app.viewModels
+import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.ssafy.mr_patent_android.R
 import com.ssafy.mr_patent_android.base.BaseFragment
 import com.ssafy.mr_patent_android.data.model.dto.QuizDto
+import com.ssafy.mr_patent_android.databinding.DialogQuizOutBinding
 import com.ssafy.mr_patent_android.databinding.FragmentQuizBinding
 
 private const val TAG = "QuizFragment"
@@ -25,11 +29,33 @@ class QuizFragment : BaseFragment<FragmentQuizBinding>(FragmentQuizBinding::bind
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+            initDialog()
+        }
+
         initView()
         initObserver()
     }
+    fun initDialog() {
+        val dialogBinding = DialogQuizOutBinding.inflate(layoutInflater)
+        val dialog = Dialog(requireContext())
+        dialog.setContentView(dialogBinding.root)
+        dialog.setCancelable(false)
+
+        dialogBinding.dlBtnOut.setOnClickListener {
+            findNavController().popBackStack()
+            dialog.dismiss()
+        }
+
+        dialogBinding.dlBtnNo.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
 
     fun initView(){
+
         quizViewModel.getQuiz(1)
 
         binding.tvTitle.text = "Level ${levelId} 퀴즈"
@@ -48,7 +74,12 @@ class QuizFragment : BaseFragment<FragmentQuizBinding>(FragmentQuizBinding::bind
                     quizViewModel.wrongAnswers.value?.let { wrongAnswers ->
                         Log.d(TAG, "initView: $wrongAnswers")
                     }
-                    findNavController().navigate(QuizFragmentDirections.actionQuizFragmentToQuizResultFragment(quizViewModel.wrongAnswers.value!!.toIntArray()))
+                    findNavController().navigate(
+                        QuizFragmentDirections.actionQuizFragmentToQuizResultFragment(quizViewModel.wrongAnswers.value!!.toIntArray(), levelId),
+                        NavOptions.Builder()
+                            .setPopUpTo(R.id.quizFragment, true)
+                            .build()
+                    )
                 }
             }
         }

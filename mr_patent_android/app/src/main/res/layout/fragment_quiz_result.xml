@@ -32,7 +32,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="end|bottom"
-        android:text="Level 1 퀴즈"
+        android:text="Level 1 퀴즈 결과"
         app:layout_constraintStart_toEndOf="@+id/v_title"
         app:layout_constraintTop_toBottomOf="@+id/v_title" />
 
@@ -65,7 +65,7 @@
 
 
     <TextView
-        android:id="@+id/textView2"
+        android:id="@+id/tv_quiz_score"
         style="@style/customTitleFontStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -79,7 +79,7 @@
         app:layout_constraintTop_toTopOf="@+id/circularProgressIndicator" />
 
     <TextView
-        android:id="@+id/textView3"
+        android:id="@+id/tv_quiz_passed"
         style="@style/customTitleFontStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -87,7 +87,7 @@
         android:text="Pass"
         android:textColor="@color/mr_gray"
         android:textSize="20sp"
-        app:layout_constraintBottom_toTopOf="@+id/textView2"
+        app:layout_constraintBottom_toTopOf="@+id/tv_quiz_score"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -115,28 +115,27 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tv_level" />
 
-    <TextView
-        android:visibility="gone"
-        android:id="@+id/tv_quiz_ment"
-        style="@style/customTitleFontStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:textSize="15sp"
-        android:gravity="center"
-        android:text="@string/quiz_ment"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tv_quiz_result" />
+            <TextView
+                android:visibility="gone"
+                android:id="@+id/tv_quiz_ment"
+                style="@style/customTitleFontStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:gravity="center"
+                android:text="@string/quiz_ment"
+                android:textSize="15sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tv_quiz_result" />
 
     <Button
-        android:visibility="gone"
-        android:id="@+id/btn_study"
+        android:id="@+id/btn_go_level_list"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
-        android:backgroundTint="@color/mr_gray_light"
-        android:text="단어 학습하기"
+        android:backgroundTint="@color/mr_blue"
+        android:text="홈으로 가기"
         android:layout_marginEnd="10dp"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintEnd_toStartOf="@id/btn_retry"
@@ -151,22 +150,10 @@
         android:backgroundTint="@color/mr_red"
         android:text="다시 풀기"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/btn_study"
-        app:layout_constraintTop_toTopOf="@+id/btn_study" />
+        app:layout_constraintStart_toEndOf="@id/btn_go_level_list"
+        app:layout_constraintTop_toTopOf="@+id/btn_go_level_list" />
 
-    <Button
-        android:id="@+id/btn_go_level_list"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:backgroundTint="@color/mr_blue"
-        android:text="단어 학습 홈으로 가기"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tv_quiz_result" />
-
-
-    <TextView
+            <TextView
         android:id="@+id/tv_wrong_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -213,6 +200,7 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_marginTop="20dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_constraintTop_toBottomOf="@+id/tv_title1"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

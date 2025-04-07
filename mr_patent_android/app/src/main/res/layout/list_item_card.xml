@@ -13,6 +13,7 @@
         app:flipOnTouch="true"
         app:flipEnabled="true"
         app:flipDuration="400"
+        android:padding="10dp"
         app:flipFrom="right"
         app:flipType="horizontal"
         app:autoFlipBack="false"
@@ -37,7 +38,7 @@
 
 
     <ToggleButton
-        android:layout_margin="20dp"
+        android:layout_margin="30dp"
         android:id="@+id/t_btn_bookmark"
         android:layout_width="40dp"
         android:layout_height="40dp"
