@@ -6,7 +6,7 @@ data class PatentTitleDto(
     , val titleSummary : List<PatentTitleSummaryDto>
 ) {
     data class PatentTitleExpDto(
-        val patentDraftTitleExp: String = "발명의 명칭",
+        val patentDraftTitleExp: String ="발명의 명칭",
         val patentDraftTechnicalFieldExp: String = "기술분야",
         val patentDraftBackgroundExp: String = "배경기술",
         val patentDraftProblemExp: String = "해결하고자 하는 과제",

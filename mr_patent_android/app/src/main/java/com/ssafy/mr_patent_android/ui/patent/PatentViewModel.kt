@@ -16,6 +16,10 @@ import java.time.LocalDateTime
 
 private const val TAG = "PatentViewModel_Mr_Patent"
 class PatentViewModel : ViewModel() {
+    private val _toastMsg = MutableLiveData<String?>()
+    val toastMsg: LiveData<String?>
+        get() = _toastMsg
+
     private val _draftType = MutableLiveData<String>()
     val draftType: LiveData<String>
         get() = _draftType
@@ -45,6 +49,10 @@ class PatentViewModel : ViewModel() {
     private val _deleteFlag = MutableLiveData<Boolean>()
     val deleteFlag: LiveData<Boolean>
         get() = _deleteFlag
+
+    fun setToastMsg(toastMsg: String) {
+        _toastMsg.value = toastMsg
+    }
 
     fun setDraftType(draftType: String) {
         _draftType.value = draftType
@@ -76,7 +84,6 @@ class PatentViewModel : ViewModel() {
             runCatching {
                 patentService.getFolderList(sharedPreferences.getUser().userId)
             }.onSuccess {
-                Log.d(TAG, "getFolderList: ${it.isSuccessful}")
                 if (it.isSuccessful) {
                     it.body()?.data?.let { response ->
                         _folders.value = response.folders.toMutableList()
@@ -87,7 +94,7 @@ class PatentViewModel : ViewModel() {
                     }
                 }
             }.onFailure {
-
+                it.printStackTrace()
             }
         }
     }
@@ -97,7 +104,6 @@ class PatentViewModel : ViewModel() {
             runCatching {
                 patentService.getRecentPatentList(sharedPreferences.getUser().userId, 5)
             }.onSuccess {
-                Log.d(TAG, "getRecentPatentList: ")
                 if (it.isSuccessful) {
                     it.body()?.data?.let { response ->
                         _patentsRecent.value = response.patentDrafts
@@ -108,7 +114,7 @@ class PatentViewModel : ViewModel() {
                     }
                 }
             }.onFailure {
-
+                it.printStackTrace()
             }
         }
     }
@@ -133,9 +139,13 @@ class PatentViewModel : ViewModel() {
                             )
                         }
                     }
+                } else {
+                    it.errorBody()?.let {
+                        it1 -> networkUtil.getErrorResponse(it1)
+                    }
                 }
             }.onFailure {
-
+                it.printStackTrace()
             }
         }
     }
@@ -143,11 +153,19 @@ class PatentViewModel : ViewModel() {
     fun editFolder(folderId: Int, folderName: String) {
         viewModelScope.launch {
             runCatching {
-//                patentService.editFolder(folderId, folderName)
+                patentService.editFolder(folderId, folderName)
             }.onSuccess {
-
+                if (it.isSuccessful) {
+                    it.body()?.data?.let { response ->
+                        _toastMsg.value = response.message
+                    }
+                } else {
+                    it.errorBody()?.let {
+                            it1 -> networkUtil.getErrorResponse(it1)
+                    }
+                }
             }.onFailure {
-
+                it.printStackTrace()
             }
         }
     }
@@ -155,11 +173,19 @@ class PatentViewModel : ViewModel() {
     fun deleteFolder(folderId: Int) {
         viewModelScope.launch {
             runCatching {
-//                patentService.deleteFolder(folderId)
+                patentService.deleteFolder(folderId)
             }.onSuccess {
-
+                if (it.isSuccessful) {
+                    it.body()?.data?.let { response ->
+                        _toastMsg.value = response.message
+                    }
+                } else {
+                    it.errorBody()?.let {
+                        it1 -> networkUtil.getErrorResponse(it1)
+                    }
+                }
             }.onFailure {
-
+                it.printStackTrace()
             }
         }
     }
