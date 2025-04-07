@@ -75,6 +75,20 @@ class FileUtil {
         return file
     }
 
+    fun getFilePathFromUri(context: Context, uri: Uri, extension: String): String {
+        val inputStream = context.contentResolver.openInputStream(uri)
+        val fileName = "selected_${System.currentTimeMillis()}.$extension"
+        val file = File(context.cacheDir, fileName)
+
+        inputStream.use { input ->
+            file.outputStream().use { output ->
+                input?.copyTo(output)
+            }
+        }
+
+        return file.absolutePath
+    }
+
     fun isFileSizeValid(context: Context,uri: Uri): Boolean {
         return try {
             val fileSize = context.contentResolver.openInputStream(uri)?.available()?.toLong() ?: 0

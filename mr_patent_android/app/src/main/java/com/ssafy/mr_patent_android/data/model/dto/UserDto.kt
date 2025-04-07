@@ -15,26 +15,36 @@ data class UserDto(
     @SerializedName("expert_id")val expertId: Int,
     @SerializedName("expert_license_number")val expertLicenseNumber: String,
     @SerializedName("expert_phone")val expertPhone: String,
-    @SerializedName("expert_category")val expertCategory: MutableList<String>,
+    @SerializedName("expert_categorie")val expertCategory: MutableList<String>,
+    @SerializedName("expert_categories")val expertCategoryDto: MutableList<Category>,
     @SerializedName("user_image")val userImage:String,
     @SerializedName("expert_created_at")val expertCreatedAt: String
     ){
+
+    data class Category(
+        @SerializedName("category_name") val categoryName: String
+    )
+
     constructor():this(-1, "","",-1,
         "","","",
-        -1,"","",  mutableListOf(""), "", "")
+        -1,"","",  mutableListOf(), mutableListOf(), "", "")
 
     constructor(userId: Int, userName: String, userRole: Int):this(userId, "", userName, userRole,
         "","","",
-        -1,"","",  mutableListOf(""),"", "")
+        -1,"","",  mutableListOf(), mutableListOf(), "", "")
 
     constructor(userId: Int, userName: String, expertAddress: String, expertDescription: String, expertGetDate: String, expertId: Int, expertLicenseNumber: String, expertPhone: String, userImage: String, expertCreatedAt: String):
-            this(userId,"",  userName, -1, expertAddress, expertDescription, expertGetDate, expertId, expertLicenseNumber, expertPhone, mutableListOf(""),userImage,expertCreatedAt)
+            this(userId,"",  userName, -1, expertAddress, expertDescription, expertGetDate, expertId, expertLicenseNumber, expertPhone, mutableListOf(),mutableListOf(), userImage,expertCreatedAt)
 
-    constructor(userName: String,userImage: String) : this(-1, "", userName, -1, "", "", "", -1, "", "", mutableListOf(""), userImage, "")
+    constructor(userName: String,userImage: String) : this(-1, "", userName, -1, "", "", "", -1, "", "", mutableListOf(), mutableListOf(), userImage, "")
 
     constructor(userId: Int, userEmail: String, userName: String, userImage: String, userRole: Int)
-            : this(userId, userEmail, userName, userRole, "", "", "", -1, "", "", mutableListOf(""), userImage, "")
+            : this(userId, userEmail, userName, userRole, "", "", "", -1, "", "", mutableListOf(), mutableListOf(), userImage, "")
 
     constructor(userId: Int, userEmail: String,  userName: String, expertId: Int, expertAddress: String, expertDescription: String, expertGetDate: String, expertPhone: String, expertCreatedAt: String, userImage: String, expertCategory: MutableList<String>)
-            : this(userId, userEmail, userName, 1, expertAddress, expertDescription, expertGetDate, expertId, "", expertPhone, expertCategory, userImage, expertCreatedAt)
+            : this(userId, userEmail, userName, 1, expertAddress, expertDescription, expertGetDate, expertId, "", expertPhone, expertCategory, mutableListOf(), userImage, expertCreatedAt)
+
+    // 변리사 정보 조회
+    constructor(userId: Int, userEmail: String, userName: String, expertAddress: String, expertDescription: String, expertGetDate: String, expertId: Int, expertPhone: String, expertCategoryDto: MutableList<Category>, userImage: String)
+        : this(userId, userEmail, userName, 1, expertAddress, expertDescription, expertGetDate, expertId, "", expertPhone, mutableListOf(), expertCategoryDto, userImage, "")
 }

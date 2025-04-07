@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit
 // 앱이 실행될때 1번만 실행이 됩니다.
 class ApplicationClass : Application() {
     val API_URL = "https://j12d208.p.ssafy.io/api/"
+    val API_URL_FAST = "https://j12d208.p.ssafy.io/fastapi/"
 
     companion object {
         lateinit var sharedPreferences: SharedPreferencesUtil
@@ -36,6 +37,7 @@ class ApplicationClass : Application() {
 //        const val COOKIES_KEY_NAME = "cookies"
 
         lateinit var retrofit: Retrofit
+        lateinit var retrofit_fast: Retrofit
 
         lateinit var instance: ApplicationClass
             private set
@@ -63,6 +65,20 @@ class ApplicationClass : Application() {
         retrofit = Retrofit.Builder()
             .baseUrl(API_URL)
             .client(client)
+            .addConverterFactory(GsonConverterFactory.create(gson))
+            .build()
+
+        val client_fast: OkHttpClient = OkHttpClient.Builder()
+            .readTimeout(5000, TimeUnit.MILLISECONDS)
+            .connectTimeout(5000, TimeUnit.MILLISECONDS)
+            .addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
+            .addNetworkInterceptor(XAccessTokenInterceptor())
+            .authenticator(ReissueInterceptor(instance.applicationContext))
+            .build()
+
+        retrofit_fast = Retrofit.Builder()
+            .baseUrl(API_URL_FAST)
+            .client(client_fast)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
     }

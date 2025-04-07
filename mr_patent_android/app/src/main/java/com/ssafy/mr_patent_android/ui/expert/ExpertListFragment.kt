@@ -38,7 +38,7 @@ class ExpertListFragment : BaseFragment<FragmentExpertListBinding>(
             binding.rvPatentAttorneys.adapter = ExpertListAdapter(it) { id ->
                 findNavController().navigate(
                     ExpertListFragmentDirections.actionPatentAttorneyListFragmentToPatentAttorneyFragment(
-                        id
+                        id, "chat"
                     )
                 )
             }

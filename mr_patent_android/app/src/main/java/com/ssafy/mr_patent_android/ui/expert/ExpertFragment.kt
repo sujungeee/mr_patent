@@ -1,6 +1,7 @@
 package com.ssafy.mr_patent_android.ui.expert
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -12,6 +13,7 @@ import com.ssafy.mr_patent_android.base.BaseFragment
 import com.ssafy.mr_patent_android.databinding.FragmentExpertBinding
 import com.ssafy.mr_patent_android.ui.chat.ChatFragmentArgs
 
+private const val TAG = "ExpertFragment_Mr_Patent"
 class ExpertFragment :
     BaseFragment<FragmentExpertBinding>(FragmentExpertBinding::bind, R.layout.fragment_expert) {
     val viewModel: ExpertViewModel by viewModels()
@@ -19,6 +21,9 @@ class ExpertFragment :
         navArgs<ExpertFragmentArgs>().value.id
     }
 
+    val expert_mode by lazy {
+        navArgs<ExpertFragmentArgs>().value.mode
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,7 +41,7 @@ class ExpertFragment :
 
     fun initView() {
         viewModel.getExpert(expert_id)
-        if (expert_id == sharedPreferences.getUser().expertId) {
+        if (expert_mode == "edit") {
             binding.btnEditProfile.visibility = View.VISIBLE
             binding.btnEditProfile.setOnClickListener {
                 findNavController().navigate(ExpertFragmentDirections.actionPatentAttorneyFragmentToProfileEditFragment(
@@ -61,7 +66,7 @@ class ExpertFragment :
             binding.tvIntro.text = it.expertDescription
             binding.tvInfo.text = it.expertGetDate
             binding.tvPhone.text = it.expertPhone
-            binding.tvAddress.text = it.expertAddress
+            binding.tvAddress.text = it.expertAddress.replace("\\", " ")
 
             Glide
                 .with(binding.root)
