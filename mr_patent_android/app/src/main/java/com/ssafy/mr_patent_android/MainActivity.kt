@@ -71,9 +71,13 @@ class MainActivity : BaseActivity<ActivityMainBinding>(ActivityMainBinding::infl
             }
         }
 
-        if (intent.getStringExtra("user_id") != null) {
-            val userId = intent.getStringExtra("user_id")!!.toInt()
-            val action = HomeFragmentDirections.actionNavFragmentHomeToChatFragment(userId)
+        if (intent.getStringExtra("roomId") != null) {
+            val userId = (intent.getStringExtra("userId")?:"-1").toInt()
+            val expertId = (intent.getStringExtra("expertId")?:"-1").toInt()
+            val roomId = intent.getStringExtra("roomId")!!
+            val userName = intent.getStringExtra("userName")?: "이름없음"
+            val userImage = intent.getStringExtra("userImage")?:""
+            val action = HomeFragmentDirections.actionNavFragmentHomeToChatFragment(userId,expertId,roomId,userName,userImage)
             navController.navigate(action)
         }
     }
