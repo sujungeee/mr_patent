@@ -4,6 +4,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.networkUtil
+import com.ssafy.mr_patent_android.data.model.dto.PatentDraftDto
+import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.patentService
+import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.similiarityTestService
 import kotlinx.coroutines.launch
 
 class SimiliarityTestViewModel : ViewModel() {
@@ -15,9 +19,9 @@ class SimiliarityTestViewModel : ViewModel() {
     val status: LiveData<String>
         get() = _status
 
-    private val _addFlag = MutableLiveData<Boolean>()
-    val addFlag: LiveData<Boolean>
-        get() = _addFlag
+    private val _addState = MutableLiveData<Boolean>()
+    val addState: LiveData<Boolean>
+        get() = _addState
 
     private val _patentId = MutableLiveData<Int>()
     val patentId: LiveData<Int>
@@ -27,32 +31,46 @@ class SimiliarityTestViewModel : ViewModel() {
         _status.value = status
     }
 
-    fun setPatentId(patentId: Int) {
-        _patentId.value = patentId
-    }
-
-    fun addDraft() {
+    fun addDraft(folderId: Int, patentDraftDto: PatentDraftDto) {
         viewModelScope.launch {
             runCatching {
-
+                patentService.addDraft(folderId, patentDraftDto)
             }.onSuccess {
-                // folderid 주면
-                _addFlag.value = true
+                if (it.isSuccessful) {
+                    it.body()?.data.let { response ->
+                        _patentId.value = response?.patentDraftId!!
+                        _addState.value = true
+                    }
+                } else {
+                    it.errorBody()?.let {
+                        it1 -> networkUtil.getErrorResponse(it1)
+                    }
+                }
             }.onFailure {
-
+                it.printStackTrace()
             }
         }
     }
 
-    fun similiaritytest() {
+    fun similiaritytest(patentDraftId: Int) {
         viewModelScope.launch {
             runCatching {
-//                similiarityTestService.similiarityTest(patentDraftId)
+                similiarityTestService.similiarityTest(patentDraftId)
             }.onSuccess {
                 // success 시 ststus.value = "finished"
                 // patentId 받기
-            }.onFailure {
 
+                if (it.isSuccessful) {
+                    it.body()?.data.let { response ->
+                        _status.value = response?.status!!
+                    }
+                } else {
+                    it.errorBody()?.let {
+                        it1 -> networkUtil.getErrorResponse(it1)
+                    }
+                }
+            }.onFailure {
+                it.printStackTrace()
             }
         }
     }
