@@ -1,6 +1,7 @@
 package com.ssafy.mr_patent_android.ui.study
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.ssafy.mr_patent_android.R
@@ -12,7 +13,7 @@ class QuizOptionAdapter(
     private val correctOptionId: Int,
     private val wordId: Int,
     private val viewModel: QuizViewModel,
-    val itemClickListener:ItemClickListener
+    val itemClickListener: ItemClickListener
 ) : RecyclerView.Adapter<QuizOptionAdapter.OptionViewHolder>() {
 
     private var selectedOption: Int? = null
@@ -22,19 +23,39 @@ class QuizOptionAdapter(
         fun bind(option: Question.Option) {
             binding.tvOptionText.text = option.optionText
 
+            // 배경 초기화
+            binding.tvOptionText.setBackgroundResource(R.drawable.selector_quiz_option)
+
+            if (isAnswerChecked) {
+                when (option.optionId) {
+                    correctOptionId -> {
+                        binding.tvOptionText.setBackgroundResource(R.drawable.quiz_option_correct)
+                        binding.tvIndicator.visibility = View.VISIBLE
+                        binding.tvIndicator.setTextColor(
+                            binding.root.context.getColor(R.color.mr_green)
+                        )
+                        binding.tvIndicator.text = "O"
+                    }
+                    selectedOption -> {
+                        if (selectedOption != correctOptionId) {
+                            binding.tvOptionText.setBackgroundResource(R.drawable.quiz_option_wrong)
+                            binding.tvIndicator.visibility = View.VISIBLE
+                            binding.tvIndicator.setTextColor(
+                                binding.root.context.getColor(R.color.mr_red)
+                            )
+                            binding.tvIndicator.text = "X"
+                        }
+                    }
+                }
+            }
+
             binding.tvOptionText.setOnClickListener {
                 if (!isAnswerChecked) {
-                isAnswerChecked = true
-                itemClickListener.onItemClick(option.optionId)
-                binding.tvOptionText.setBackgroundResource(R.drawable.selector_quiz_option)
-                binding.tvOptionText.setBackgroundResource(
-                    when {
-                        option.optionId == correctOptionId -> R.drawable.quiz_option_correct
-                        else -> R.drawable.quiz_option_wrong
-                    }
-                )
-//                    notifyDataSetChanged()
-            }
+                    isAnswerChecked = true
+                    selectedOption = option.optionId
+                    itemClickListener.onItemClick(option.optionId)
+                    notifyDataSetChanged()
+                }
             }
         }
     }
@@ -42,7 +63,6 @@ class QuizOptionAdapter(
     fun interface ItemClickListener {
         fun onItemClick(id: Int)
     }
-
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): OptionViewHolder {
         val binding = ItemQuizOptionBinding.inflate(LayoutInflater.from(parent.context), parent, false)

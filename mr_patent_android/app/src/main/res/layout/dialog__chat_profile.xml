@@ -22,14 +22,14 @@
         android:id="@+id/tv_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="킹왕짱 변리사"
+        android:text=""
         android:textSize="18sp" />
 
     <TextView
         android:id="@+id/tv_description"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="안녕하세요 고객만을 생각하는 킹왕짱 변리사입니다.\n언제든지 편하게 문의 주세요."
+        android:text=""
         android:textSize="14sp"
         android:textColor="#666666"
         android:layout_marginVertical="10dp" />
@@ -44,7 +44,7 @@
             android:id="@+id/tv_field_chemi"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="화학"
+            android:text="화학공학"
             android:paddingHorizontal="8dp"
             android:layout_marginEnd="5dp"
             android:gravity="center"
@@ -56,7 +56,7 @@
             android:id="@+id/tv_field_mecha"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="기계"
+            android:text="기계공학"
             android:layout_marginEnd="5dp"
             android:paddingHorizontal="8dp"
             android:gravity="center"
@@ -67,7 +67,7 @@
             android:id="@+id/tv_field_life"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="생명"
+            android:text="생명공학"
             android:layout_marginEnd="5dp"
             android:paddingHorizontal="8dp"
             android:gravity="center"
@@ -100,7 +100,7 @@
         android:id="@+id/tv_info"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="2020년 자격증 취득"
+        android:text=""
         android:textSize="14sp"
         android:textColor="#666666"
         android:layout_marginBottom="16dp" />
@@ -118,7 +118,7 @@
         android:id="@+id/tv_phone"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="T: 010-0000-0000"
+        android:text=""
         android:textSize="14sp"
         android:textColor="#666666"
         android:layout_marginBottom="4dp" />
@@ -127,7 +127,7 @@
         android:id="@+id/tv_address"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="경상북도 구미시 진평 00길 00"
+        android:text=""
         android:textSize="14sp"
         android:textColor="#666666"
         android:layout_marginBottom="16dp" />

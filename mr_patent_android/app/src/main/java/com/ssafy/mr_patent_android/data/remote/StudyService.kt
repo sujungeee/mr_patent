@@ -37,16 +37,24 @@ interface StudyService {
         @Path("level_id") level_id: Int,
         @Body QuizRequest: AnswerDto
     ):
-            Response<BaseResponse<QuizRequest>>
+            Response<BaseResponse<WordDto>>
 
     @POST("bookmarks")
     suspend fun postBookmark(
-        @Query("word_id") word_id: Int):
-            Response<BaseResponse<String>>
+        @Body word_id: Int):
+            Response<BaseResponse<WordDto.Word>>
 
     @DELETE("bookmarks/{bookmark_id}")
     suspend fun deleteBookmark(
         @Path("bookmark_id") bookmark_id: Int):
-            Response<BaseResponse<String?>>
+            Response<BaseResponse<WordDto.Word>>
 
+    @GET("bookmarks/count")
+    suspend fun getBookmarkList():
+            Response<BaseResponse<LevelDto>>
+
+    @GET("bookmarks")
+    suspend fun getBookmarkWords(
+        @Query("level_id") level_id: Int):
+            Response<BaseResponse<WordDto>>
 }

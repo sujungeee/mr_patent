@@ -2,6 +2,7 @@ package com.ssafy.mr_patent_android.ui.expert
 
 import android.os.Build
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.RecyclerView
@@ -33,6 +34,18 @@ class ExpertListAdapter(val groupList: List<UserDto>, val itemClickListener:Item
             binding.listItemExpert.setOnClickListener {
                 itemClickListener.onItemClick(groupList[position].expertId)
             }
+            if (groupList[position].category.isNotEmpty()) {
+                groupList[position].category.forEach { category ->
+                    when (category) {
+                        "기계공학" -> binding.tvFieldMecha.visibility = View.VISIBLE
+                        "전기/전자" -> binding.tvFieldElec.visibility = View.VISIBLE
+                        "화학공학" -> binding.tvFieldChemi.visibility = View.VISIBLE
+                        "생명공학" -> binding.tvFieldLife.visibility = View.VISIBLE
+                    }
+                }
+            }
+            binding.tvExpertName.text = groupList[position].userName
+            binding.tvExpertDescription.text = groupList[position].expertDescription
 
         }
     }

@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit
 // 앱이 실행될때 1번만 실행이 됩니다.
 class ApplicationClass : Application() {
     val API_URL = "https://j12d208.p.ssafy.io/api/"
-
+//    val API_URL = "http://172.30.1.36:8080/api/"
     companion object {
         lateinit var sharedPreferences: SharedPreferencesUtil
 
@@ -78,11 +78,17 @@ class XAccessTokenInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val builder: Request.Builder = chain.request().newBuilder()
         val jwtToken: String? = sharedPreferences.getAToken()
-        if (!jwtToken.isNullOrEmpty()) {
-            builder.addHeader("Authorization", "Bearer $jwtToken")
-        } else {
-            Log.w("TOKEN_WARNING", "JWT 토큰이 존재하지 않습니다!")
+        if (chain.request().url.toString()
+                .contains("mr-patent.s3.ap-northeast-2.amazonaws.com")
+        ) {
+            return chain.proceed(builder.build())
+        }else {
+            if (!jwtToken.isNullOrEmpty()) {
+                builder.addHeader("Authorization", "Bearer $jwtToken")
+            } else {
+                Log.w("TOKEN_WARNING", "JWT 토큰이 존재하지 않습니다!")
+            }
+            return chain.proceed(builder.build())
         }
-        return chain.proceed(builder.build())
     }
 }

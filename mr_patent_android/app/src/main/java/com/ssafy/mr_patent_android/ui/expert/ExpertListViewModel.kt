@@ -1,5 +1,6 @@
 package com.ssafy.mr_patent_android.ui.expert
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -8,6 +9,7 @@ import com.ssafy.mr_patent_android.data.model.dto.UserDto
 import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.userService
 import kotlinx.coroutines.launch
 
+private const val TAG = "ExpertListViewModel"
 class ExpertListViewModel : ViewModel() {
     private val _expertList = MutableLiveData<List<UserDto>>()
     val expertList: LiveData<List<UserDto>>
@@ -44,6 +46,11 @@ class ExpertListViewModel : ViewModel() {
             }.onSuccess {
                 if (it.isSuccessful) {
                     it.body()?.data?.let { list ->
+                        list.forEach {
+                            it.expertCategory.forEach { category ->
+                                it.category.add(category.categoryName)
+                            }
+                        }
                         _expertList.value = list
                     }
                 }

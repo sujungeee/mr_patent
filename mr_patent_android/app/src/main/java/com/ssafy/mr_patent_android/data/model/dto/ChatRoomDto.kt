@@ -3,14 +3,15 @@ package com.ssafy.mr_patent_android.data.model.dto
 import com.google.gson.annotations.SerializedName
 
 data class ChatRoomDto(
-    @SerializedName("user_id") val userId: Int,
-    @SerializedName("expert_id") val expertId: Int=-1,
-    @SerializedName("user_name") val userName: String,
-    @SerializedName("user_image") val userImage: String,
-    @SerializedName("room_id")val roomId: String,
-    @SerializedName("last_message") val lastMessage: String,
-    @SerializedName("last_message_time")val lastMessageTime: String,
-    @SerializedName("unreadCount")val unreadCount: Int
+    @SerializedName("userId") val userId: Int,
+    @SerializedName("expertId") val expertId: Int=-1,
+    @SerializedName("userName") val userName: String,
+    @SerializedName("userImage") val userImage: String="",
+    @SerializedName("roomId")val roomId: String,
+    @SerializedName("lastMessage") val lastMessage: String,
+    @SerializedName("lastTimestamp")val lastMessageTime: String,
+    @SerializedName("unreadCount")val unreadCount: Int,
+    @SerializedName("receiverId")val receiverId: Int,
 ){
-    constructor() : this(-1,-1,"","","","","",0)
+    constructor() : this(-1,-1,"","","","","",0,-1)
 }

@@ -18,14 +18,15 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:paddingVertical="20dp"
-        android:paddingHorizontal="40dp"
+        android:paddingHorizontal="20dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
 
         <ImageView
             android:id="@+id/preview_image"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_marginVertical="10dp"
+            android:layout_height="50dp"
             android:src="@drawable/word_icon"
             android:scaleType="fitCenter"
             app:layout_constraintDimensionRatio="1:1"
@@ -37,13 +38,15 @@
             android:id="@+id/tv_file_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:maxWidth="100dp"
-            android:ellipsize="end"
-            android:maxLines="2"
             android:layout_marginStart="10dp"
-            android:text="파일명.확장자"
+            android:layout_marginEnd="10dp"
+            android:ellipsize="end"
+            android:maxWidth="100dp"
+            android:maxLines="2"
             android:paddingStart="10dp"
+            android:text="파일명.확장자"
             app:layout_constraintBottom_toTopOf="@+id/tv_file_size"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/preview_image"
             app:layout_constraintTop_toTopOf="parent" />
 

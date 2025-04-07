@@ -15,7 +15,7 @@
         android:elevation="10dp"
         android:gravity="center"
         android:padding="20dp"
-        android:text="특허소송에서 특허권자가 확인대상 발명의 침해를 주장하는 데 있어서 균등론을 적용하기 위한 요건.  "
+        android:text=""
         android:textSize="20dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
