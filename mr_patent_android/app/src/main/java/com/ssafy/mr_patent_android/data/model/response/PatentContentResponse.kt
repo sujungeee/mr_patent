@@ -27,4 +27,12 @@ data class PatentContentResponse (
                 patentDraftDetailed: String, patentDraftClaim: String, patentDraftSummary: String, rawText: String) :
             this(patentDraftTitle, patentDraftTechnicalField, patentDraftBackground, patentDraftProblem, patentDraftSolution,
                 patentDraftEffect, patentDraftDetailed, patentDraftClaim, patentDraftSummary, rawText, "", "")
+
+    // OCR
+    constructor(patentDraftTitle: String, patentDraftTechnicalField: String, patentDraftBackground: String,
+                patentDraftProblem: String, patentDraftSolution: String, patentDraftEffect: String,
+                patentDraftDetailed: String, patentDraftClaim: String, patentDraftSummary: String)
+    : this(patentDraftTitle, patentDraftTechnicalField, patentDraftBackground, patentDraftProblem, patentDraftSolution,
+        patentDraftEffect, patentDraftDetailed, patentDraftClaim, patentDraftSummary, "", "", "")
+
 }

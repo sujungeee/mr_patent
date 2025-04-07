@@ -7,9 +7,11 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Button
+import android.widget.EditText
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.get
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
@@ -18,10 +20,12 @@ import com.google.android.material.tabs.TabLayoutMediator
 import com.ssafy.mr_patent_android.R
 import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.sharedPreferences
 import com.ssafy.mr_patent_android.base.BaseFragment
+import com.ssafy.mr_patent_android.data.model.dto.PatentDraftDto
 import com.ssafy.mr_patent_android.data.model.dto.PatentFrameDto
 import com.ssafy.mr_patent_android.data.model.dto.PatentTitleDto
 import com.ssafy.mr_patent_android.databinding.FragmentPatentContentBinding
 import com.ssafy.mr_patent_android.ui.mypage.ReportResultViewModel
+import kotlin.math.exp
 
 private const val TAG = "PatentContentFragment_Mr_Patent"
 class PatentContentFragment : BaseFragment<FragmentPatentContentBinding>(
@@ -29,6 +33,7 @@ class PatentContentFragment : BaseFragment<FragmentPatentContentBinding>(
 ) {
     private val args: PatentContentFragmentArgs by navArgs()
     private val fileViewModel: FileViewModel by activityViewModels()
+    private val patentViewModel : PatentViewModel by activityViewModels()
     private val reportResultViewModel : ReportResultViewModel by activityViewModels()
     private val similiarityTestViewModel : SimiliarityTestViewModel by activityViewModels()
 
@@ -97,8 +102,20 @@ class PatentContentFragment : BaseFragment<FragmentPatentContentBinding>(
 
         binding.btnSimiliarityTest.setOnClickListener {
             if (isFillInput()) {
-                // folder id 와 모든 content 주기
-                similiarityTestViewModel.addDraft()
+                val expAdapter = expFragment.binding.rvPatentContentExp
+                similiarityTestViewModel.addDraft(patentViewModel.folderId.value!!,
+                    PatentDraftDto(
+                        expAdapter[0].findViewById<EditText>(R.id.et_spec_content).text.toString()
+                        , expAdapter[1].findViewById<EditText>(R.id.et_spec_content).text.toString()
+                        , expAdapter[2].findViewById<EditText>(R.id.et_spec_content).text.toString()
+                        , expAdapter[3].findViewById<EditText>(R.id.et_spec_content).text.toString()
+                        , expAdapter[4].findViewById<EditText>(R.id.et_spec_content).text.toString()
+                        , expAdapter[5].findViewById<EditText>(R.id.et_spec_content).text.toString()
+                        , expAdapter[6].findViewById<EditText>(R.id.et_spec_content).text.toString()
+                        , claimFragment.getPatentClaimContents()
+                        , summaryFragment.getPatentSummaryContents()
+                    )
+                )
             }
         }
 
@@ -128,14 +145,17 @@ class PatentContentFragment : BaseFragment<FragmentPatentContentBinding>(
             reportResultViewModel.getPatentContent(it)
         })
 
-        reportResultViewModel.patentContent.observe(viewLifecycleOwner, {
-            // TODO: add
+        reportResultViewModel.patentContent.observe(viewLifecycleOwner, { // select, update
+            if (args.mode == "select") {
+                binding.tvDraftWrite.text =  it.patentDraftTitle
+            }
+            // 파일 업로드 시
 //            splitContent(it)
         })
 
-        similiarityTestViewModel.addFlag.observe(viewLifecycleOwner, {
+        similiarityTestViewModel.addState.observe(viewLifecycleOwner, {
             if (it) {
-                similiarityTestViewModel.similiaritytest()
+                similiarityTestViewModel.similiaritytest(similiarityTestViewModel.patentId.value!!)
                 similiarityTestViewModel.setStatus("ongoing")
                 findNavController().navigate(R.id.similiarityTestFragment)
             }
@@ -155,7 +175,7 @@ class PatentContentFragment : BaseFragment<FragmentPatentContentBinding>(
 //            , PatentFrameDto(patentTitleExp.patentDraftSolutionExp, patentContentResponse.patentDraftSolution)
 //            , PatentFrameDto(patentTitleExp.patentDraftEffectExp, patentContentResponse.patentDraftEffect)
 //            , PatentFrameDto(patentTitleExp.patentDraftDetailedExp, patentContentResponse.patentDraftDetailed)
-            PatentFrameDto(patentTitleExp.patentDraftTitleExp, "신발내부설치용에어쿠션시트")
+            PatentFrameDto(patentTitleExp.patentDraftTitleExp, "발명의 명칭ㅋ")
             , PatentFrameDto(patentTitleExp.patentDraftTechnicalFieldExp, "본 발명은 신발 내부에...")
             , PatentFrameDto(patentTitleExp.patentDraftBackgroundExp, "종래의 기술에서는...")
             , PatentFrameDto(patentTitleExp.patentDraftProblemExp, "해결하려는 과제는...")
@@ -191,6 +211,7 @@ class PatentContentFragment : BaseFragment<FragmentPatentContentBinding>(
         fragmentList.add(claimFragment)
         fragmentList.add(summaryFragment)
 
+        vpContents.offscreenPageLimit = 3
         vpContents.adapter = ViewContentAdapter(fragmentList, requireActivity() as AppCompatActivity)
         val tabArray = arrayOf("발명의 설명", "청구범위", "요약서")
         TabLayoutMediator(tlContentsClassification, vpContents) { tab, position ->
@@ -214,29 +235,16 @@ class PatentContentFragment : BaseFragment<FragmentPatentContentBinding>(
 
         val btnExtraction = dialogView.findViewById<Button>(R.id.btn_extraction)
         val tvPdf = dialogView.findViewById<TextView>(R.id.tv_pdf)
-        val tvWord = dialogView.findViewById<TextView>(R.id.tv_word)
 
         tvPdf.setOnClickListener {
             fileViewModel.setExtractionType("pdf")
             tvPdf.setBackgroundResource(R.drawable.rounded_background_stroke_active)
-            tvWord.setBackgroundResource(R.drawable.rounded_background_stroke)
-        }
-
-        tvWord.setOnClickListener {
-            fileViewModel.setExtractionType("word")
-            tvWord.setBackgroundResource(R.drawable.rounded_background_stroke_active)
-            tvPdf.setBackgroundResource(R.drawable.rounded_background_stroke)
         }
 
         btnExtraction.setOnClickListener {
-            if (fileViewModel.extractionType.value == null || fileViewModel.extractionType.value == "") {
-                showCustomToast("파일 형식을 선택하세요!")
-            } else {
-                // TODO: 파일 다운로드
-
-                dialogBuilder.dismiss()
-                setDialogFileComplete()
-            }
+            dialogBuilder.dismiss()
+            setDialogFileComplete()
+            // 파일 추출 api 삽입
         }
     }
 
@@ -275,8 +283,8 @@ class PatentContentFragment : BaseFragment<FragmentPatentContentBinding>(
 
     fun isFillInput() : Boolean {
         val result = expFragment.expFillInput()
-                && claimFragment.claimFillInput()
                 && summaryFragment.summaryFillInput()
+                && claimFragment.claimFillInput()
 
         if (result) {
             return true

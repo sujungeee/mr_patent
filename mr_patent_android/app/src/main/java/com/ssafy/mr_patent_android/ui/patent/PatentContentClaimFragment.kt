@@ -1,6 +1,7 @@
 package com.ssafy.mr_patent_android.ui.patent
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.fragment.app.activityViewModels
 import com.ssafy.mr_patent_android.R
@@ -41,10 +42,11 @@ class PatentContentClaimFragment : BaseFragment<FragmentPatentContentClaimBindin
     }
 
     fun claimFillInput() : Boolean {
-        if (binding.etSpecContent.text.isBlank()) {
-            return false
-        }
-        return true
+        return binding.etSpecContent.text.isNotBlank()
+    }
+
+    fun getPatentClaimContents() : String {
+        return binding.etSpecContent.text.toString()
     }
 
     fun toggleLayout(isExpanded: Boolean, view: View, layout: View) {
