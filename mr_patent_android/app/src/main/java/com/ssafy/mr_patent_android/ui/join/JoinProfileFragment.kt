@@ -7,6 +7,7 @@ import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
@@ -127,7 +128,8 @@ class JoinProfileFragment : BaseFragment<FragmentJoinProfileBinding>(
     private fun handleImageJpgSelected(uri: Uri, extension: String) {
         viewLifecycleOwner.lifecycleScope.launch {
             ImageCompressor(requireContext()).compressImage(uri, 500 * 1024)?.let { bytes ->
-                val compressedUri = byteArrayToUri(bytes, extension)
+                val (compressedUri, filePath) = byteArrayToUri(bytes, extension)
+                joinViewModel.setUserImagePath(filePath)
                 joinViewModel.setUserImage(compressedUri.toString())
                 loadingDialog.dismiss()
             } ?: run {
@@ -142,21 +144,23 @@ class JoinProfileFragment : BaseFragment<FragmentJoinProfileBinding>(
             val outputStream = ByteArrayOutputStream()
             resizedBitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
             val bytes = outputStream.toByteArray()
-            val compressedUri = byteArrayToUri(bytes, extension)
+            val (compressedUri, filePath) = byteArrayToUri(bytes, extension)
+            joinViewModel.setUserImagePath(filePath)
             joinViewModel.setUserImage(compressedUri.toString())
         }
     }
 
-    private suspend fun byteArrayToUri(byteArray: ByteArray, extension: String): Uri {
+    private suspend fun byteArrayToUri(byteArray: ByteArray, extension: String): Pair<Uri, String> {
         return withContext(Dispatchers.IO) {
             val fileName = "compressed_${System.currentTimeMillis()}.$extension"
             val file = File(requireContext().cacheDir, fileName)
             file.writeBytes(byteArray)
-            FileProvider.getUriForFile(
+            val uri = FileProvider.getUriForFile(
                 requireContext(),
                 "${requireContext().packageName}.fileprovider",
                 file
             )
+            Pair(uri, file.absolutePath)
         }
     }
 
