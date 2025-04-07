@@ -14,19 +14,22 @@ class SseEventHandler(private val viewModel: ChatListViewModel) : BackgroundEven
     }
 
     override fun onClosed() {
-        // SSE 연결 종료시 처리 로직 작성
     }
 
     override fun onMessage(event: String, messageEvent: MessageEvent) {
+        Log.d(TAG, "onMessage: ")
         Log.d(TAG, "onMessage: $event, ${messageEvent.lastEventId}, ${messageEvent.data}")
-    // SSE 이벤트 도착시 처리 로직 작성
 
-        if (messageEvent != null) {
+        if (event == "connect") {
+            Log.d(TAG, "SSE 연결 확인 성공 메시지: $messageEvent")
+        }else if(event == "chat-update") {
+            Log.d(TAG, "SSE 메시지 수신: $messageEvent")
             val newMessage = Gson().fromJson(messageEvent.data, ChatRoomDto::class.java)
-            Log.d(TAG, "새로운 메시지 수신: $newMessage")
-
-            // ✅ 새로운 메시지를 받아서 채팅방 리스트 갱신
-            viewModel.updateChatList(newMessage)
+            Log.d(TAG, "새로운 메시지 수신: ${newMessage}")
+            if (!newMessage.roomId.isNullOrEmpty()) {
+                Log.d(TAG, "새로운 메시지 수신: ${newMessage.roomId}")
+                viewModel.updateChatList(newMessage)
+            }
 
         }
 
