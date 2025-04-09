@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.networkUtil
 import com.ssafy.mr_patent_android.data.model.response.PatentListResponse
 import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.patentService
 import kotlinx.coroutines.launch
@@ -43,9 +44,13 @@ class PatentFolderDetailViewModel : ViewModel() {
                     it.body()?.let { response ->
                         _patents.value = response.data?.patents
                     }
+                } else {
+                    it.errorBody()?.let {
+                        it1 -> networkUtil.getErrorResponse(it1)
+                    }
                 }
             }.onFailure {
-
+                it.printStackTrace()
             }
         }
     }

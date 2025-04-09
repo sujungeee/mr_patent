@@ -13,6 +13,7 @@ import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.sharedPrefere
 import com.ssafy.mr_patent_android.base.BaseFragment
 import com.ssafy.mr_patent_android.databinding.FragmentMyPageBinding
 import com.ssafy.mr_patent_android.ui.login.LoginActivity
+import com.ssafy.mr_patent_android.util.SharedPreferencesUtil
 
 private const val TAG = "MyPageFragment_Mr_Patent"
 class MyPageFragment : BaseFragment<FragmentMyPageBinding>(
@@ -45,14 +46,20 @@ class MyPageFragment : BaseFragment<FragmentMyPageBinding>(
 
         profileEditViewModel.getMemberInfo()
 
-        binding.tvProfileUpdate.setOnClickListener { // 프로필 수정
+        binding.tvProfileUpdate.setOnClickListener {
             when (sharedPreferences.getUser().userRole) {
                 0 -> {
                     findNavController().navigate(MyPageFragmentDirections.actionNavFragmentMypageToProfileEditFragment(
                         "member", sharedPreferences.getUser().userId
                     ))
                 }
-                1-> findNavController().navigate(R.id.patentAttorneyFragment)
+                1-> {
+                    if (profileEditViewModel.expertId.value != null) {
+                        findNavController().navigate(MyPageFragmentDirections.actionNavFragmentMypageToPatentAttorneyFragment2(profileEditViewModel.expertId.value!!))
+                    } else {
+                        showCustomToast("잠시 후에 다시 시도해주세요.")
+                    }
+                }
             }
         }
 
@@ -64,15 +71,16 @@ class MyPageFragment : BaseFragment<FragmentMyPageBinding>(
         // 알림 설정
         // TODO
 
-        binding.tvSettingPasswordChange.setOnClickListener {
+        binding.llPasswordChange.setOnClickListener {
             findNavController().navigate(R.id.pwdEditFragment)
         }
 
-        binding.tvSettingLogout.setOnClickListener {
+        binding.llLogout.setOnClickListener {
             userLeaveViewModel.clearToken()
+            userLeaveViewModel.logout()
         }
 
-        binding.tvSettingDelete.setOnClickListener {
+        binding.llLeave.setOnClickListener {
             findNavController().navigate(R.id.userDeleteFragment)
         }
     }
@@ -89,19 +97,22 @@ class MyPageFragment : BaseFragment<FragmentMyPageBinding>(
                 requireActivity().finish()
             }
         }
-
         profileEditViewModel.profileImage.observe(viewLifecycleOwner, {
-            if (it.isNotBlank()) {
-                imageUri = Uri.parse(it)
+            Log.d(TAG, "initObserver: profileImage: ${it}")
+            if (it != null) {
                 Glide.with(requireContext())
-                    .load(imageUri)
-                    .fallback(R.drawable.user_profile)
-                    .error(R.drawable.image_load_error_icon)
+                    .load(it)
                     .into(binding.ivProfile)
             } else {
-                imageUri = Uri.parse(requireContext().resources.getString(R.string.default_image))
+                Glide.with(requireContext())
+                    .load(R.drawable.user_profile)
+                    .into(binding.ivProfile)
             }
-            profileEditViewModel.setCurrentImage(imageUri.toString())
+        })
+
+        profileEditViewModel.memberInfo.observe(viewLifecycleOwner, {
+            Log.d(TAG, "initObserver: userImage: ${it.userImage}")
+            profileEditViewModel.getImage(it.userImage)
         })
     }
 

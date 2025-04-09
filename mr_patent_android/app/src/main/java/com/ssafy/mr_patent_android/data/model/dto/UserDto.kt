@@ -38,10 +38,14 @@ data class UserDto(
         "","","",
         -1,"","",  mutableListOf(),"", "")
 
+    constructor(userId: Int, userName: String, userRole: Int, expertId: Int):this(userId, "", userName, userRole,
+        "","","",
+        expertId,"","",  mutableListOf(),"", "")
+
     constructor(userId: Int, userName: String, expertAddress: String, expertDescription: String, expertGetDate: String, expertId: Int, expertLicenseNumber: String, expertPhone: String, userImage: String, expertCreatedAt: String):
             this(userId,"",  userName, -1, expertAddress, expertDescription, expertGetDate, expertId, expertLicenseNumber, expertPhone, mutableListOf(),userImage,expertCreatedAt)
 
-    constructor(userName: String,userImage: String) : this(-1, "", userName, -1, "", "", "", -1, "", "", mutableListOf(), userImage, "")
+    constructor(userName: String,userImage: String) : this(-1,                                               "", userName, -1, "", "", "", -1, "", "", mutableListOf(), userImage, "")
 
     constructor(userId: Int, userEmail: String, userName: String, userImage: String, userRole: Int)
             : this(userId, userEmail, userName, userRole, "", "", "", -1, "", "", mutableListOf(), userImage, "")
@@ -52,4 +56,5 @@ data class UserDto(
     // 변리사 정보 조회
     constructor(userId: Int, userEmail: String, userName: String, expertAddress: String, expertDescription: String, expertGetDate: String, expertId: Int, expertPhone: String, expertCategory: MutableList<Category>, userImage: String)
             : this(userId, userEmail, userName, 1, expertAddress, expertDescription, expertGetDate, expertId, "", expertPhone, expertCategory, userImage, "")
+
 }

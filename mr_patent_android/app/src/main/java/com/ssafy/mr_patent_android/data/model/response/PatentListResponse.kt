@@ -8,8 +8,8 @@ data class PatentListResponse (
     data class PatentSummaryInfo(
         @SerializedName("patent_draft_id") val patentDraftId: Int,
         @SerializedName("patent_draft_title") val patentDraftTitle: String,
-        @SerializedName("patent_similiarity_result") val patentSimiliarityResult: String,
-        @SerializedName("patent_similiarity_result_score") val patentSimiliarityResultScore: Int,
+        @SerializedName("fitness_is_corrected") val fitnessIsCorrected: Boolean,
+        @SerializedName("detailed_comparison_total_score") val detailedComparisonTotalScore: Int,
         @SerializedName("created_at") val createdAt: String
     )
 }

@@ -39,16 +39,6 @@ class PatentFolderFragment : BaseFragment<FragmentPatentFolderBinding>(
 
     private fun initView() {
         patentViewModel.getFolderList()
-        // TODO: delete
-        val tmp = mutableListOf<FolderDto.Folder>()
-        tmp.add(FolderDto.Folder(
-                   1, "폴더 1", "2025-03-10"
-        ))
-        tmp.add(FolderDto.Folder(
-            2, "폴더 2", "2025-03-10"
-        ))
-        patentViewModel.setFolders(tmp)
-
 
         binding.tvBefore.setOnClickListener {
             findNavController().popBackStack()
@@ -61,14 +51,14 @@ class PatentFolderFragment : BaseFragment<FragmentPatentFolderBinding>(
         binding.btnFolderEdit.setOnClickListener {
             patentViewModel.setEditFlag(true)
             binding.rvPatentFolders.adapter = FolderAdapter(true, false, patentViewModel.folders.value!!) { position ->
-                setDialogFolderEdit()
+                setDialogFolderEdit(position)
             }
         }
 
         binding.btnFolderDelete.setOnClickListener {
             patentViewModel.setDeleteFlag(true)
             binding.rvPatentFolders.adapter = FolderAdapter(false, true, patentViewModel.folders.value!!) { position ->
-                setDialogFolderDelete()
+                setDialogFolderDelete(position)
             }
         }
 
@@ -115,10 +105,11 @@ class PatentFolderFragment : BaseFragment<FragmentPatentFolderBinding>(
 
         btnFolderAdd.setOnClickListener {
             patentViewModel.addFolder(etFolderName.text.toString())
+            dialogBuilder.dismiss()
         }
     }
 
-    private fun setDialogFolderEdit() {
+    private fun setDialogFolderEdit(position: Int) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_folder_edit, null)
         val dialogBuilder = Dialog(requireContext())
         dialogBuilder.setContentView(dialogView)
@@ -136,13 +127,12 @@ class PatentFolderFragment : BaseFragment<FragmentPatentFolderBinding>(
         val btnFolderEdit = dialogView.findViewById<Button>(R.id.btn_folder_edit)
 
         btnFolderEdit.setOnClickListener {
-            // TODO: edit
-            showCustomToast("폴더 이름이 변경되었습니다.")
+            patentViewModel.editFolder(patentViewModel.folders.value!![position].userPatentFolderId, etFolderName.text.toString())
             dialogBuilder.dismiss()
         }
     }
 
-    private fun setDialogFolderDelete() {
+    private fun setDialogFolderDelete(position: Int) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_folder_delete, null)
         val dialogBuilder = Dialog(requireContext())
         dialogBuilder.setContentView(dialogView)
@@ -160,9 +150,7 @@ class PatentFolderFragment : BaseFragment<FragmentPatentFolderBinding>(
         val btnFolderDeleteCancel = dialogView.findViewById<Button>(R.id.btn_folder_delete_cancel)
 
         btnFolderDeleteConfirm.setOnClickListener {
-            // TODO: delete
-
-            showCustomToast("폴더가 삭제되었습니다.")
+            patentViewModel.deleteFolder(patentViewModel.folders.value!![position].userPatentFolderId)
             dialogBuilder.dismiss()
         }
 

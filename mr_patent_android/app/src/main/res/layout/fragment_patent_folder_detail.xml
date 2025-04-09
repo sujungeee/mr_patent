@@ -35,21 +35,6 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.11" />
 
-    <Button
-        android:id="@+id/btn_patent_delete"
-        android:layout_width="wrap_content"
-        android:layout_height="40dp"
-        android:backgroundTint="@color/mr_blue"
-        android:text="특허 삭제"
-        android:textColor="@color/white"
-        android:textSize="13sp"
-        app:layout_constraintBottom_toBottomOf="@+id/tv_folder_name"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.93"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/tv_folder_name"
-        app:layout_constraintVertical_bias="0.1" />
-
     <View
         android:id="@+id/v_line_1"
         android:layout_width="0dp"

@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -18,6 +19,7 @@ import com.ssafy.mr_patent_android.databinding.FragmentPatentContentSummaryBindi
 import com.ssafy.mr_patent_android.ui.mypage.ReportResultViewModel
 import com.ssafy.mr_patent_android.util.FilePicker
 import com.ssafy.mr_patent_android.util.FileUtil
+import kotlin.math.log
 
 private const val TAG = "PatentContentSummaryFragment_Mr_Patent"
 class PatentContentSummaryFragment : BaseFragment<FragmentPatentContentSummaryBinding>(
@@ -49,10 +51,11 @@ class PatentContentSummaryFragment : BaseFragment<FragmentPatentContentSummaryBi
     }
 
     fun summaryFillInput() : Boolean {
-        if (binding.etSpecContent.text.isBlank()) {
-            return false
-        }
-        return true
+        return binding.etSpecContent.text.isNotBlank()
+    }
+
+    fun getPatentSummaryContents() : String {
+        return binding.etSpecContent.text.toString()
     }
 
     fun toggleLayout(isExpanded: Boolean, view: View, layout: View) {

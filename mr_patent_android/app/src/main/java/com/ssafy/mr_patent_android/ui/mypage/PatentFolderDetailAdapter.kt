@@ -7,8 +7,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.ssafy.mr_patent_android.R
 import com.ssafy.mr_patent_android.data.model.response.PatentListResponse
 import com.ssafy.mr_patent_android.databinding.ListItemPatentBinding
+import com.ssafy.mr_patent_android.util.TimeUtil
 
-class PatentFolderDetailAdapter(var deleteFlag : Boolean = false, var patents: List<PatentListResponse.PatentSummaryInfo>, val itemClickListener : ItemClickListener)
+class PatentFolderDetailAdapter(var patents: List<PatentListResponse.PatentSummaryInfo>, val itemClickListener : ItemClickListener)
     : RecyclerView.Adapter<PatentFolderDetailAdapter.PatentFolderDetailViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PatentFolderDetailViewHolder {
@@ -29,11 +30,20 @@ class PatentFolderDetailAdapter(var deleteFlag : Boolean = false, var patents: L
     inner class PatentFolderDetailViewHolder(private val binding: ListItemPatentBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(position: Int) {
             binding.tvPatentName.text = patents[position].patentDraftTitle
-            binding.tvDateTest.text = itemView.context.getString(R.string.tv_date_test, patents[position].createdAt)
-            binding.tvSimiliarityTestResult.text = itemView.context.getString(R.string.tv_similiarity_test_result, patents[position].patentSimiliarityResult)
-            binding.tvSimiliarityTestResultPercent.text = "${patents[position].patentSimiliarityResultScore}%"
-            binding.pbSimiliarityResult.progress = patents[position].patentSimiliarityResultScore
-            when (patents[position].patentSimiliarityResult) {
+            binding.tvDateTest.text = itemView.context.getString(R.string.tv_date_test,
+                    TimeUtil().parseUtcWithJavaTime(patents[position].createdAt)
+                )
+
+            val similiarityResult = when(patents[position].detailedComparisonTotalScore) {
+                in 0..50 -> "적합"
+                in 51..70 -> "부분 적합"
+                else -> "부적합"
+            }
+            binding.tvSimiliarityTestResult.text = itemView.context.getString(R.string.tv_similiarity_test_result, similiarityResult)
+
+            binding.tvSimiliarityTestResultPercent.text = "${patents[position].detailedComparisonTotalScore}%"
+            binding.pbSimiliarityResult.progress = patents[position].detailedComparisonTotalScore
+            when (similiarityResult) {
                 "적합" -> {
                     binding.pbSimiliarityResult.progressTintList = itemView.context.getColorStateList(R.color.mr_blue)
                 }
@@ -50,12 +60,6 @@ class PatentFolderDetailAdapter(var deleteFlag : Boolean = false, var patents: L
 
             binding.ivPatentDelete.setOnClickListener {
                 itemClickListener.onItemClick(position)
-            }
-
-            if (deleteFlag) {
-                binding.ivPatentDelete.visibility = View.VISIBLE
-            } else {
-                binding.ivPatentDelete.visibility = View.GONE
             }
         }
     }

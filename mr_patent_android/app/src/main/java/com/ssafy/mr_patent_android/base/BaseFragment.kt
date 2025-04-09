@@ -20,7 +20,7 @@ abstract class BaseFragment<B : ViewBinding>(
         LoadingDialog(requireContext())
     }
 
-    protected val binding get() = _binding!!
+    val binding get() = _binding!!
 
     override fun onCreateView(
         inflater: LayoutInflater,

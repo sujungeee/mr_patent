@@ -1,33 +1,41 @@
 package com.ssafy.mr_patent_android.ui.mypage
 
 import android.app.Dialog
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Button
+import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
+import androidx.core.content.FileProvider
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.Glide
 import com.google.android.material.chip.Chip
 import com.ssafy.mr_patent_android.R
-import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.sharedPreferences
 import com.ssafy.mr_patent_android.base.BaseFragment
 import com.ssafy.mr_patent_android.data.model.dto.ProfileEditRequest
-import com.ssafy.mr_patent_android.data.model.dto.UserDto
 import com.ssafy.mr_patent_android.databinding.FragmentProfileEditBinding
 import com.ssafy.mr_patent_android.ui.address.AddressViewModel
 import com.ssafy.mr_patent_android.util.FileUtil
+import com.ssafy.mr_patent_android.util.ImageCompressor
 import com.ssafy.mr_patent_android.util.ImagePicker
+import com.ssafy.mr_patent_android.util.ImageUtil
+import com.ssafy.mr_patent_android.util.LoadingDialog
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
+import java.io.File
 
 private const val TAG = "ProfileEditFragment_Mr_Patent"
 class ProfileEditFragment : BaseFragment<FragmentProfileEditBinding>(
@@ -35,12 +43,17 @@ class ProfileEditFragment : BaseFragment<FragmentProfileEditBinding>(
 ) {
     private var isExpanded = mutableListOf(false, false, false, false, false)
     private val args: ProfileEditFragmentArgs by navArgs()
+    private var flag = false
 
     private lateinit var imagePickerUtil: ImagePicker
     private lateinit var imageUri: Uri
+    private lateinit var loadingDialog: LoadingDialog
+    private lateinit var contentType: String
 
     private val profileEditViewModel : ProfileEditViewModel by activityViewModels()
     private val addressViewModel : AddressViewModel by activityViewModels()
+
+    private lateinit var profileEditRequest : ProfileEditRequest
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,20 +67,26 @@ class ProfileEditFragment : BaseFragment<FragmentProfileEditBinding>(
     }
 
     private fun initView() {
+        loadingDialog = LoadingDialog(requireContext())
         imagePickerUtil = ImagePicker(this) { uri ->
-            val fileSize = FileUtil().getFileSize(requireContext(), uri)
-            profileEditViewModel.setCurrentImage(uri.toString())
-
-            if(fileSize >= 1024 * 1024 * 5) {
+            if (FileUtil().isFileSizeValid(requireContext(), uri) == false) {
                 setDialogSizeOver()
                 return@ImagePicker
             }
 
-            Glide.with(requireContext())
-                .load(uri)
-                .fallback(R.drawable.user_profile)
-                .error(R.drawable.image_load_error_icon)
-                .into(binding.ivProfile)
+            val extension = FileUtil().getFileExtension(requireContext(), uri)
+            val bitmap = MediaStore.Images.Media.getBitmap(requireContext().contentResolver,  uri)
+            when (extension) {
+                "jpg", "jpeg" -> {
+                    loadingDialog.show()
+                    val rotatedBitmap = ImageUtil().rotateBitmapIfNeeded(requireContext(), bitmap, uri)
+                    val rotatedUri = ImageUtil().bitmapToUri(requireContext(), rotatedBitmap, extension)
+                    handleImageJpgSelected(rotatedUri, extension)
+                }
+                "png" -> {
+                    handleImagePngSelected(bitmap, extension)
+                }
+            }
         }
 
         binding.tvBefore.setOnClickListener {
@@ -80,13 +99,20 @@ class ProfileEditFragment : BaseFragment<FragmentProfileEditBinding>(
             }
         })
 
-        when (args.role) {
-            "member" -> {
-                profileEditViewModel.getMemberInfo()
+        if (!flag) {
+            when (args.role) {
+                "member" -> {
+                    profileEditViewModel.getMemberInfo()
+                    binding.clProfileEditItemsMember.visibility = View.VISIBLE
+                    binding.clProfileEditItemsExpert.visibility = View.GONE
+                }
+                "expert" -> {
+                    profileEditViewModel.getExpertInfo(args.id)
+                    binding.clProfileEditItemsMember.visibility = View.GONE
+                    binding.clProfileEditItemsExpert.visibility = View.VISIBLE
+                }
             }
-            "expert" -> {
-                profileEditViewModel.getExpertInfo(args.id)
-            }
+            flag = true
         }
 
         binding.tvEditProfile.setOnClickListener {
@@ -119,6 +145,12 @@ class ProfileEditFragment : BaseFragment<FragmentProfileEditBinding>(
         }
 
         binding.ivSearch.setOnClickListener {
+            profileEditViewModel.setEditDescription(binding.etDescription.text.toString())
+            profileEditViewModel.setEditPhone(binding.etPhone.text.toString())
+            profileEditViewModel.setEditAddress2(binding.etAddress2.text.toString())
+            profileEditViewModel.setIsExpanded(
+                mutableListOf(isExpanded[0], isExpanded[1], isExpanded[2], isExpanded[3])
+            )
             findNavController().navigate(R.id.addressSearchFragment)
         }
 
@@ -131,11 +163,7 @@ class ProfileEditFragment : BaseFragment<FragmentProfileEditBinding>(
         }
 
         binding.btnEdit.setOnClickListener {
-            var profileEditRequest = ProfileEditRequest(null, null, null, null, null, null)
-
-            if (profileEditViewModel.profileImage.value != profileEditViewModel.currentImage.value) {
-                profileEditRequest.userImage = profileEditViewModel.currentImage.value.toString()
-            }
+            profileEditRequest = ProfileEditRequest(null, null, null, null, null, null)
 
             when (args.role) {
                 "member" -> {
@@ -158,7 +186,7 @@ class ProfileEditFragment : BaseFragment<FragmentProfileEditBinding>(
                     }
 
                     if (binding.etPhone.text.toString() != profileEditViewModel.expertInfo.value?.expertPhone) {
-                        if (binding.etPhone.text.isNotBlank() && binding.etPhone.toString().length in (9..11)) {
+                        if (binding.etPhone.text.isNotBlank() && binding.etPhone.text.toString().length in (9..11)) {
                             profileEditRequest.expertPhone = binding.etPhone.text.toString()
                         } else {
                             showCustomToast("전화번호가 형식에 맞지 않습니다.")
@@ -188,23 +216,30 @@ class ProfileEditFragment : BaseFragment<FragmentProfileEditBinding>(
                 }
             }
 
-            val isEdited = profileEditRequest.userName != null
-                    || profileEditRequest.userImage != null
-                    || profileEditRequest.expertDescription != null
-                    || profileEditRequest.expertAddress != null
-                    || profileEditRequest.expertPhone != null
-                    || profileEditRequest.expertCategories != null
+            if (profileEditViewModel.profileImage.value != profileEditViewModel.currentImage.value
+                && profileEditViewModel.currentImage.value != null) {
 
-            Log.d(TAG, "initView: ${isEdited}")
-            Log.d(TAG, "initView: name ${profileEditRequest.userName}")
-            Log.d(TAG, "initView: address ${profileEditRequest.expertAddress}")
-            Log.d(TAG, "initView: image ${profileEditRequest.userImage}")
-            Log.d(TAG, "initView: phone ${profileEditRequest.expertPhone}")
-            Log.d(TAG, "initView: description ${profileEditRequest.expertDescription}")
-            Log.d(TAG, "initView: categories ${profileEditRequest.expertCategories}")
-
-            if (isEdited) {
-                profileEditViewModel.editUserInfo(profileEditRequest)
+                val fileUri = Uri.parse(profileEditViewModel.currentImage.value)
+                val fileName = FileUtil().getFileName(requireContext(), fileUri)
+                var extension = FileUtil().getFileExtension(requireContext(), Uri.parse(profileEditViewModel.currentImage.value))
+                if (extension == "jpg" || extension == "jpeg") {
+                    contentType = "image/jpeg"
+                } else {
+                    contentType = "image/png"
+                }
+                profileEditRequest.userImage = fileName
+                lifecycleScope.launch {
+                    profileEditViewModel.uploadFile(requireContext(), Uri.parse(profileEditViewModel.currentImage.value!!), fileName!!, extension!!, contentType)
+                    val isEdited = profileEditRequest.userName != null
+                            || profileEditRequest.userImage != null
+                            || profileEditRequest.expertDescription != null
+                            || profileEditRequest.expertAddress != null
+                            || profileEditRequest.expertPhone != null
+                            || profileEditRequest.expertCategories != null
+                    if (isEdited) {
+                        profileEditViewModel.editUserInfo(profileEditRequest)
+                    }
+                }
             }
         }
     }
@@ -230,12 +265,8 @@ class ProfileEditFragment : BaseFragment<FragmentProfileEditBinding>(
         profileEditViewModel.expertInfo.observe(viewLifecycleOwner) {
             binding.clProfileEditItemsMember.visibility = View.GONE
             binding.clProfileEditItemsExpert.visibility = View.VISIBLE
-            binding.etDescription.setText(it.expertDescription)
-            binding.etPhone.setText(it.expertPhone)
-            binding.etAddress1.setText(it.expertAddress.substringBefore("\\"))
-            binding.etAddress2.setText(it.expertAddress.substringAfter("\\"))
-            for (category in it.category) {
-                when (category) {
+            for (categories in it.expertCategory) {
+                when (categories.categoryName) {
                     "화학공학" -> binding.chipChemi.isChecked = true
                     "기계공학" -> binding.chipMecha.isChecked = true
                     "생명공학" -> binding.chipLife.isChecked = true
@@ -244,35 +275,115 @@ class ProfileEditFragment : BaseFragment<FragmentProfileEditBinding>(
             }
         }
 
+        profileEditViewModel.editDescription.observe(viewLifecycleOwner, {
+            binding.etDescription.setText(it)
+        })
+
+        profileEditViewModel.editPhone.observe(viewLifecycleOwner, {
+            binding.etPhone.setText(it)
+        })
+
+        profileEditViewModel.editAddress1.observe(viewLifecycleOwner, {
+            binding.etAddress1.setText(it)
+        })
+
+        profileEditViewModel.editAddress2.observe(viewLifecycleOwner, {
+            binding.etAddress2.setText(it)
+        })
+
         profileEditViewModel.memberInfo.observe(viewLifecycleOwner) {
             binding.clProfileEditItemsMember.visibility = View.VISIBLE
             binding.clProfileEditItemsExpert.visibility = View.GONE
             binding.etName.setText(it.userName)
+            profileEditViewModel.getImage(it.userImage)
         }
 
         profileEditViewModel.profileImage.observe(viewLifecycleOwner, {
-            if (it.isNotBlank()) {
+            Log.d(TAG, "initObserver: profileImage")
+            if (it != "") {
                 imageUri = Uri.parse(it)
                 Glide.with(requireContext())
                     .load(imageUri)
-                    .fallback(R.drawable.user_profile)
                     .error(R.drawable.image_load_error_icon)
                     .into(binding.ivProfile)
+                profileEditViewModel.setCurrentImage(imageUri.toString())
             } else {
-                imageUri = Uri.parse(requireContext().resources.getString(R.string.default_image))
+                Glide.with(requireContext())
+                    .load(R.drawable.user_profile)
+                    .into(binding.ivProfile)
             }
-            profileEditViewModel.setCurrentImage(imageUri.toString())
         })
 
         addressViewModel.address.observe(viewLifecycleOwner) {
             binding.etAddress1.setText(it)
-            toggleLayout(true, binding.ivToggle3, binding.clEtAddress)
-            isExpanded[2] = false
+            binding.etAddress2.setText(profileEditViewModel.editAddress2.value)
+            binding.etDescription.setText(profileEditViewModel.editDescription.value)
+            binding.etPhone.setText(profileEditViewModel.editPhone.value)
+        }
+
+        profileEditViewModel.currentImage.observe(viewLifecycleOwner, {
+            Log.d(TAG, "initObserver: currentImage")
+            Glide.with(requireContext())
+                .load(it)
+                .fallback(R.drawable.user_profile)
+                .error(R.drawable.image_load_error_icon)
+                .centerInside()
+                .into(binding.ivProfile)
+        })
+
+        profileEditViewModel.isExpanded.observe(viewLifecycleOwner, {
+            isExpanded = it
+            toggleLayout(isExpanded[0], binding.ivToggle1, binding.hsvFilter)
+            toggleLayout(isExpanded[1], binding.ivToggle2, binding.etDescription)
+            toggleLayout(isExpanded[2], binding.ivToggle3, binding.clEtAddress)
+            toggleLayout(isExpanded[3], binding.ivToggle4, binding.etPhone)
+            for (i in 0 until 4) {
+                isExpanded[i] = !isExpanded[i]
+            }
+        })
+    }
+
+    private fun handleImageJpgSelected(uri: Uri, extension: String) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            ImageCompressor(requireContext()).compressImage(uri, 500 * 1024)?.let { bytes ->
+                val compressedUri = byteArrayToUri(bytes, extension)
+                profileEditViewModel.setCurrentImage(compressedUri.toString())
+                loadingDialog.dismiss()
+            } ?: run {
+                showCustomToast("이미지 처리 실패")
+            }
+        }
+    }
+
+    private fun handleImagePngSelected(bitmap: Bitmap, extension: String) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val resizedBitmap = ImageUtil().resizeBitmap(bitmap, 600, 600)
+            val outputStream = ByteArrayOutputStream()
+            resizedBitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+            val bytes = outputStream.toByteArray()
+            val compressedUri = byteArrayToUri(bytes, extension)
+            profileEditViewModel.setCurrentImage(compressedUri.toString())
+        }
+    }
+
+    private suspend fun byteArrayToUri(byteArray: ByteArray, extension: String): Uri {
+        return withContext(Dispatchers.IO) {
+            val fileName = "compressed_${System.currentTimeMillis()}.$extension"
+            val file = File(requireContext().cacheDir, fileName)
+            file.writeBytes(byteArray)
+            val uri = FileProvider.getUriForFile(
+                requireContext(),
+                "${requireContext().packageName}.fileprovider",
+                file
+            )
+            uri
         }
     }
 
     private fun setDialogSizeOver() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_size_over, null)
+        val overTextView = dialogView.findViewById<TextView>(R.id.tv_text2)
+        overTextView.setText("5mb 이상의 이미지는 업로드가 불가능해요.")
         val dialogBuilder = Dialog(requireContext())
         dialogBuilder.setContentView(dialogView)
         dialogBuilder.create()

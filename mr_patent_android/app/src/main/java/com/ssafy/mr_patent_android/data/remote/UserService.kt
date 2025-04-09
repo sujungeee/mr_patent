@@ -10,6 +10,7 @@ import com.ssafy.mr_patent_android.data.model.dto.UserDto
 import com.ssafy.mr_patent_android.data.model.response.CheckDuplResponse
 import com.ssafy.mr_patent_android.data.model.response.MessageResponse
 import com.ssafy.mr_patent_android.data.model.response.ProfileEditResponse
+import com.ssafy.mr_patent_android.data.model.response.UrlResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -23,9 +24,9 @@ interface UserService {
     @GET("expert")
     suspend fun getExpertList(): Response<BaseResponse<List<UserDto>>>
 
-    @GET("expert/{expert_id}")
+    @GET("expert/{expertId}")
     suspend fun getExpert(
-        @Path("expert_id") expert_id: Int
+        @Path("expertId") expertId: Int
     ): Response<BaseResponse<UserDto>>
 
     @POST("user")
@@ -44,15 +45,10 @@ interface UserService {
     @POST("user/expert")
     suspend fun joinExpert(
         @Body joinExpertRequest: JoinExpertRequest
-    ): Response<BaseResponse<Boolean?>>
+    ): Response<BaseResponse<MessageResponse>>
 
     @DELETE("user/me")
     suspend fun deleteUser(): Response<BaseResponse<MessageResponse>>
-
-    @PATCH("user/me")
-    suspend fun editUser(
-        @Body userDto: LoginResponse
-    ): Response<BaseResponse<Boolean?>>
 
     @PATCH("user/me/pw")
     suspend fun pwdEdit(
@@ -63,4 +59,9 @@ interface UserService {
     suspend fun checkDuplEmail(
         @Query("email") userEmail: String
     ): Response<BaseResponse<CheckDuplResponse>>
+
+    @GET("user/profile-image/download-url")
+    suspend fun getImage(
+        @Query("filename") fileName: String
+    ): Response<BaseResponse<UrlResponse>>
 }

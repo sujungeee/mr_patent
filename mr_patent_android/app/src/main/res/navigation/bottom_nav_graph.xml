@@ -230,6 +230,9 @@
         <action
             android:id="@+id/action_patentFragment_to_patentFolderChoiceFragment2"
             app:destination="@id/patentFolderChoiceFragment" />
+        <action
+            android:id="@+id/action_nav_fragment_patent_to_similiarityTestFragment"
+            app:destination="@id/similiarityTestFragment" />
     </fragment>
     <fragment
         android:id="@+id/patentFolderChoiceFragment"
@@ -289,7 +292,12 @@
         android:id="@+id/similiarityTestFragment"
         android:name="com.ssafy.mr_patent_android.ui.patent.SimiliarityTestFragment"
         android:label="fragment_similiarity_test"
-        tools:layout="@layout/fragment_similiarity_test" />
+        tools:layout="@layout/fragment_similiarity_test">
+        <argument
+            android:name="status"
+            android:defaultValue=""
+            app:argType="string" />
+    </fragment>
     <fragment
         android:id="@+id/userDeleteFragment"
         android:name="com.ssafy.mr_patent_android.ui.mypage.UserDeleteFragment"
@@ -317,7 +325,11 @@
         android:id="@+id/reportResultFragment"
         android:name="com.ssafy.mr_patent_android.ui.mypage.ReportResultFragment"
         android:label="fragment_report_result"
-        tools:layout="@layout/fragment_report_result" />
+        tools:layout="@layout/fragment_report_result">
+        <argument
+            android:name="id"
+            app:argType="integer" />
+    </fragment>
     <fragment
         android:id="@+id/addressSearchFragment"
         android:name="com.ssafy.mr_patent_android.ui.address.AddressSearchFragment"

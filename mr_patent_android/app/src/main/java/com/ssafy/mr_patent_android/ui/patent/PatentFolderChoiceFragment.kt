@@ -32,26 +32,6 @@ class PatentFolderChoiceFragment : BaseFragment<FragmentPatentFolderChoiceBindin
 
         initView()
         initObserver()
-        // TODO: delete
-        initAdapter()
-    }
-
-    // TODO: delete
-    private fun initAdapter() {
-        val tmp = mutableListOf(
-            FolderDto.Folder(1, "폴더 1", "2024-03-28"),
-            FolderDto.Folder(2, "폴더 2", "2024-03-27"),
-            FolderDto.Folder(3, "폴더 3", "2024-03-26")
-        )
-        binding.rvFolderItems.layoutManager = LinearLayoutManager(requireContext())
-        binding.rvFolderItems.adapter = FolderAdapter(false, false, tmp) { position ->
-            patentViewModel.setFolderId(tmp[position].userPatentFolderId)
-            when(patentViewModel.draftType.value) {
-                "upload" -> findNavController().navigate(R.id.fileUploadFragment)
-                "write" -> findNavController().navigate(PatentFolderChoiceFragmentDirections.actionPatentFolderChoiceFragmentToPatentContentFragment(-1, "write"))
-                "update" -> findNavController().navigate(PatentFolderChoiceFragmentDirections.actionPatentFolderChoiceFragmentToPatentContentFragment(patentViewModel.patentDraftId.value!!, "update"))
-            }
-        }
     }
 
     private fun initView() {
@@ -99,6 +79,7 @@ class PatentFolderChoiceFragment : BaseFragment<FragmentPatentFolderChoiceBindin
 
         btnFolderAdd.setOnClickListener {
             patentViewModel.addFolder(etFolderName.text.toString())
+            dialogBuilder.dismiss()
         }
     }
 

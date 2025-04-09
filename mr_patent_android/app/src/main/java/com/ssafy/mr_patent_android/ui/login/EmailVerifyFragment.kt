@@ -44,13 +44,13 @@ class EmailVerifyFragment : BaseFragment<FragmentEmailVerifyBinding>(FragmentEma
                 showCustomToast("이메일을 확인해주세요.")
             } else {
                 viewModel.setCodeState(true)
-                viewModel.sendCode((binding.etEmail.text.toString()))
+                viewModel.sendCodeForgot((binding.etEmail.text.toString()))
             }
         }
 
         binding.btnVerifyEmail.setOnClickListener {
             // 코드 확인
-            viewModel.emailVerify(binding.etEmail.text.toString(), binding.etPwd.text.toString().toInt())
+            viewModel.emailVerifyForgot(binding.etEmail.text.toString(), binding.etPwd.text.toString().toInt())
 
         }
     }

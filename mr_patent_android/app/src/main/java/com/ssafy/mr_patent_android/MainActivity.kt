@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.NavHostController
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
@@ -15,6 +16,8 @@ import com.ssafy.mr_patent_android.base.BaseActivity
 import com.ssafy.mr_patent_android.databinding.ActivityMainBinding
 import com.ssafy.mr_patent_android.ui.home.HomeFragmentDirections
 import com.ssafy.mr_patent_android.util.ConnectionStateMonitor
+import com.ssafy.mr_patent_android.ui.patent.PatentFragmentDirections
+import com.ssafy.mr_patent_android.ui.patent.SimiliarityTestViewModel
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -84,6 +87,12 @@ class MainActivity : BaseActivity<ActivityMainBinding>(ActivityMainBinding::infl
             val userImage = intent.getStringExtra("userImage")?:""
             val action = HomeFragmentDirections.actionNavFragmentHomeToChatFragment(userId,expertId,roomId,userName,userImage)
             navController.navigate(action)
+        }
+
+        if (intent.getStringExtra("type") == "SIMILARITY_TEST") {
+            navController.navigate(
+                PatentFragmentDirections.actionNavFragmentPatentToSimiliarityTestFragment("finished")
+            )
         }
     }
 }
