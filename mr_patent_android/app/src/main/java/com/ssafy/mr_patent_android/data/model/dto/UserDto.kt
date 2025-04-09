@@ -25,6 +25,11 @@ data class UserDto(
         @SerializedName("category_name") val categoryName: String
     )
 
+    constructor(userEmail: String):this(-1, userEmail, "", -1,
+        "","","",
+        -1,"","",  mutableListOf(), "", "")
+
+
     constructor():this(-1, "","",-1,
         "","","",
         -1,"","",  mutableListOf(), "", "")

@@ -54,4 +54,18 @@ class UserLeaveViewModel : ViewModel() {
             }
         }
     }
+
+    fun clearToken() {
+        viewModelScope.launch {
+            try {
+                authService.deleteFcmToken(sharedPreferences.getUser().userId,)
+
+            }
+            catch (e: Exception) {
+            }finally {
+                logout()
+            }
+        }
+    }
+
 }
