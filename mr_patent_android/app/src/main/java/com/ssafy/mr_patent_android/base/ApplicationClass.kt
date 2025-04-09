@@ -25,10 +25,12 @@ import java.util.concurrent.TimeUnit
 
 // 앱이 실행될때 1번만 실행이 됩니다.
 class ApplicationClass : Application() {
-//    val API_URL = "https://j12d208.p.ssafy.io/api/"
-    val API_URL = "http://192.168.100.130:8080/api/"
+    val API_URL = "https://j12d208.p.ssafy.io/api/"
+//    val API_URL = "http://192.168.0.14:8080/api/"
+//    val API_URL = "http://172.30.1.36:8080/api/"
 //    val API_URL_FAST = "https://j12d208.p.ssafy.io/fastapi/"
-    val API_URL_FAST = "http://192.168.100.207:8000/fastapi/"
+//    val API_URL_FAST = "http://172.20.10.13:8000/fastapi/"
+    val API_URL_FAST = "http://172.20.10.13:8000/fastapi/"
 
     companion object {
         lateinit var sharedPreferences: SharedPreferencesUtil

@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.networkUtil
 import com.ssafy.mr_patent_android.data.model.response.PatentContentResponse
+import com.ssafy.mr_patent_android.data.model.response.PatentRecentResponse
 import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.patentService
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -32,8 +33,8 @@ class FileViewModel : ViewModel() {
     val uploadState: LiveData<Boolean>
         get() = _uploadState
 
-    private val _patentContent = MutableLiveData<PatentContentResponse?>()
-    val patentContent: LiveData<PatentContentResponse?>
+    private val _patentContent = MutableLiveData<PatentRecentResponse.PatentDraft?>()
+    val patentContent: LiveData<PatentRecentResponse.PatentDraft?>
         get() = _patentContent
 
     fun setExtractionType(type: String) {
@@ -44,8 +45,8 @@ class FileViewModel : ViewModel() {
         _fileUri.value = uri
     }
 
-    fun setPatentContent(patentContent: PatentContentResponse?) {
-        _patentContent.value = patentContent
+    fun setPatentContent(patentDraft: PatentRecentResponse.PatentDraft?) {
+        _patentContent.value = patentDraft
     }
 
     fun getOcrContent(file: File) {

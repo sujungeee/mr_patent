@@ -31,7 +31,7 @@ class PatentFolderDetailAdapter(var patents: List<PatentListResponse.PatentSumma
         fun bind(position: Int) {
             binding.tvPatentName.text = patents[position].patentDraftTitle
             binding.tvDateTest.text = itemView.context.getString(R.string.tv_date_test,
-                    TimeUtil().parseUtcWithJavaTime(patents[position].createdAt)
+                        TimeUtil().formatLocalDateTimeToString(TimeUtil().parseUtcWithJavaTime(patents[position].createdAt))
                 )
 
             val similiarityResult = when(patents[position].detailedComparisonTotalScore) {

@@ -109,4 +109,7 @@ dependencies {
     implementation ("com.wajahatkarim:EasyFlipView:3.0.3")
 
     implementation ("io.github.ParkSangGwon:tedimagepicker:1.4.3")
+
+    implementation ("io.github.ParkSangGwon:tedpermission-normal:3.3.0")
+
 }

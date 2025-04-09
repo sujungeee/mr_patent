@@ -26,7 +26,7 @@ class ChatDiffCallback(
         val new = newList[newItemPosition]
         val result = old.chatId == new.chatId &&
                 old.isRead == new.isRead
-        Log.d("ChatDiffCallback", "areContentsTheSame($oldItemPosition, $newItemPosition): $result")
+//        Log.d("ChatDiffCallback", "areContentsTheSame($oldItemPosition, $newItemPosition): $result")
 
         return result
     }

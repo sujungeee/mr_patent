@@ -39,7 +39,7 @@ class ChatListAdapter(private val itemClickListener: ItemClickListener) :
             Log.d(TAG, "bind: $chatRoom")
             binding.tvName.text = chatRoom.userName
             binding.tvChatPreview.text = chatRoom.lastMessage
-            binding.tvTime.text = TimeUtil().formatLocalDateTimeToString(TimeUtil().parseUtcWithJavaTime(chatRoom.lastMessageTime))
+            binding.tvTime.text = TimeUtil().formatLocalToStringMonthTime(TimeUtil().parseUtcWithJavaTime(chatRoom.lastMessageTime))
 
             if (chatRoom.unreadCount > 0) {
                 binding.tvUnreadCount.visibility = View.VISIBLE
@@ -48,12 +48,14 @@ class ChatListAdapter(private val itemClickListener: ItemClickListener) :
                 binding.tvUnreadCount.visibility = View.GONE
             }
 
+            if(!chatRoom.userImage.isNullOrBlank()){
             Glide.with(binding.root)
                 .load(chatRoom.userImage)
+                .circleCrop()
                 .fallback(R.drawable.user_profile)
-                .error(R.drawable.image_load_error_icon)
+                .error(R.drawable.user_profile)
                 .into(binding.ivPatentAttorney)
-
+}
             binding.listItemChatRoom.setOnClickListener {
                 itemClickListener.onItemClick(chatRoom)
             }

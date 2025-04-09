@@ -34,7 +34,7 @@ class WordAllAdapter(
     override fun getItemCount(): Int = wordList.size
 
     fun interface ItemClickListener {
-        fun onItemClick(position: Int): Boolean
+        fun onItemClick(position: Int, checked:Boolean): Boolean
     }
 
     inner class WordViewHolder(private val binding: ListItemWordBinding) : RecyclerView.ViewHolder(binding.root) {
@@ -44,10 +44,9 @@ class WordAllAdapter(
             binding.tvMean.text = word.word_mean
             binding.tBtnBookmark.isChecked = word.is_bookmarked
 
-            binding.cardLevel.setOnClickListener {
-                binding.tBtnExpand.isChecked = !binding.expandableLayout.isVisible
-                binding.expandableLayout.isVisible = !binding.expandableLayout.isVisible
-            }
+            binding.expandableLayout.isVisible = word.checked?:false
+            binding.tBtnExpand.isChecked = word.checked?:false
+
             binding.tBtnExpand.setOnClickListener {
                 binding.tBtnExpand.isChecked = !binding.expandableLayout.isVisible
                 binding.expandableLayout.isVisible = !binding.expandableLayout.isVisible
@@ -60,14 +59,14 @@ class WordAllAdapter(
 
                 setBookmarkIcon(toggled)
 
-                val success = itemClickListener.onItemClick(position)
+                val success = itemClickListener.onItemClick(position, binding.expandableLayout.isVisible)
                 if (!success) {
                     setBookmarkIcon(word.is_bookmarked)
                 }
             }
 
             binding.tBtnBookmark.setThrottleClickListener {
-                itemClickListener.onItemClick(position)
+                itemClickListener.onItemClick(position, binding.expandableLayout.isVisible)
             }
         }
         private fun setBookmarkIcon(isBookmarked: Boolean) {
@@ -82,12 +81,13 @@ class WordAllAdapter(
 
 
 
-    fun updateBookmarkState(position: Int, updatedWord: WordDto.Word) {
+    fun updateBookmarkState(position: Int, updatedWord: WordDto.Word, checked: Boolean) {
         wordList[position] = updatedWord
+        wordList[position].checked = checked
         notifyItemChanged(position)
     }
 
-    fun View.setThrottleClickListener(interval: Long = 2000L, onClick: (View) -> Unit) {
+    fun View.setThrottleClickListener(interval: Long = 500L, onClick: (View) -> Unit) {
         setOnClickListener {
             val currentTime = System.currentTimeMillis()
             if (currentTime - lastClickTime >= interval) {

@@ -17,6 +17,7 @@
         app:layout_constraintBottom_toBottomOf="parent">
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout_file_preview"
         android:paddingVertical="20dp"
         android:paddingHorizontal="20dp"
         android:layout_width="wrap_content"
@@ -43,6 +44,7 @@
             android:ellipsize="end"
             android:maxWidth="100dp"
             android:maxLines="2"
+            android:paddingEnd="10dp"
             android:paddingStart="10dp"
             android:text="파일명.확장자"
             app:layout_constraintBottom_toTopOf="@+id/tv_file_size"
@@ -70,8 +72,8 @@
             android:visibility="gone"
             android:layout_margin="10dp"
             android:id="@+id/btn_delete"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
             android:layout_alignParentTop="true"
             android:layout_alignParentEnd="true"
             android:background="@drawable/circle_shape"

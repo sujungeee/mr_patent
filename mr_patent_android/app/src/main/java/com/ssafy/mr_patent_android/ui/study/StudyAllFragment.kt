@@ -30,6 +30,7 @@ class StudyAllFragment : BaseFragment<FragmentStudyAllBinding>(FragmentStudyAllB
             binding.tvTitle.text = "북마크 단어장"
             viewModel.getBookmarkWordList(level_id)
         } else {
+            binding.tvTitle.text = "Level $level_id"
             viewModel.getWordList(level_id)
         }
 
@@ -50,14 +51,14 @@ class StudyAllFragment : BaseFragment<FragmentStudyAllBinding>(FragmentStudyAllB
     fun initObserver() {
         viewModel.wordList.observe(viewLifecycleOwner) { list ->
             if (!::wordAllAdapter.isInitialized) {
-                wordAllAdapter = WordAllAdapter(list.toMutableList()) { position ->
+                wordAllAdapter = WordAllAdapter(list.toMutableList()) { position, checked ->
                     if (viewModel.isLoading.value == true) return@WordAllAdapter false
 
                     val result = viewModel.createBookmark(position)
                     val updatedWord = viewModel.wordList.value?.get(position)
 
                     if (result && updatedWord != null) {
-                        wordAllAdapter.updateBookmarkState(position, updatedWord)
+                        wordAllAdapter.updateBookmarkState(position, updatedWord, checked)
                     }
 
                     return@WordAllAdapter result

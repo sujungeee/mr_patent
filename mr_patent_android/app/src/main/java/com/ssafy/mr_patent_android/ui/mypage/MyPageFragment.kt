@@ -42,6 +42,7 @@ class MyPageFragment : BaseFragment<FragmentMyPageBinding>(
         } else {
             binding.tvProfileUpdate.text = "> 프로필 보기"
         }
+
         profileEditViewModel.getMemberInfo()
 
         binding.tvProfileUpdate.setOnClickListener {
@@ -74,6 +75,7 @@ class MyPageFragment : BaseFragment<FragmentMyPageBinding>(
         }
 
         binding.llLogout.setOnClickListener {
+            userLeaveViewModel.clearToken()
             userLeaveViewModel.logout()
         }
 

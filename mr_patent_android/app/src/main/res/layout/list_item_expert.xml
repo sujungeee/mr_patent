@@ -12,9 +12,10 @@
         android:id="@+id/iv_expert"
         android:layout_width="50dp"
         android:layout_height="50dp"
-
+        android:background="@drawable/circle_shape"
+        android:backgroundTint="@color/mr_blue_light"
         app:layout_constraintDimensionRatio="1:1"
-        android:src="@drawable/logo"
+        android:src="@drawable/image_loader"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"/>

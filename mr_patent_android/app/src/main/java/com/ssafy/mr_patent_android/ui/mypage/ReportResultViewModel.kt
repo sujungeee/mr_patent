@@ -8,6 +8,7 @@ import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.networkUtil
 import com.ssafy.mr_patent_android.data.model.dto.PatentFrameDto
 import com.ssafy.mr_patent_android.data.model.response.FitnessResultResponse
 import com.ssafy.mr_patent_android.data.model.response.PatentContentResponse
+import com.ssafy.mr_patent_android.data.model.response.PatentRecentResponse
 import com.ssafy.mr_patent_android.data.model.response.SimiliarityResultResponse
 import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.patentService
 import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.similiarityTestService
@@ -18,8 +19,8 @@ class ReportResultViewModel : ViewModel() {
     val toastMsg: LiveData<String>
         get() = _toastMsg
 
-    private val _patentContent = MutableLiveData<PatentContentResponse>()
-    val patentContent: LiveData<PatentContentResponse>
+    private val _patentContent = MutableLiveData<PatentRecentResponse.PatentDraft>()
+    val patentContent: LiveData<PatentRecentResponse.PatentDraft>
         get() = _patentContent
 
     private val _similiarityResult = MutableLiveData<List<SimiliarityResultResponse.Comparison>>()
@@ -56,7 +57,7 @@ class ReportResultViewModel : ViewModel() {
         _mode.value = mode
     }
 
-    fun setPatentContent(patentContent: PatentContentResponse) {
+    fun setPatentContent(patentContent: PatentRecentResponse.PatentDraft) {
         _patentContent.value = patentContent
     }
 

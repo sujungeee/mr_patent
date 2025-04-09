@@ -7,14 +7,12 @@
     android:padding="5dp">
 
 
-
-
     <TextView
         android:id="@+id/tvOptionText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="16sp"
-        android:paddingVertical="10dp"
+        android:paddingVertical="12dp"
         android:gravity="center"
         android:background="@drawable/selector_quiz_option"
         android:clickable="true"

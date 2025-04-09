@@ -72,13 +72,14 @@ class PatentContentFragment : BaseFragment<FragmentPatentContentBinding>(
                 binding.btnSimiliarityTest.visibility = View.VISIBLE
                 binding.clReportItems.visibility = View.GONE
                 splitContent(null)
-                initViewPager()
             }
             "upload" -> {
                 binding.btnSimiliarityTest.visibility = View.VISIBLE
                 binding.clReportItems.visibility = View.GONE
             }
         }
+
+        initViewPager()
 
         binding.tvBefore.setOnClickListener {
             when (args.mode) {
@@ -128,16 +129,13 @@ class PatentContentFragment : BaseFragment<FragmentPatentContentBinding>(
     private fun initObserver() {
         fileViewModel.patentContent.observe(viewLifecycleOwner, { // upload
             splitContent(it)
-            initViewPager()
         })
 
         reportResultViewModel.patentContent.observe(viewLifecycleOwner, { // select, update
-            Log.d(TAG, "initObserver: 업데이트 할 내용: ${it}")
             if (args.mode == "select") {
                 binding.tvDraftWrite.text =  it.patentDraftTitle
             }
             splitContent(it)
-            initViewPager()
         })
 
         similiarityTestViewModel.patentId.observe(viewLifecycleOwner, {

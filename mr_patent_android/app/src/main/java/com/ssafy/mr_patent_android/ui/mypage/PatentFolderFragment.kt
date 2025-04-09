@@ -4,6 +4,7 @@ import android.app.Dialog
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
@@ -44,10 +45,6 @@ class PatentFolderFragment : BaseFragment<FragmentPatentFolderBinding>(
             findNavController().popBackStack()
         }
 
-        binding.ivFolderAdd.setOnClickListener {
-            setDialogFolderAdd()
-        }
-
         binding.btnFolderEdit.setOnClickListener {
             patentViewModel.setEditFlag(true)
             binding.rvPatentFolders.adapter = FolderAdapter(true, false, patentViewModel.folders.value!!) { position ->
@@ -83,29 +80,6 @@ class PatentFolderFragment : BaseFragment<FragmentPatentFolderBinding>(
                 patentFolderDetailViewModel.setFolderId(it[position].userPatentFolderId)
                 findNavController().navigate(R.id.patentFolderDetailFragment)
             }
-        }
-    }
-
-    private fun setDialogFolderAdd() {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_folder_add, null)
-        val dialogBuilder = Dialog(requireContext())
-        dialogBuilder.setContentView(dialogView)
-        dialogBuilder.create()
-        dialogBuilder.window?.apply {
-            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-            setLayout(
-                ((context.resources.displayMetrics.widthPixels) * 0.8).toInt(),
-                WindowManager.LayoutParams.WRAP_CONTENT
-            )
-        }
-        dialogBuilder.show()
-
-        val btnFolderAdd = dialogView.findViewById<Button>(R.id.btn_folder_add)
-        val etFolderName = dialogView.findViewById<EditText>(R.id.et_folder_name)
-
-        btnFolderAdd.setOnClickListener {
-            patentViewModel.addFolder(etFolderName.text.toString())
-            dialogBuilder.dismiss()
         }
     }
 

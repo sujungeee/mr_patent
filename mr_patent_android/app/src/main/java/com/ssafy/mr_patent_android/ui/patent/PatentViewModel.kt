@@ -168,9 +168,8 @@ class PatentViewModel : ViewModel() {
                 patentService.deleteFolder(folderId)
             }.onSuccess {
                 if (it.isSuccessful) {
-                    it.body()?.data?.let { response ->
+                    it.body()?.let { response ->
                         getFolderList()
-                        _toastMsg.value = response.message
                     }
                 } else {
                     it.errorBody()?.let {

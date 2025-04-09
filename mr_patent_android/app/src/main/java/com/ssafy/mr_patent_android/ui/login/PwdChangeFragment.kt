@@ -72,7 +72,7 @@ class PwdChangeFragment : Fragment() {
 
         binding.btnChabgePwd.setOnClickListener {
         // 비밀번호 변경
-            viewModel.changePwd(PwdChangeRequest(email, code, binding.etPwd.text.toString()))
+            viewModel.changePwd(PwdChangeRequest(email, null, binding.etPwd.text.toString()))
         }
 
     }
