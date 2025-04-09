@@ -1,14 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
-    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appbar"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/mr_red">
+        <TextView
+            android:id="@+id/tv_network_error"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:gravity="center"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:layout_gravity="center"
+            android:text="네트워크 연결이 불안정합니다."
+            />
+    </com.google.android.material.appbar.AppBarLayout>
+<LinearLayout
+    android:id="@+id/main"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/frame_layout"
         android:name="androidx.navigation.fragment.NavHostFragment"
@@ -33,3 +54,4 @@
         app:labelVisibilityMode="labeled"/>
 
 </LinearLayout>
+</FrameLayout>
