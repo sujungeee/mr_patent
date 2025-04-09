@@ -69,7 +69,7 @@ class MyPageFragment : BaseFragment<FragmentMyPageBinding>(
         }
 
         binding.tvSettingLogout.setOnClickListener {
-            userLeaveViewModel.logout()
+            userLeaveViewModel.clearToken()
         }
 
         binding.tvSettingDelete.setOnClickListener {
