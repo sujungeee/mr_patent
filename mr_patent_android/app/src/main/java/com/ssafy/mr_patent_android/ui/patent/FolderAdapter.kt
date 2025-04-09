@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.ssafy.mr_patent_android.R
 import com.ssafy.mr_patent_android.data.model.dto.FolderDto
 import com.ssafy.mr_patent_android.databinding.ListItemPatentFolderBinding
+import com.ssafy.mr_patent_android.util.TimeUtil
 
 class FolderAdapter(var editFlag: Boolean = false, var deleteFlag: Boolean = false, var folders: MutableList<FolderDto.Folder>, val itemClickListener : ItemClickListener)
     : RecyclerView.Adapter<FolderAdapter.FolderViewHolder>() {
@@ -29,7 +30,9 @@ class FolderAdapter(var editFlag: Boolean = false, var deleteFlag: Boolean = fal
     inner class FolderViewHolder(private val binding: ListItemPatentFolderBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(position: Int) {
             binding.tvFolderName.text = folders[position].uerPatentFolderTitle
-            binding.tvFolderRecent.text = itemView.context.getString(R.string.tv_date_create, folders[position].createdAt)
+
+            val date = TimeUtil().formatLocalDateTimeToString(TimeUtil().parseUtcWithJavaTime(folders[position].createdAt))
+            binding.tvFolderRecent.text = itemView.context.getString(R.string.tv_date_create, date)
             binding.clListItemPatentFolder.setOnClickListener {
                 itemClickListener.onItemClick(position)
             }
