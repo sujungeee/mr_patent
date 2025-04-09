@@ -10,6 +10,7 @@ import com.ssafy.mr_patent_android.data.model.dto.UserDto
 import com.ssafy.mr_patent_android.data.model.response.CheckDuplResponse
 import com.ssafy.mr_patent_android.data.model.response.MessageResponse
 import com.ssafy.mr_patent_android.data.model.response.ProfileEditResponse
+import com.ssafy.mr_patent_android.data.model.response.UrlResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -58,4 +59,9 @@ interface UserService {
     suspend fun checkDuplEmail(
         @Query("email") userEmail: String
     ): Response<BaseResponse<CheckDuplResponse>>
+
+    @GET("user/profile-image/download-url")
+    suspend fun getImage(
+        @Query("filename") fileName: String
+    ): Response<BaseResponse<UrlResponse>>
 }

@@ -71,7 +71,7 @@ class JoinProfileFragment : BaseFragment<FragmentJoinProfileBinding>(
                     handleImageJpgSelected(rotatedUri, extension)
                 }
                 "png" -> {
-                    handleImagePngSelected(uri, bitmap, extension)
+                    handleImagePngSelected(bitmap, extension)
                 }
             }
         }
@@ -116,6 +116,7 @@ class JoinProfileFragment : BaseFragment<FragmentJoinProfileBinding>(
 
     private fun initObserver() {
         joinViewModel.userImage.observe(viewLifecycleOwner, {
+            Log.d(TAG, "initObserver: userImage: ${joinViewModel.userImage.value}")
             Glide.with(requireContext())
                 .load(it)
                 .fallback(R.drawable.user_profile)
@@ -128,8 +129,7 @@ class JoinProfileFragment : BaseFragment<FragmentJoinProfileBinding>(
     private fun handleImageJpgSelected(uri: Uri, extension: String) {
         viewLifecycleOwner.lifecycleScope.launch {
             ImageCompressor(requireContext()).compressImage(uri, 500 * 1024)?.let { bytes ->
-                val (compressedUri, filePath) = byteArrayToUri(bytes, extension)
-                joinViewModel.setUserImagePath(filePath)
+                val compressedUri = byteArrayToUri(bytes, extension)
                 joinViewModel.setUserImage(compressedUri.toString())
                 loadingDialog.dismiss()
             } ?: run {
@@ -138,19 +138,18 @@ class JoinProfileFragment : BaseFragment<FragmentJoinProfileBinding>(
         }
     }
 
-    private fun handleImagePngSelected(uri: Uri, bitmap: Bitmap, extension: String) {
+    private fun handleImagePngSelected(bitmap: Bitmap, extension: String) {
         viewLifecycleOwner.lifecycleScope.launch {
             val resizedBitmap = ImageUtil().resizeBitmap(bitmap, 600, 600)
             val outputStream = ByteArrayOutputStream()
             resizedBitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
             val bytes = outputStream.toByteArray()
-            val (compressedUri, filePath) = byteArrayToUri(bytes, extension)
-            joinViewModel.setUserImagePath(filePath)
+            val compressedUri = byteArrayToUri(bytes, extension)
             joinViewModel.setUserImage(compressedUri.toString())
         }
     }
 
-    private suspend fun byteArrayToUri(byteArray: ByteArray, extension: String): Pair<Uri, String> {
+    private suspend fun byteArrayToUri(byteArray: ByteArray, extension: String): Uri {
         return withContext(Dispatchers.IO) {
             val fileName = "compressed_${System.currentTimeMillis()}.$extension"
             val file = File(requireContext().cacheDir, fileName)
@@ -160,7 +159,7 @@ class JoinProfileFragment : BaseFragment<FragmentJoinProfileBinding>(
                 "${requireContext().packageName}.fileprovider",
                 file
             )
-            Pair(uri, file.absolutePath)
+            uri
         }
     }
 

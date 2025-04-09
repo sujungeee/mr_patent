@@ -53,6 +53,8 @@ class ProfileEditFragment : BaseFragment<FragmentProfileEditBinding>(
     private val profileEditViewModel : ProfileEditViewModel by activityViewModels()
     private val addressViewModel : AddressViewModel by activityViewModels()
 
+    private lateinit var profileEditRequest : ProfileEditRequest
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
     }
@@ -74,7 +76,6 @@ class ProfileEditFragment : BaseFragment<FragmentProfileEditBinding>(
 
             val extension = FileUtil().getFileExtension(requireContext(), uri)
             val bitmap = MediaStore.Images.Media.getBitmap(requireContext().contentResolver,  uri)
-
             when (extension) {
                 "jpg", "jpeg" -> {
                     loadingDialog.show()
@@ -83,7 +84,7 @@ class ProfileEditFragment : BaseFragment<FragmentProfileEditBinding>(
                     handleImageJpgSelected(rotatedUri, extension)
                 }
                 "png" -> {
-                    handleImagePngSelected(uri, bitmap, extension)
+                    handleImagePngSelected(bitmap, extension)
                 }
             }
         }
@@ -162,20 +163,7 @@ class ProfileEditFragment : BaseFragment<FragmentProfileEditBinding>(
         }
 
         binding.btnEdit.setOnClickListener {
-            var profileEditRequest = ProfileEditRequest(null, null, null, null, null, null)
-            if (profileEditViewModel.profileImage.value != profileEditViewModel.currentImage.value
-                && profileEditViewModel.currentImage.value != null) {
-                val fileName = FileUtil().getFileName(requireContext(), Uri.parse(profileEditViewModel.currentImage.value))
-                val extension = FileUtil().getFileExtension(requireContext(), Uri.parse(profileEditViewModel.currentImage.value))
-                if (extension == "jpg" || extension == "jpeg") {
-                    contentType = "image/jpeg"
-                } else {
-                    contentType = "image/png"
-                }
-                lifecycleScope.launch {
-                    profileEditViewModel.uploadFile(fileName!!, contentType)
-                }
-            }
+            profileEditRequest = ProfileEditRequest(null, null, null, null, null, null)
 
             when (args.role) {
                 "member" -> {
@@ -228,17 +216,30 @@ class ProfileEditFragment : BaseFragment<FragmentProfileEditBinding>(
                 }
             }
 
-            profileEditRequest.userImage = profileEditViewModel.currentImage.value
+            if (profileEditViewModel.profileImage.value != profileEditViewModel.currentImage.value
+                && profileEditViewModel.currentImage.value != null) {
 
-            val isEdited = profileEditRequest.userName != null
-                    || profileEditRequest.userImage != null
-                    || profileEditRequest.expertDescription != null
-                    || profileEditRequest.expertAddress != null
-                    || profileEditRequest.expertPhone != null
-                    || profileEditRequest.expertCategories != null
-
-            if (isEdited) {
-                profileEditViewModel.editUserInfo(profileEditRequest)
+                val fileUri = Uri.parse(profileEditViewModel.currentImage.value)
+                val fileName = FileUtil().getFileName(requireContext(), fileUri)
+                var extension = FileUtil().getFileExtension(requireContext(), Uri.parse(profileEditViewModel.currentImage.value))
+                if (extension == "jpg" || extension == "jpeg") {
+                    contentType = "image/jpeg"
+                } else {
+                    contentType = "image/png"
+                }
+                profileEditRequest.userImage = fileName
+                lifecycleScope.launch {
+                    profileEditViewModel.uploadFile(requireContext(), Uri.parse(profileEditViewModel.currentImage.value!!), fileName!!, extension!!, contentType)
+                    val isEdited = profileEditRequest.userName != null
+                            || profileEditRequest.userImage != null
+                            || profileEditRequest.expertDescription != null
+                            || profileEditRequest.expertAddress != null
+                            || profileEditRequest.expertPhone != null
+                            || profileEditRequest.expertCategories != null
+                    if (isEdited) {
+                        profileEditViewModel.editUserInfo(profileEditRequest)
+                    }
+                }
             }
         }
     }
@@ -294,9 +295,11 @@ class ProfileEditFragment : BaseFragment<FragmentProfileEditBinding>(
             binding.clProfileEditItemsMember.visibility = View.VISIBLE
             binding.clProfileEditItemsExpert.visibility = View.GONE
             binding.etName.setText(it.userName)
+            profileEditViewModel.getImage(it.userImage)
         }
 
         profileEditViewModel.profileImage.observe(viewLifecycleOwner, {
+            Log.d(TAG, "initObserver: profileImage")
             if (it != "") {
                 imageUri = Uri.parse(it)
                 Glide.with(requireContext())
@@ -319,6 +322,7 @@ class ProfileEditFragment : BaseFragment<FragmentProfileEditBinding>(
         }
 
         profileEditViewModel.currentImage.observe(viewLifecycleOwner, {
+            Log.d(TAG, "initObserver: currentImage")
             Glide.with(requireContext())
                 .load(it)
                 .fallback(R.drawable.user_profile)
@@ -342,10 +346,8 @@ class ProfileEditFragment : BaseFragment<FragmentProfileEditBinding>(
     private fun handleImageJpgSelected(uri: Uri, extension: String) {
         viewLifecycleOwner.lifecycleScope.launch {
             ImageCompressor(requireContext()).compressImage(uri, 500 * 1024)?.let { bytes ->
-                val (compressedUri, filePath) = byteArrayToUri(bytes, extension)
-                profileEditViewModel.setUserImagePath(filePath)
+                val compressedUri = byteArrayToUri(bytes, extension)
                 profileEditViewModel.setCurrentImage(compressedUri.toString())
-                Log.d(TAG, "handleImageJpgSelected: currentjpg")
                 loadingDialog.dismiss()
             } ?: run {
                 showCustomToast("이미지 처리 실패")
@@ -353,19 +355,18 @@ class ProfileEditFragment : BaseFragment<FragmentProfileEditBinding>(
         }
     }
 
-    private fun handleImagePngSelected(uri: Uri, bitmap: Bitmap, extension: String) {
+    private fun handleImagePngSelected(bitmap: Bitmap, extension: String) {
         viewLifecycleOwner.lifecycleScope.launch {
             val resizedBitmap = ImageUtil().resizeBitmap(bitmap, 600, 600)
             val outputStream = ByteArrayOutputStream()
             resizedBitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
             val bytes = outputStream.toByteArray()
-            val (compressedUri, filePath) = byteArrayToUri(bytes, extension)
-            profileEditViewModel.setUserImagePath(filePath)
+            val compressedUri = byteArrayToUri(bytes, extension)
             profileEditViewModel.setCurrentImage(compressedUri.toString())
         }
     }
 
-    private suspend fun byteArrayToUri(byteArray: ByteArray, extension: String): Pair<Uri, String> {
+    private suspend fun byteArrayToUri(byteArray: ByteArray, extension: String): Uri {
         return withContext(Dispatchers.IO) {
             val fileName = "compressed_${System.currentTimeMillis()}.$extension"
             val file = File(requireContext().cacheDir, fileName)
@@ -375,7 +376,7 @@ class ProfileEditFragment : BaseFragment<FragmentProfileEditBinding>(
                 "${requireContext().packageName}.fileprovider",
                 file
             )
-            Pair(uri, file.absolutePath)
+            uri
         }
     }
 

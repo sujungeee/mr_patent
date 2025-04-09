@@ -1,5 +1,7 @@
 package com.ssafy.mr_patent_android.ui.mypage
 
+import android.content.Context
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -13,6 +15,7 @@ import com.ssafy.mr_patent_android.data.model.dto.UserDto
 import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.authService
 import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.fileService
 import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.userService
+import com.ssafy.mr_patent_android.util.FileUtil
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -27,13 +30,17 @@ class ProfileEditViewModel : ViewModel() {
     val toastMsg: LiveData<String?>
         get() = _toastMsg
 
-    private val _profileImage = MutableLiveData<String>()
-    val profileImage: LiveData<String>
+    private val _profileImage = MutableLiveData<String?>()
+    val profileImage: LiveData<String?>
         get() = _profileImage
 
     private val _currentImage = MutableLiveData<String>()
     val currentImage: LiveData<String>
         get() = _currentImage
+
+    private val _uploadImage = MutableLiveData<String?>()
+    val uploadImage: LiveData<String?>
+        get() = _uploadImage
 
     private val _id = MutableLiveData<Int>()
     val id: LiveData<Int>
@@ -86,8 +93,8 @@ class ProfileEditViewModel : ViewModel() {
     val editPhone: LiveData<String>
         get() = _editPhone
 
-    fun setProfileImage(uri: String) {
-        _profileImage.value = uri
+    fun setProfileImage(profileImage: String?) {
+        _profileImage.value = profileImage
     }
 
     fun setCurrentImage(uri: String) {
@@ -96,18 +103,6 @@ class ProfileEditViewModel : ViewModel() {
 
     fun clearToastMsg() {
         _toastMsg.value = null
-    }
-
-    fun setUserImagePath(userImagePath: String) {
-        _userImagePath.value = userImagePath
-    }
-
-    fun setExpertInfo(expertInfo: UserDto) {
-        _expertInfo.value = expertInfo
-    }
-
-    fun setEditState(editState: Boolean?) {
-        _editState.value = editState
     }
 
     /**
@@ -163,6 +158,26 @@ class ProfileEditViewModel : ViewModel() {
         }
     }
 
+    fun getImage(fileName: String) {
+        viewModelScope.launch {
+            runCatching {
+                userService.getImage(fileName)
+            }.onSuccess {
+                if (it.isSuccessful) {
+                    it.body()?.data?.let { response ->
+                        _profileImage.value = response.url
+                    }
+                } else {
+                    it.errorBody()?.let {
+                        it1 -> networkUtil.getErrorResponse(it1)
+                    }
+                }
+            }.onFailure {
+                it.printStackTrace()
+            }
+        }
+    }
+
     fun getMemberInfo() {
         viewModelScope.launch {
             runCatching {
@@ -172,7 +187,6 @@ class ProfileEditViewModel : ViewModel() {
                     it.body()?.data?.let { response ->
                         Log.d(TAG, "getMemberInfo: ${response}")
                         _memberInfo.value = response
-                        _profileImage.value = response.userImage
                         _expertId.value = response.expertId
                     }
                 } else {
@@ -212,19 +226,17 @@ class ProfileEditViewModel : ViewModel() {
         }
     }
 
-    suspend fun uploadFile(file: String, contentType: String) {
+    suspend fun uploadFile(context: Context, fileUri: Uri, fileName: String, extension: String, contentType: String) {
         runCatching {
             var response = false
             var preSignedUrl = ""
+//            var rExtension = if (extension == "jpg") "jpeg" else extension
 
-            if (file != null) {
-                preSignedUrl = getPreSignedUrl(file, contentType)
-                response = uploadFileS3(preSignedUrl, contentType)
-            }
+            preSignedUrl = getPreSignedUrl(fileName, contentType)
+            response = uploadFileS3(context, fileUri, preSignedUrl, fileName, extension, contentType)
+
             if (response) {
-                when (contentType) {
-                    "image/jpeg", "image/png" -> _currentImage.value = preSignedUrl.substringBefore("?")
-                }
+
             } else {
                 throw Exception("업로드 실패")
             }
@@ -254,11 +266,12 @@ class ProfileEditViewModel : ViewModel() {
         }
     }
 
-    suspend fun uploadFileS3(preSignedUrl: String, contentType: String) : Boolean {
+    suspend fun uploadFileS3(context: Context, fileUri: Uri, preSignedUrl: String, fileName: String, extension: String, contentType: String) : Boolean {
         return suspendCoroutine { continuation ->
             viewModelScope.launch {
                 runCatching {
-                    val file = File(userImagePath.value!!)
+                    val file = FileUtil().getFileFromUri(context, fileUri, fileName, extension)
+                    Log.d(TAG, "uploadFileS3: ${file}")
                     val requestBody = file.asRequestBody(contentType.toMediaType())
                     fileService.uploadFile(preSignedUrl, requestBody)
                 }.onSuccess {
