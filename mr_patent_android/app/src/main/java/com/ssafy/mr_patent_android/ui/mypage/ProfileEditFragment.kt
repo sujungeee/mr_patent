@@ -218,16 +218,16 @@ class ProfileEditFragment : BaseFragment<FragmentProfileEditBinding>(
 
             if (profileEditViewModel.profileImage.value != profileEditViewModel.currentImage.value
                 && profileEditViewModel.currentImage.value != null) {
-
                 val fileUri = Uri.parse(profileEditViewModel.currentImage.value)
                 val fileName = FileUtil().getFileName(requireContext(), fileUri)
-                var extension = FileUtil().getFileExtension(requireContext(), Uri.parse(profileEditViewModel.currentImage.value))
+                val extension = FileUtil().getFileExtension(requireContext(), Uri.parse(profileEditViewModel.currentImage.value))
                 if (extension == "jpg" || extension == "jpeg") {
                     contentType = "image/jpeg"
                 } else {
                     contentType = "image/png"
                 }
                 profileEditRequest.userImage = fileName
+
                 lifecycleScope.launch {
                     profileEditViewModel.uploadFile(requireContext(), Uri.parse(profileEditViewModel.currentImage.value!!), fileName!!, extension!!, contentType)
                     val isEdited = profileEditRequest.userName != null
@@ -299,13 +299,8 @@ class ProfileEditFragment : BaseFragment<FragmentProfileEditBinding>(
         }
 
         profileEditViewModel.profileImage.observe(viewLifecycleOwner, {
-            Log.d(TAG, "initObserver: profileImage")
             if (it != "") {
                 imageUri = Uri.parse(it)
-                Glide.with(requireContext())
-                    .load(imageUri)
-                    .error(R.drawable.image_load_error_icon)
-                    .into(binding.ivProfile)
                 profileEditViewModel.setCurrentImage(imageUri.toString())
             } else {
                 Glide.with(requireContext())
@@ -322,7 +317,6 @@ class ProfileEditFragment : BaseFragment<FragmentProfileEditBinding>(
         }
 
         profileEditViewModel.currentImage.observe(viewLifecycleOwner, {
-            Log.d(TAG, "initObserver: currentImage")
             Glide.with(requireContext())
                 .load(it)
                 .fallback(R.drawable.user_profile)

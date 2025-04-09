@@ -93,10 +93,6 @@ class ProfileEditViewModel : ViewModel() {
     val editPhone: LiveData<String>
         get() = _editPhone
 
-    fun setProfileImage(profileImage: String?) {
-        _profileImage.value = profileImage
-    }
-
     fun setCurrentImage(uri: String) {
         _currentImage.value = uri
     }
