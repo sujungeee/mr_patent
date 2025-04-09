@@ -34,8 +34,8 @@ class ProfileEditViewModel : ViewModel() {
     val profileImage: LiveData<String?>
         get() = _profileImage
 
-    private val _currentImage = MutableLiveData<String>()
-    val currentImage: LiveData<String>
+    private val _currentImage = MutableLiveData<String?>()
+    val currentImage: LiveData<String?>
         get() = _currentImage
 
     private val _uploadImage = MutableLiveData<String?>()
@@ -93,12 +93,12 @@ class ProfileEditViewModel : ViewModel() {
     val editPhone: LiveData<String>
         get() = _editPhone
 
-    fun setProfileImage(profileImage: String?) {
-        _profileImage.value = profileImage
+    fun setCurrentImage(currentImage: String?) {
+        _currentImage.value = currentImage
     }
 
-    fun setCurrentImage(uri: String) {
-        _currentImage.value = uri
+    fun setProfileImage(profileImage: String?) {
+        _profileImage.value = profileImage
     }
 
     fun clearToastMsg() {
@@ -165,7 +165,9 @@ class ProfileEditViewModel : ViewModel() {
             }.onSuccess {
                 if (it.isSuccessful) {
                     it.body()?.data?.let { response ->
-                        _profileImage.value = response.url
+                        if (_profileImage.value != response.url) {
+                            _profileImage.value = response.url
+                        }
                     }
                 } else {
                     it.errorBody()?.let {

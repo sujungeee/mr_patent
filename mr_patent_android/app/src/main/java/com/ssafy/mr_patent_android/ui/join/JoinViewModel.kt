@@ -230,15 +230,7 @@ class JoinViewModel: ViewModel() {
                 response = uploadFileS3(context, fileUri, preSignedUrl, fileName, extension, contentType)
             }
             if (response) {
-                when (contentType) {
-                    "image/jpeg", "image/png" -> {
-                        _uploadImageState.value = true
-                    }
 
-                    "application/pdf" -> {
-                        _uploadFileState.value = true
-                    }
-                }
             } else {
                 throw Exception("업로드 실패")
             }

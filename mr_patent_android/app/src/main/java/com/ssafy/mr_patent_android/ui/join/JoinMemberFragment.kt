@@ -71,14 +71,14 @@ class JoinMemberFragment : BaseFragment<FragmentJoinMemberBinding>(
                     lifecycleScope.launch {
                         var fileUri = Uri.parse(joinViewModel.userImage.value)
                         val fileName = FileUtil().getFileName(requireContext(), fileUri)
-                        var extension = FileUtil().getFileExtension(requireContext(), Uri.parse(joinViewModel.userImage.value))
+                        val extension = FileUtil().getFileExtension(requireContext(), fileUri)
                         if (extension == "jpg" || extension == "jpeg") {
-                            extension = "jpeg"
                             contentType = "image/jpeg"
                         } else {
                             contentType = "image/png"
                         }
-                        joinViewModel.uploadFile(requireContext(), Uri.parse(joinViewModel.userImage.value!!), fileName!!, extension!!, contentType)
+                        joinViewModel.uploadFile(requireContext(), fileUri, fileName!!, extension!!, contentType)
+                        joinViewModel.joinMember(binding.etEmail.text.toString(), binding.etName.text.toString(), binding.etPw.text.toString(), fileName)
                     }
                 } else {
                     joinViewModel.joinMember(binding.etEmail.text.toString(), binding.etName.text.toString(), binding.etPw.text.toString(), "")
@@ -149,18 +149,6 @@ class JoinMemberFragment : BaseFragment<FragmentJoinMemberBinding>(
                 binding.btnVerify.isEnabled = false
                 stopTimer()
             } else {
-            }
-        })
-
-        joinViewModel.uploadImageState.observe(viewLifecycleOwner, {
-            val uriNoExtension = joinViewModel.userImage.value?.substringBeforeLast(".")
-            var fileUri = Uri.parse(uriNoExtension)
-            val fileName = FileUtil().getFileName(requireContext(), fileUri)
-            Log.d(TAG, "initObserver: upload: ${fileName}")
-            it?.let {
-                if (it) {
-                    joinViewModel.joinMember(binding.etEmail.text.toString(), binding.etName.text.toString(), binding.etPw.text.toString(), fileName!!)
-                }
             }
         })
 
