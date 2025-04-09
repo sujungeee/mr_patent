@@ -15,6 +15,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.ssafy.mr_patent_android.base.BaseActivity
 import com.ssafy.mr_patent_android.databinding.ActivityMainBinding
 import com.ssafy.mr_patent_android.ui.home.HomeFragmentDirections
+import com.ssafy.mr_patent_android.util.ConnectionStateMonitor
 import com.ssafy.mr_patent_android.ui.patent.PatentFragmentDirections
 import com.ssafy.mr_patent_android.ui.patent.SimiliarityTestViewModel
 import java.time.Instant
@@ -29,24 +30,28 @@ class MainActivity : BaseActivity<ActivityMainBinding>(ActivityMainBinding::infl
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
-        initFcm()
         initNavigation()
+        initConnection()
     }
 
-    private fun initFcm(){
-
-        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
-            if (!task.isSuccessful) {
-
-                Log.w(TAG, "Fetching FCM registration token failed", task.exception)
-                return@OnCompleteListener
-            }
-            // Get new FCM registration token
-            val token = task.result
-
-            viewModel.sendFcmToken(token)
-            Log.d(TAG, "FCM 토큰: $token")
+    fun initConnection(){
+        ConnectionStateMonitor(this, {
+            viewModel.setNetworkState(true)
+        }, {
+            viewModel.setNetworkState(false)
         })
+    }
+
+    fun initObserver(){
+        viewModel.networkState.observe(this){
+            Log.d(TAG, "initObserver: $it")
+            if(it == true){
+                binding.appbar.visibility = View.GONE
+            }
+            else{
+                binding.appbar.visibility = View.VISIBLE
+            }
+        }
     }
 
 
@@ -90,4 +95,5 @@ class MainActivity : BaseActivity<ActivityMainBinding>(ActivityMainBinding::infl
             )
         }
     }
+
 }

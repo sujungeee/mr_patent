@@ -75,7 +75,7 @@ class QuizFragment : BaseFragment<FragmentQuizBinding>(FragmentQuizBinding::bind
                         Log.d(TAG, "initView: $wrongAnswers")
                     }
                     findNavController().navigate(
-                        QuizFragmentDirections.actionQuizFragmentToQuizResultFragment(quizViewModel.wrongAnswers.value!!.toIntArray(), levelId),
+                        QuizFragmentDirections.actionQuizFragmentToQuizResultFragment((quizViewModel.wrongAnswers.value?: emptyList<Int>()).toIntArray()  , levelId),
                         NavOptions.Builder()
                             .setPopUpTo(R.id.quizFragment, true)
                             .build()
@@ -109,6 +109,7 @@ class QuizFragment : BaseFragment<FragmentQuizBinding>(FragmentQuizBinding::bind
         binding.rvQuizOptions.adapter = optionAdapter
 
         binding.tvSequence.text = "${currentQuestionIndex + 1}/${quizData.questions.size}"
+        binding.linearProgressIndicator.progress = (currentQuestionIndex + 1)
 
         binding.button.text = if (currentQuestionIndex == quizData.questions.size - 1) "퀴즈 완료" else "다음 문제"
     }

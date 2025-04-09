@@ -31,7 +31,7 @@ class ChatListViewModel : ViewModel() {
             }.onSuccess {
                 if (it.isSuccessful) {
                     it.body()?.data?.let { chatRoomList ->
-                        _chatRoomList.value = chatRoomList
+                        _chatRoomList.value = chatRoomList.sortedByDescending {  it.lastMessageTime }
                         Log.d(TAG, "getChatRoomList: ${chatRoomList}")
                     }
                 }else{
@@ -42,10 +42,6 @@ class ChatListViewModel : ViewModel() {
                 }
             }.onFailure {
                 it.printStackTrace()
-                _chatRoomList.value= mutableListOf(
-                    ChatRoomDto(
-                    )
-                )
                 Log.d(TAG, "getChatRoomList: ${_chatRoomList.value}")
             }
         }
@@ -53,7 +49,18 @@ class ChatListViewModel : ViewModel() {
 
     fun updateChatList(newMessage: ChatRoomDto) {
         val currentList = _chatRoomList.value?.toMutableList() ?: mutableListOf()
+
         currentList.removeAll { it.roomId == newMessage.roomId }
+
+        val tmpUserId = newMessage.userId
+        val tmpreceiverId = newMessage.receiverId
+        if(tmpUserId!=sharedPreferences.getUser().userId) {
+            newMessage.userId= tmpreceiverId
+            newMessage.receiverId = tmpUserId
+        }
+
+
+
         currentList.add(0, newMessage)
         _chatRoomList.postValue(currentList)
     }

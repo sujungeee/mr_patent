@@ -20,13 +20,23 @@ class TimeUtil {
 
         return localDateTime
     }
-    fun formatLocalDateTimeToString(localDateTime: LocalDateTime): String {
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+
+    fun formatLocalToStringMonthTime(localDateTime: LocalDateTime): String {
+        val formatter = DateTimeFormatter.ofPattern("MM월 dd일 HH시 mm분")
         return localDateTime.format(formatter)
     }
 
-    fun formatLocalDateTimeToDateString(localDateTime: LocalDateTime): String {
+    fun formatLocalToStringYearDash(localDateTime: LocalDateTime): String {
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        return localDateTime.format(formatter)
+    }
+
+    fun formatLocalToStringYear(localDateTime: LocalDateTime): String {
+        val formatter = DateTimeFormatter.ofPattern("yyyy년 MM월 dd일")
+        return localDateTime.format(formatter)
+    }
+    fun formatLocalDateTimeToString(localDateTime: LocalDateTime): String {
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
         return localDateTime.format(formatter)
     }
 }

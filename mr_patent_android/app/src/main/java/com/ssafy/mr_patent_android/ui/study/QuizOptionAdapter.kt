@@ -24,7 +24,7 @@ class QuizOptionAdapter(
             binding.tvOptionText.text = option.optionText
 
             // 배경 초기화
-            binding.tvOptionText.setBackgroundResource(R.drawable.selector_quiz_option)
+            binding.tvOptionText.setBackgroundResource(R.drawable.rounded_background_stroke)
 
             if (isAnswerChecked) {
                 when (option.optionId) {

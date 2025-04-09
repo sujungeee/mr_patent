@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavOptions
@@ -46,13 +47,25 @@ class StudyCardFragment : BaseFragment<FragmentStudyCardBinding>(FragmentStudyCa
             viewModel.getBookmarkWordList(level_id)
             binding.tvSequence.text = "${binding.vpStudyCard.currentItem+1}/${viewModel.total.value ?: ""}"
             binding.vpStudyCard.setPageTransformer { page, position ->
+                val firstItem = binding.vpStudyCard.currentItem == 0
+                val lastItem = binding.vpStudyCard.currentItem == viewModel.total.value?.toInt()!!-1
+                binding.btnBack.isVisible = !firstItem
+                binding.btnNext.isVisible = !lastItem
+
                 binding.tvSequence.text = "${binding.vpStudyCard.currentItem+1}/${viewModel.total.value?: ""}"
             }
         } else {
+            binding.tvTitle.text = "Level $level_id"
             viewModel.getWordList(level_id)
             binding.tvSequence.text = "${binding.vpStudyCard.currentItem+1}/30"
             binding.vpStudyCard.setPageTransformer { page, position ->
                 binding.tvSequence.text = "${binding.vpStudyCard.currentItem+1}/30"
+
+                val firstItem = binding.vpStudyCard.currentItem == 0
+                val lastItem = binding.vpStudyCard.currentItem == 29
+
+                binding.btnBack.isVisible = !firstItem
+                binding.btnNext.isVisible = !lastItem
             }
         }
         binding.btnAll.setOnClickListener {

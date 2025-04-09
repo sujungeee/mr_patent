@@ -14,6 +14,7 @@ import com.google.android.libraries.places.api.model.kotlin.localTime
 import com.google.gson.Gson
 import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.networkUtil
 import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.sharedPreferences
+import com.ssafy.mr_patent_android.data.model.dto.ChatHeartBeat
 import com.ssafy.mr_patent_android.data.model.dto.ChatMessageDto
 import com.ssafy.mr_patent_android.data.model.dto.ChatRoomDto
 import com.ssafy.mr_patent_android.data.model.dto.UserDto
@@ -40,6 +41,14 @@ class ChatViewModel : ViewModel() {
     private val _messageList = MutableLiveData<List<ChatMessageDto>>()
     val messageList: LiveData<List<ChatMessageDto>>
         get() = _messageList
+
+    private val _dateChanged = MutableLiveData<Boolean>(false)
+    val dateChanged: LiveData<Boolean>
+        get() = _dateChanged
+
+    fun setDateChanged(dateChanged: Boolean) {
+        _dateChanged.value = dateChanged
+    }
 
     private val _roomId = MutableLiveData<Int>()
     val roomId: LiveData<Int>
@@ -70,6 +79,11 @@ class ChatViewModel : ViewModel() {
     val isLoading: LiveData<Boolean>
         get() = _isLoading
 
+
+    fun setIsLoading(isLoading: Boolean) {
+        _isLoading.value= isLoading
+    }
+
     fun setIsSend(isSend: Boolean) {
         _isSend.postValue(isSend)
     }
@@ -88,22 +102,26 @@ class ChatViewModel : ViewModel() {
         Log.d(TAG, "addMessage: $message, ${currentList}")
         if (currentList.isNullOrEmpty()) {
             Log.d(TAG, "addMessage: 빈리스트")
-            currentList.add(0,
+            currentList.add(
                 ChatMessageDto(
                     chatId = 0,
-                    timestamp = message.timestamp,
+                    timestamp = TimeUtil().parseUtcWithJavaTime(message.timestamp!!).toLocalDate().toString(),
                     messageType = "DIVIDER"
                 )
             )
         }else{
             Log.d(TAG, "addMessage: ${currentList.first()}")
-            val lastTime = currentList.last().timestamp
-            val cur = message.timestamp
+            val lastTime = TimeUtil().parseUtcWithJavaTime(currentList.first().timestamp!!)
+            val cur = TimeUtil().parseUtcWithJavaTime(message.timestamp!!)
+            Log.d(TAG, "addMessage: $lastTime, $cur")
+
 
             if (cur != null && cur != lastTime) {
+                _dateChanged.postValue(true)
                 currentList.add(
                     ChatMessageDto(
-                        timestamp = message.timestamp,
+                        chatId = 0,
+                        timestamp = TimeUtil().parseUtcWithJavaTime(message.timestamp!!).toLocalDate().toString(),
                         messageType = "DIVIDER"
                     )
                 )
@@ -235,6 +253,21 @@ class ChatViewModel : ViewModel() {
         }
     }
 
+    fun sendStompHeartBeat(stompClient: StompClient, roomId: String) {
+       val heartBeat = ChatHeartBeat(
+            roomId = roomId,
+            type = "PING",
+            userId = sharedPreferences.getUser().userId
+        )
+
+        val jsonMessage = Gson().toJson(heartBeat)
+        Log.d(TAG, "sendStompMessage: $jsonMessage")
+        try {
+            stompClient.send("/pub/chat/heartbeat", jsonMessage).subscribe()
+        } catch (e: Exception) {
+        }
+    }
+
 
 
 
@@ -294,6 +327,7 @@ class ChatViewModel : ViewModel() {
                         _messageList.value = currentMessages
                         _isLoading.value = false
                     }
+                    _isLoading.value = false
                 } else {
                     it.errorBody()?.let { error ->
                         networkUtil.getErrorResponse(error)?.let { errorResponse ->
@@ -326,5 +360,8 @@ class ChatViewModel : ViewModel() {
             }
         }
 
+    }
+    fun setMessageList(message: List<ChatMessageDto>){
+        _messageList.value = message
     }
 }

@@ -1,59 +1,67 @@
 package com.ssafy.mr_patent_android.ui.chat
 
+import android.Manifest.permission.READ_EXTERNAL_STORAGE
+import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.Activity.RESULT_OK
 import android.app.Dialog
+import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
+import android.graphics.Rect
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
-import android.provider.OpenableColumns
+import android.os.Environment
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import android.view.MotionEvent
 import android.view.View
-import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.view.Window
-import android.webkit.MimeTypeMap
-import android.widget.Button
+import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
 import android.widget.FrameLayout
-import android.widget.ImageView
+import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.ActionBar.LayoutParams
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.widget.addTextChangedListener
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.gson.Gson
+import com.ssafy.mr_patent_android.MainViewModel
 import com.ssafy.mr_patent_android.R
-import com.ssafy.mr_patent_android.base.ApplicationClass
+import com.ssafy.mr_patent_android.WebViewActivity
 import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.sharedPreferences
 import com.ssafy.mr_patent_android.base.BaseFragment
-import com.ssafy.mr_patent_android.base.XAccessTokenInterceptor
 import com.ssafy.mr_patent_android.data.model.dto.ChatMessageDto
 import com.ssafy.mr_patent_android.data.model.dto.UserDto
 import com.ssafy.mr_patent_android.databinding.DialogChatProfileBinding
+import com.ssafy.mr_patent_android.databinding.DialogSizeOverBinding
 import com.ssafy.mr_patent_android.databinding.FragmentChatBinding
 import com.ssafy.mr_patent_android.databinding.FragmentChatBottomSheetBinding
 import com.ssafy.mr_patent_android.databinding.ItemPhotoPreviewBinding
 import com.ssafy.mr_patent_android.util.FileUtil
 import gun0912.tedimagepicker.builder.TedImagePicker
-import kotlinx.coroutines.launch
-import okhttp3.OkHttpClient
-import okhttp3.OkHttpClient.*
-import okhttp3.internal.http2.Header
 import ua.naiksoftware.stomp.Stomp
 import ua.naiksoftware.stomp.StompClient
 import ua.naiksoftware.stomp.dto.LifecycleEvent
 import ua.naiksoftware.stomp.dto.StompHeader
-import java.util.concurrent.TimeUnit
-import kotlin.math.log
+import java.text.SimpleDateFormat
+import java.util.Date
 
 
 private const val TAG = "ChatFragment"
@@ -62,6 +70,8 @@ class ChatFragment :
     BaseFragment<FragmentChatBinding>(FragmentChatBinding::bind, R.layout.fragment_chat) {
     private lateinit var messageListAdapter: MessageListAdapter
     val viewModel: ChatViewModel by viewModels()
+    var pendingUrl: String? = null
+    val activityViewModel: MainViewModel by activityViewModels()
     private val roomId: String by lazy {
         navArgs<ChatFragmentArgs>().value.roomId
     }
@@ -79,86 +89,125 @@ class ChatFragment :
     }
     lateinit var stompClient: StompClient
 
-    val url = "wss://j12d208.p.ssafy.io/ws/chat"
+    var isConnected = false
+
+    lateinit var sizeOverdialog: Dialog
+
+
+//    val url = "wss://j12d208.p.ssafy.io/ws/chat"
+    val url = "ws://192.168.100.130:8080/ws/chat"
+//    val url = "ws://192.168.100.130:8080/ws/chat"
+//    val url = "ws://172.20.10.3:8080/ws/chat"
+
     var headerList: MutableList<StompHeader> = mutableListOf()
     var modalBottomSheet: BottomSheetDialog? = null
 
 
+//    @SuppressLint("CheckResult")
+//    fun initStomp() {
+//
+//        stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, url)
+//        headerList.add(StompHeader("Authorization", "Bearer ${sharedPreferences.getAToken()}"))
+//        headerList.add(StompHeader("roomId", roomId))
+//        headerList.add(StompHeader("userId", sharedPreferences.getUser().userId.toString()))
+//
+//        stompClient.connect(headerList)
+//
+//    }
+    private fun retryConnect() {
+        if (!isConnected) {
+            Handler(Looper.getMainLooper()).postDelayed({
+                Log.d(TAG, "STOMP 재연결 시도")
+                connectStomp() // stompClient.connect() + lifecycle 재등록 + 재구독
+            }, 3000) // 3초 후 재시도
+        }
+    }
     @SuppressLint("CheckResult")
-    fun initStomp() {
+    private fun connectStomp() {
 
         stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, url)
         headerList.add(StompHeader("Authorization", "Bearer ${sharedPreferences.getAToken()}"))
         headerList.add(StompHeader("roomId", roomId))
         headerList.add(StompHeader("userId", sharedPreferences.getUser().userId.toString()))
+//
+        val heartBeatHandler = Handler(Looper.getMainLooper())
+        val heartBeatRunnable = object : Runnable {
+            override fun run() {
+                if (isConnected) {
+                    viewModel.sendStompHeartBeat(stompClient, roomId)
+                    heartBeatHandler.postDelayed(this, 5000)
+                }
+            }
+        }
+        stompClient.disconnect()
+
 
         stompClient.lifecycle().subscribe { lifecycleEvent ->
             when (lifecycleEvent.type) {
                 LifecycleEvent.Type.OPENED -> {
-                    Log.i("OPEND", "스톰프 연결 성공")
-                    stompClient.topic("/sub/chat/room/" + roomId, headerList)
-                        .subscribe({ topicMessage ->
-                            try {
-                                Log.d(TAG,"구독스${topicMessage.getPayload()}")
-                                val message = Gson().fromJson(
-                                    topicMessage.getPayload(),
-                                    ChatMessageDto::class.java
-                                )
-
-                                Log.d(TAG, "initStomp: $message")
-                                if (message.type == "ENTER") {
-                                    if (message.status>=2){
-                                        viewModel.setState(true)
-                                        requireActivity().runOnUiThread {
-                                            messageListAdapter.setRead()
-                                        }
-                                    }
-                                    else{
-                                        viewModel.setState(false)
-                                    }
-                                }else if (message.type == "LEAVE") {
-                                    viewModel.setState(false)
-                                }else {
-                                    viewModel.setIsSend(true)
-                                    viewModel.addMessage(message)
-                                }
-                            } catch (e: Exception) {
-                                Log.e(TAG, "Failed to process message", e)
-                            }
-                        }, { error ->
-                            Log.e(
-                                "SUBSCRIPTION_ERROR",
-                                "Topic subscription error: ${error.message}"
-                            )
-                        })
-
-                }
-
-                LifecycleEvent.Type.CLOSED -> {
-                    Log.i("CLOSED", "스톰프 연결 종료")
+                    Log.d(TAG, "STOMP 연결됨")
+                    isConnected = true
+                    subscribeAll() // 재연결 시 모든 구독 다시 수행
+                    heartBeatHandler.post(heartBeatRunnable)
 
                 }
 
                 LifecycleEvent.Type.ERROR -> {
-                    Log.i("ERROR", "스톰프 연결 에러")
-
-                    Log.e("CONNECT ERROR", lifecycleEvent.exception.toString())
+                    Log.e(TAG, "STOMP 오류", lifecycleEvent.exception)
+                    isConnected = false
                 }
 
-                else -> {
-                    Log.i("ELSE", lifecycleEvent.message)
+                LifecycleEvent.Type.CLOSED -> {
+                    Log.d(TAG, "STOMP 연결 종료됨")
+                    isConnected = false
+//                    retryConnect() // 연결 종료 시 재시도
+                    heartBeatHandler.removeCallbacks(heartBeatRunnable)
                 }
+
+                LifecycleEvent.Type.FAILED_SERVER_HEARTBEAT -> retryConnect()
             }
         }
-        stompClient.withClientHeartbeat(10000) // 10초마다 heartbeat 보내기
-        stompClient.withServerHeartbeat(10000) // 10초마다 서버 heartbeat 받기
-
-
         stompClient.connect(headerList)
 
-
     }
+    @SuppressLint("CheckResult")
+    private fun subscribeAll() {
+        stompClient.topic("/sub/chat/room/" + roomId, headerList)
+            .subscribe({ topicMessage ->
+                try {
+                    Log.d(TAG,"구독스${topicMessage.getPayload()}")
+                    val message = Gson().fromJson(
+                        topicMessage.getPayload(),
+                        ChatMessageDto::class.java
+                    )
 
+                    Log.d(TAG, "initStomp: $message")
+                    if (message.type == "ENTER") {
+                        if (message.status>=2){
+                            viewModel.setState(true)
+                            requireActivity().runOnUiThread {
+                                messageListAdapter.setRead()
+                            }
+                        }
+                        else{
+                            viewModel.setState(false)
+                        }
+                    }else if (message.type == "LEAVE") {
+                        viewModel.setState(false)
+                    }else {
+                        viewModel.setIsSend(true)
+                        viewModel.addMessage(message)
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to process message", e)
+                }
+            }, { error ->
+                Log.e(
+                    "SUBSCRIPTION_ERROR",
+                    "Topic subscription error: ${error.message}"
+                )
+            })
+    }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -171,25 +220,49 @@ class ChatFragment :
         super.onViewCreated(view, savedInstanceState)
         initView()
         initBottomSheet()
-        initStomp()
+//        connectStomp()
+        sizeOverDialog()
+//        initStomp()
         initObserver()
+        initKeyBoard()
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     fun initObserver() {
+        activityViewModel.networkState.observe(requireActivity()){
+            if(isAdded) {
+                if (it == false) {
+                    binding.tvNetworkError.visibility = View.VISIBLE
+                } else {
+                    binding.tvNetworkError.visibility = View.GONE
+                    connectStomp()
+                    viewModel.setMessageList(emptyList())
+                    viewModel.setIsLoading(false)
+                    viewModel.getMessageList(roomId)
+                }
+            }
+        }
         // 어댑터를 한 번만 생성
         messageListAdapter = MessageListAdapter(
             UserDto(userName, userImage),
             emptyList(),
             object : MessageListAdapter.ItemClickListener {
                 override fun onItemClick() {
-                    Log.d(TAG, "onFileClick: $expertId")
                     if (expertId != -1) {
                         initUserDialog(expertId)
                     }
                 }
 
                 override fun onFileClick(url: String) {
+                    Log.d(TAG, "onFileClick: $url")
+                    if (url.isNotEmpty()) {
+                        val intent = Intent(requireContext(), WebViewActivity::class.java)
+                        intent.putExtra("url", url)
+                        intent.putExtra("file", 1)
 
+                        startActivity(intent)
+
+                    }
 
                 }
 
@@ -198,12 +271,18 @@ class ChatFragment :
                 }
             })
 
-//         RecyclerView에 어댑터 설정 (한 번만)
         binding.rvChat.adapter = messageListAdapter
+
 
         viewModel.messageList.observe(viewLifecycleOwner) {
             if (viewModel.isSend.value == true) {
-                messageListAdapter.addMessage(it[0])
+                if (it.size == 2) {
+                    messageListAdapter.addMessage(it[1], 1)
+                    messageListAdapter.addMessage(it[0],1)
+                }
+                else{
+                    messageListAdapter.addMessage(it[0],0)
+                }
                 viewModel.setIsSend(false)
                 if (it!=null){
                 binding.rvChat.scrollToPosition(0)
@@ -214,16 +293,17 @@ class ChatFragment :
                     messageListAdapter.updateMessages(it)
                 }
 
-                if(it.size==10){
+                val visibleMessages = it.filter { message -> message.messageType != "DIVIDER" }
+                if (visibleMessages.size <= 20) {
                     binding.rvChat.scrollToPosition(0)
                 }
+
             }
         }
 
     }
 
     fun initView() {
-        viewModel.getMessageList(roomId)
         binding.btnSend.isEnabled = false
         binding.tvChatHeader.text = userName
         binding.etMessage.addTextChangedListener {
@@ -233,7 +313,9 @@ class ChatFragment :
                 binding.btnSend.isEnabled = false
             }
         }
-        binding.rvChat.scrollToPosition(0)
+
+
+
 
         binding.btnSend.setOnClickListener {
             viewModel.sendMessage(
@@ -253,14 +335,16 @@ class ChatFragment :
                 super.onScrolled(recyclerView, dx, dy)
 
                 val layoutManager = recyclerView.layoutManager as? LinearLayoutManager ?: return
-                val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
-
+                val firstVisibleItemPosition = layoutManager.findLastVisibleItemPosition()
                 // 최상단에서 3개 이하일 때 (즉, 거의 맨 위로 스크롤한 상황)
-                if (firstVisibleItemPosition <= 2) {
+                if ((viewModel.messageList.value?.size)?.minus(firstVisibleItemPosition)?:11 <= 10) {
                     // 이미 로딩 중이라면 중복 방지 로직 필요
                     if (viewModel.isLoading.value == false) {
                         Log.d(TAG, "onScrolled: ${viewModel.messageList.value}")
-                        viewModel.getMessageList(roomId, viewModel.messageList.value?.last()?.chatId)
+                        viewModel.getMessageList(
+                            roomId,
+                            viewModel.messageList.value?.last()?.chatId
+                        )
                     }
                 }
             }
@@ -339,6 +423,19 @@ class ChatFragment :
 
     }
 
+    fun sizeOverDialog(){
+        sizeOverdialog = Dialog(requireContext())
+        sizeOverdialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        val dialogBinding = DialogSizeOverBinding.inflate(layoutInflater)
+        sizeOverdialog.setContentView(dialogBinding.root)
+        sizeOverdialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        dialogBinding.dlBtnYes.setOnClickListener {
+            sizeOverdialog.dismiss()
+        }
+    }
+
+
     fun initBottomSheet() {
         val bottomBinding = FragmentChatBottomSheetBinding.inflate(layoutInflater)
 // modal bottom sheet 객체 생성
@@ -351,6 +448,7 @@ class ChatFragment :
             modalBottomSheet?.dismiss()
         }
 
+
         bottomBinding.btnGallery.setOnClickListener {
         TedImagePicker.with(requireContext())
             .max(5, "사진은 최대 5장까지 선택 가능합니다.")
@@ -359,6 +457,12 @@ class ChatFragment :
                 uriList.forEach { uri ->
                     if (FileUtil().isFileSizeValid(requireContext(), uri)) {
                         viewModel.addImage(ChatMessageDto.Files("", "", uri))
+                    }
+                    else {
+                        Log.d("uri", "파일 크기 초과")
+                        if (!sizeOverdialog.isShowing) {
+                            sizeOverdialog.show()
+                        }
                     }
                 }
             }
@@ -467,41 +571,14 @@ class ChatFragment :
         }
     }
 
-    private val activityResult: ActivityResultLauncher<Intent> = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == RESULT_OK) {
-            val clipData = result.data?.clipData
-            val currentCount = viewModel.image.value?.size ?: 0
-            val remainingSlots = 5 - currentCount
 
-            if (clipData != null) {
-                var addedCount = 0
-                for (i in 0 until clipData.itemCount) {
-                    if (addedCount >= remainingSlots) break
-
-                    val uri = clipData.getItemAt(i).uri
-                    if (FileUtil().isFileSizeValid(requireContext(),uri)) {
-                        viewModel.addImage(ChatMessageDto.Files("name", "", uri))
-                        addedCount++
-                    }
-                }
-            } else {
-                val uri = result.data?.data
-                if (uri != null && currentCount < 5 && FileUtil().isFileSizeValid(requireContext(),uri)) {
-                    viewModel.addImage(ChatMessageDto.Files("name", "", uri))
-                }
-            }
-        }
-    }
-
-
-    override fun onDestroy() {
-        super.onDestroy()
-        // stompClient가 초기화되고 연결되어 있는지 확인 후 연결 해제
+    override fun onDestroyView() {
+        super.onDestroyView()
         if (::stompClient.isInitialized && stompClient.isConnected()) {
             stompClient.disconnect()
         }
-
     }
+
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -512,11 +589,55 @@ class ChatFragment :
                     viewModel.setFile(uri)
                     Log.d("uri", "파일 선택됨: $uri")
                 } else {
-                    Log.d("uri", "파일 크기 초과")
+                    if (!sizeOverdialog.isShowing) {
+                        sizeOverdialog.show()
+                    } else {
+                        Log.d("uri", "파일 크기 초과")
+                    }
+
                 }
             }
         }
     }
 
+    fun initKeyBoard(){
+        val rootView = view?.rootView
+        val recyclerView = binding.rvChat
+
+        rootView?.viewTreeObserver?.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+            private var lastHeight = 0
+
+            override fun onGlobalLayout() {
+                val rect = Rect()
+                rootView.getWindowVisibleDisplayFrame(rect)
+                val screenHeight = rootView.height
+                val keypadHeight = screenHeight - rect.bottom
+
+                if (lastHeight != keypadHeight) {
+                    if (keypadHeight > screenHeight * 0.15) {
+                        // 키보드가 올라왔을 때
+                        recyclerView.scrollToPosition(0)
+                    }
+                    lastHeight = keypadHeight
+                }
+            }
+        })
+
+        binding.rvChat.setOnTouchListener { _, event ->
+            if (event.action == MotionEvent.ACTION_DOWN) {
+                val focused = activity?.currentFocus
+                if (focused is EditText) {
+                    focused.clearFocus()
+                    hideKeyboard(focused)
+                }
+            }
+            false
+        }
+    }
+
+    fun hideKeyboard(view: View) {
+        val imm = view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(view.windowToken, 0)
+    }
 
 }
