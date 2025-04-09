@@ -13,7 +13,6 @@ import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.sharedPrefere
 import com.ssafy.mr_patent_android.base.BaseFragment
 import com.ssafy.mr_patent_android.databinding.FragmentMyPageBinding
 import com.ssafy.mr_patent_android.ui.login.LoginActivity
-import com.ssafy.mr_patent_android.util.SharedPreferencesUtil
 
 private const val TAG = "MyPageFragment_Mr_Patent"
 class MyPageFragment : BaseFragment<FragmentMyPageBinding>(
@@ -95,15 +94,18 @@ class MyPageFragment : BaseFragment<FragmentMyPageBinding>(
                 requireActivity().finish()
             }
         }
+
         profileEditViewModel.profileImage.observe(viewLifecycleOwner, {
             Log.d(TAG, "initObserver: profileImage: ${it}")
             if (it != null) {
                 Glide.with(requireContext())
                     .load(it)
+                    .circleCrop()
                     .into(binding.ivProfile)
             } else {
                 Glide.with(requireContext())
                     .load(R.drawable.user_profile)
+                    .circleCrop()
                     .into(binding.ivProfile)
             }
         })

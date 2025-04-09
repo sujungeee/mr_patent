@@ -121,7 +121,7 @@ class JoinProfileFragment : BaseFragment<FragmentJoinProfileBinding>(
                 .load(it)
                 .fallback(R.drawable.user_profile)
                 .error(R.drawable.image_load_error_icon)
-                .centerInside()
+                .circleCrop()
                 .into(binding.ivProfile)
         })
     }

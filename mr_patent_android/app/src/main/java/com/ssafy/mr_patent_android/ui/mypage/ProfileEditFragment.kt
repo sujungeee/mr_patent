@@ -90,11 +90,13 @@ class ProfileEditFragment : BaseFragment<FragmentProfileEditBinding>(
         }
 
         binding.tvBefore.setOnClickListener {
+            profileEditViewModel.setCurrentImage(null)
             findNavController().popBackStack()
         }
 
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
+                profileEditViewModel.setCurrentImage(null)
                 findNavController().popBackStack()
             }
         })
@@ -305,6 +307,7 @@ class ProfileEditFragment : BaseFragment<FragmentProfileEditBinding>(
             } else {
                 Glide.with(requireContext())
                     .load(R.drawable.user_profile)
+                    .circleCrop()
                     .into(binding.ivProfile)
             }
         })
@@ -321,7 +324,7 @@ class ProfileEditFragment : BaseFragment<FragmentProfileEditBinding>(
                 .load(it)
                 .fallback(R.drawable.user_profile)
                 .error(R.drawable.image_load_error_icon)
-                .centerInside()
+                .circleCrop()
                 .into(binding.ivProfile)
         })
 
