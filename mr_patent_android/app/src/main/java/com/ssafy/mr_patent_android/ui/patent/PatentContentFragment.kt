@@ -24,6 +24,7 @@ import com.ssafy.mr_patent_android.data.model.dto.PatentDraftDto
 import com.ssafy.mr_patent_android.data.model.dto.PatentFrameDto
 import com.ssafy.mr_patent_android.data.model.dto.PatentTitleDto
 import com.ssafy.mr_patent_android.data.model.response.PatentContentResponse
+import com.ssafy.mr_patent_android.data.model.response.PatentRecentResponse
 import com.ssafy.mr_patent_android.databinding.FragmentPatentContentBinding
 import com.ssafy.mr_patent_android.ui.mypage.ReportResultViewModel
 import kotlin.math.exp
@@ -71,14 +72,13 @@ class PatentContentFragment : BaseFragment<FragmentPatentContentBinding>(
                 binding.btnSimiliarityTest.visibility = View.VISIBLE
                 binding.clReportItems.visibility = View.GONE
                 splitContent(null)
+                initViewPager()
             }
             "upload" -> {
                 binding.btnSimiliarityTest.visibility = View.VISIBLE
                 binding.clReportItems.visibility = View.GONE
             }
         }
-
-        initViewPager()
 
         binding.tvBefore.setOnClickListener {
             when (args.mode) {
@@ -128,13 +128,16 @@ class PatentContentFragment : BaseFragment<FragmentPatentContentBinding>(
     private fun initObserver() {
         fileViewModel.patentContent.observe(viewLifecycleOwner, { // upload
             splitContent(it)
+            initViewPager()
         })
 
         reportResultViewModel.patentContent.observe(viewLifecycleOwner, { // select, update
+            Log.d(TAG, "initObserver: 업데이트 할 내용: ${it}")
             if (args.mode == "select") {
                 binding.tvDraftWrite.text =  it.patentDraftTitle
             }
             splitContent(it)
+            initViewPager()
         })
 
         similiarityTestViewModel.patentId.observe(viewLifecycleOwner, {
@@ -150,7 +153,7 @@ class PatentContentFragment : BaseFragment<FragmentPatentContentBinding>(
         })
     }
 
-    private fun splitContent(patentContentResponse: PatentContentResponse?) {
+    private fun splitContent(patentDraft: PatentRecentResponse.PatentDraft?) {
         val patentTitleExp = PatentTitleDto.PatentTitleExpDto()
         reportResultViewModel.setPatentExpContents(listOf(
 //            PatentFrameDto(patentTitleExp.patentDraftTitleExp, patentContentResponse?.patentDraftTitle ?: getString(R.string.patentDraftTitleExp))
@@ -160,23 +163,23 @@ class PatentContentFragment : BaseFragment<FragmentPatentContentBinding>(
 //            , PatentFrameDto(patentTitleExp.patentDraftSolutionExp, patentContentResponse?.patentDraftSolution ?: getString(R.string.patentDraftSolutionExp))
 //            , PatentFrameDto(patentTitleExp.patentDraftEffectExp, patentContentResponse?.patentDraftEffect ?: getString(R.string.patentDraftEffectExp))
 //            , PatentFrameDto(patentTitleExp.patentDraftDetailedExp, patentContentResponse?.patentDraftDetailed ?: getString(R.string.patentDraftDetailedExp))
-            PatentFrameDto(patentTitleExp.patentDraftTitleExp, patentContentResponse?.patentDraftTitle ?: "")
-            , PatentFrameDto(patentTitleExp.patentDraftTechnicalFieldExp, patentContentResponse?.patentDraftTechnicalField ?: "")
-            , PatentFrameDto(patentTitleExp.patentDraftBackgroundExp, patentContentResponse?.patentDraftBackground ?: "")
-            , PatentFrameDto(patentTitleExp.patentDraftProblemExp, patentContentResponse?.patentDraftProblem ?: "")
-            , PatentFrameDto(patentTitleExp.patentDraftSolutionExp, patentContentResponse?.patentDraftSolution ?: "")
-            , PatentFrameDto(patentTitleExp.patentDraftEffectExp, patentContentResponse?.patentDraftEffect ?: "")
-            , PatentFrameDto(patentTitleExp.patentDraftDetailedExp, patentContentResponse?.patentDraftDetailed ?: "")
+            PatentFrameDto(patentTitleExp.patentDraftTitleExp, patentDraft?.patentDraftTitle ?: "")
+            , PatentFrameDto(patentTitleExp.patentDraftTechnicalFieldExp, patentDraft?.patentDraftTechnicalField ?: "")
+            , PatentFrameDto(patentTitleExp.patentDraftBackgroundExp, patentDraft?.patentDraftBackground ?: "")
+            , PatentFrameDto(patentTitleExp.patentDraftProblemExp, patentDraft?.patentDraftProblem ?: "")
+            , PatentFrameDto(patentTitleExp.patentDraftSolutionExp, patentDraft?.patentDraftSolution ?: "")
+            , PatentFrameDto(patentTitleExp.patentDraftEffectExp, patentDraft?.patentDraftEffect ?: "")
+            , PatentFrameDto(patentTitleExp.patentDraftDetailedExp, patentDraft?.patentDraftDetailed ?: "")
         ))
 
         val patentTitleClaim = PatentTitleDto.PatentTitleClaimDto()
         reportResultViewModel.setPatentClaimContents(listOf(
-            PatentFrameDto(patentTitleClaim.patentDraftClaim, patentContentResponse?.patentDraftClaim ?: getString(R.string.patentDraftClaim))
+            PatentFrameDto(patentTitleClaim.patentDraftClaim, patentDraft?.patentDraftClaim ?: "")
         ))
 
         val patentTitleSummary = PatentTitleDto.PatentTitleSummaryDto()
         reportResultViewModel.setPatentSummaryContents(listOf(
-            PatentFrameDto(patentTitleSummary.patentDraftSummary, patentContentResponse?.patentDraftSummary ?: getString(R.string.patentDraftSummary))
+            PatentFrameDto(patentTitleSummary.patentDraftSummary, patentDraft?.patentDraftSummary ?: "")
         ))
     }
 
