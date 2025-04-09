@@ -27,8 +27,17 @@ class QuizResultViewModel : ViewModel() {
                 studyService.postQuizResult(levelId,answerDto)
             }.onSuccess { response ->
                 if (response.isSuccessful) {
-                    response.body()?.let { result ->
-                        _resultData.value = result.data ?: WordDto()
+                    response.body()?.data?.let { result ->
+                        _resultData.value?.words = result.wrong_answers.map {
+                            WordDto.Word(
+                                is_bookmarked = it.is_bookmarked,
+                                word_id = it.word_id,
+                                word_mean = it.word_mean,
+                                word_name = it.word_name,
+                                bookmark_id = it.bookmark_id
+                            )
+                        }
+
                     }
                 }
             }.onFailure { error ->

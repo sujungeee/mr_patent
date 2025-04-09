@@ -56,6 +56,9 @@ class QuizResultFragment : BaseFragment<FragmentQuizResultBinding>(FragmentQuizR
             binding.tvQuizResult.text = getString(R.string.quiz_result, result.score)
             binding.tvQuizScore.text = "${result.score}/10"
             if(result.score ==10){
+                binding.tvQuizPassed.text = "Passed"
+                binding.circularProgressIndicator.progress=10
+                binding.btnGoLevelList.setBackgroundColor(resources.getColor(R.color.mr_blue))
                 binding.tvWrongList.visibility = View.GONE }
             else{
                 initSlide()
@@ -65,12 +68,19 @@ class QuizResultFragment : BaseFragment<FragmentQuizResultBinding>(FragmentQuizR
                     binding.circularProgressIndicator.setIndicatorColor(
                         resources.getColor(R.color.mr_red, null)
                     )
+                    binding.tvQuizPassed.text = "Failed"
+
                     binding.btnRetry.visibility = View.VISIBLE
                     binding.btnGoLevelList.setBackgroundColor(resources.getColor(R.color.mr_gray))
                     binding.btnRetry.setOnClickListener{
                         initDialog()
                     }
+                }else{
+                    binding.tvQuizPassed.text = "Passed"
+                    binding.btnGoLevelList.setBackgroundColor(resources.getColor(R.color.mr_blue))
                 }
+
+                binding.circularProgressIndicator.progress= result.score
 
 //                val adapter = WordAllAdapter(result.wrong_answers.toMutableList()) { it ->
 //                }

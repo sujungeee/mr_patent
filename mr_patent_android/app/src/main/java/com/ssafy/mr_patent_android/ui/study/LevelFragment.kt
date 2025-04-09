@@ -23,6 +23,8 @@ class LevelFragment : BaseFragment<FragmentLevelBinding>(FragmentLevelBinding::b
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding.tvTitle.text = "Level $levelId"
+
         binding.cardStudy.setOnClickListener {
             findNavController().navigate(LevelFragmentDirections.actionLevelFragmentToStudyCardFragment(levelId))
         }

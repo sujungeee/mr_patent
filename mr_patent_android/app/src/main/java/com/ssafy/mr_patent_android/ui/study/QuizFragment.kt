@@ -75,7 +75,7 @@ class QuizFragment : BaseFragment<FragmentQuizBinding>(FragmentQuizBinding::bind
                         Log.d(TAG, "initView: $wrongAnswers")
                     }
                     findNavController().navigate(
-                        QuizFragmentDirections.actionQuizFragmentToQuizResultFragment(quizViewModel.wrongAnswers.value!!.toIntArray(), levelId),
+                        QuizFragmentDirections.actionQuizFragmentToQuizResultFragment((quizViewModel.wrongAnswers.value?: emptyList<Int>()).toIntArray()  , levelId),
                         NavOptions.Builder()
                             .setPopUpTo(R.id.quizFragment, true)
                             .build()
