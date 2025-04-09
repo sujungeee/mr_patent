@@ -6,6 +6,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.networkUtil
+import com.ssafy.mr_patent_android.data.model.dto.PwdChangeRequest
+import com.ssafy.mr_patent_android.data.model.dto.UserDto
 import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.authService
 import kotlinx.coroutines.launch
 
@@ -31,12 +33,16 @@ class EmailVerifyViewModel:ViewModel() {
         _emailVerifyState.value = state
     }
 
-    fun emailVerify(email: String, code: String) {
+    fun emailVerify(email: String, code: Int) {
+        _emailVerifyState.value = false
         viewModelScope.launch {
             runCatching {
-                authService.emailVerify(email, code)
+                authService.sendCodePwd(
+                    PwdChangeRequest(email, code, null)
+                )
             }.onSuccess {
                 if (it.isSuccessful) {
+                    Log.d(TAG, "emailVerify: $it")
                     _emailVerifyState.value = true
                 } else {
                     it.errorBody()?.let { it1 ->
@@ -52,7 +58,7 @@ class EmailVerifyViewModel:ViewModel() {
         // 코드 전송 요청
         viewModelScope.launch {
             runCatching {
-                authService.sendCode(email)
+                authService.sendForgotCode(PwdChangeRequest(email,null,null))
             }.onSuccess { 
                 if (it.isSuccessful) {
                     _codeState.value = true
