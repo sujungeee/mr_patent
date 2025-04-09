@@ -18,10 +18,6 @@ class ReportResultViewModel : ViewModel() {
     val toastMsg: LiveData<String>
         get() = _toastMsg
 
-    private val _userPatentId = MutableLiveData<Int>()
-    val userPatentId: LiveData<Int>
-        get() = _userPatentId
-
     private val _patentContent = MutableLiveData<PatentContentResponse>()
     val patentContent: LiveData<PatentContentResponse>
         get() = _patentContent
@@ -55,26 +51,6 @@ class ReportResultViewModel : ViewModel() {
     private val _fitnessResult = MutableLiveData<String>()
     val fitnessResult: LiveData<String>
         get() = _fitnessResult
-
-
-    fun setUserPatentId(patentDraftId: Int) {
-        _userPatentId.value = patentDraftId
-    }
-
-    // TODO: delete
-    fun setFitnessResult(fitnessResult: String) {
-        _fitnessResult.value = fitnessResult
-    }
-
-    // TODO: delete
-    fun setFitnessContents(fitnessContents: FitnessResultResponse. FitnessContent) {
-        _fitnessContents.value = fitnessContents
-    }
-
-    // TODO: delete
-    fun setSimiliarityResult(similiarityResult: List<SimiliarityResultResponse.Comparison>) {
-        _similiarityResult.value = similiarityResult
-    }
 
     fun setMode(mode: String) {
         _mode.value = mode
@@ -154,7 +130,7 @@ class ReportResultViewModel : ViewModel() {
                     }
                 } else {
                     it.errorBody()?.let {
-                        it1 -> networkUtil.getErrorResponse(it1)
+                            it1 -> networkUtil.getErrorResponse(it1)
                     }
                 }
             }.onFailure {
