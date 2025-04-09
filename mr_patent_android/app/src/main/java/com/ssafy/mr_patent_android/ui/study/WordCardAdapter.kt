@@ -73,7 +73,7 @@ class WordCardAdapter(
         notifyItemChanged(position)
     }
 
-    fun View.setThrottleClickListener(interval: Long = 1000L, onClick: (View) -> Unit) {
+    fun View.setThrottleClickListener(interval: Long = 500L, onClick: (View) -> Unit) {
         setOnClickListener {
             val currentTime = System.currentTimeMillis()
             if (currentTime - lastClickTime >= interval) {
