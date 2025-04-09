@@ -57,8 +57,8 @@ class FirebaseMessageService : FirebaseMessagingService() {
         val notificationBuilder: NotificationCompat.Builder
 
         val type = remoteMessage.data["type"]
-        val channelId = type ?: "default"
-        val channelName = getChannelName(type ?: "default")
+        val channelId = type ?: "default" // CHAT
+        val channelName = getChannelName(type ?: "default") // 채팅 알림
         createNotificationChannel(channelId, type ?: "default")
 
 
@@ -125,6 +125,7 @@ class FirebaseMessageService : FirebaseMessagingService() {
                 }
             }
             "SIMILARITY_TEST" -> Intent(this, MainActivity::class.java).apply {
+                putExtra("type", "SIMILARITY_TEST")
             }
             else -> Intent(this, MainActivity::class.java).apply {
 
