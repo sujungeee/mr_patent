@@ -30,10 +30,4 @@ interface FileService {
 
     @PUT
     suspend fun uploadFile(@Url url: String, @Body file: RequestBody?): Response<Unit>
-
-    @Multipart
-    @POST("pdf/parse_patent")
-    suspend fun getOcrContent(
-        @Part file: MultipartBody.Part
-    ): Response<BaseResponse<PatentContentResponse>>
 }

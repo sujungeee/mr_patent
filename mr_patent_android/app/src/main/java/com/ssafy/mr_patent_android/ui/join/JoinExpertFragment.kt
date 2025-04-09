@@ -69,7 +69,6 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
     }
 
     private fun initView() {
-        Log.d(TAG, "initView: joinviewmodel image : ${joinViewModel.userImage.value}")
         joinViewModel.setToastMsg(null)
         emailVerifyViewModel.setToastMsg(null)
         filePickerUtil = FilePicker(this) { uri ->
@@ -137,15 +136,17 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
                     }
                 }
                 if (joinViewModel.userImage.value != null && joinViewModel.userImage.value != "") {
-                    val fileName = FileUtil().getFileName(requireContext(), Uri.parse(joinViewModel.userImage.value))
-                    val extension = FileUtil().getFileExtension(requireContext(), Uri.parse(joinViewModel.userImage.value))
-                    if (extension == "jpg" || extension == "jpeg") {
-                        contentType = "image/jpeg"
-                    } else {
-                        contentType = "image/png"
-                    }
                     lifecycleScope.launch {
-                        joinViewModel.uploadFile(fileName!!, contentType)
+                        val fileUri = Uri.parse(joinViewModel.userImage.value)
+                        val fileName = FileUtil().getFileName(requireContext(), Uri.parse(joinViewModel.userImage.value))
+                        var extension = FileUtil().getFileExtension(requireContext(), Uri.parse(joinViewModel.userImage.value))
+                        if (extension == "jpg" || extension == "jpeg") {
+                            extension = "jpeg"
+                            contentType = "image/jpeg"
+                        } else {
+                            contentType = "image/png"
+                        }
+                        joinViewModel.uploadFile(requireContext(), fileUri, fileName!!, extension!!, contentType)
                     }
                 } else {
                     joinViewModel.setUploadImageState(true)
@@ -249,10 +250,8 @@ class JoinExpertFragment : BaseFragment<FragmentJoinExpertBinding>(
         joinViewModel.uploadImageState.observe (viewLifecycleOwner, {
             it?.let{
                 if (it) {
-                    val fileName = FileUtil().getFileName(requireContext(), Uri.parse(joinViewModel.file.value))
-                    Log.d(TAG, "initObserver: filename: ${fileName}")
                     lifecycleScope.launch {
-                        joinViewModel.uploadFile(fileName!!, "application/pdf")
+//                        joinViewModel.uploadFile(requireContext(), joinViewModel.file.value!!, "application/pdf")
                     }
                 }
             }

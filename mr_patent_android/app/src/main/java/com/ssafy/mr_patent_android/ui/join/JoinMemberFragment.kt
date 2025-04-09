@@ -19,6 +19,7 @@ import com.ssafy.mr_patent_android.ui.login.EmailVerifyViewModel
 import com.ssafy.mr_patent_android.ui.login.LoginActivity
 import com.ssafy.mr_patent_android.util.FileUtil
 import kotlinx.coroutines.launch
+import kotlin.math.log
 
 private const val TAG = "JoinMemberFragment_Mr_Patent"
 class JoinMemberFragment : BaseFragment<FragmentJoinMemberBinding>(
@@ -66,16 +67,18 @@ class JoinMemberFragment : BaseFragment<FragmentJoinMemberBinding>(
                 && isFillInput()
                 && isValidName(binding.etName.text.toString())
                 && isValidPw(binding.etPw.text.toString())) {
-                val fileName = FileUtil().getFileName(requireContext(), Uri.parse(joinViewModel.userImage.value))
                 if (joinViewModel.userImage.value != "") {
-                    val extension = FileUtil().getFileExtension(requireContext(), Uri.parse(joinViewModel.userImage.value))
-                    if (extension == "jpg" || extension == "jpeg") {
-                        contentType = "image/jpeg"
-                    } else {
-                        contentType = "image/png"
-                    }
                     lifecycleScope.launch {
-                        joinViewModel.uploadFile(fileName!!, contentType)
+                        var fileUri = Uri.parse(joinViewModel.userImage.value)
+                        val fileName = FileUtil().getFileName(requireContext(), fileUri)
+                        var extension = FileUtil().getFileExtension(requireContext(), Uri.parse(joinViewModel.userImage.value))
+                        if (extension == "jpg" || extension == "jpeg") {
+                            extension = "jpeg"
+                            contentType = "image/jpeg"
+                        } else {
+                            contentType = "image/png"
+                        }
+                        joinViewModel.uploadFile(requireContext(), Uri.parse(joinViewModel.userImage.value!!), fileName!!, extension!!, contentType)
                     }
                 } else {
                     joinViewModel.joinMember(binding.etEmail.text.toString(), binding.etName.text.toString(), binding.etPw.text.toString(), "")
@@ -150,9 +153,13 @@ class JoinMemberFragment : BaseFragment<FragmentJoinMemberBinding>(
         })
 
         joinViewModel.uploadImageState.observe(viewLifecycleOwner, {
+            val uriNoExtension = joinViewModel.userImage.value?.substringBeforeLast(".")
+            var fileUri = Uri.parse(uriNoExtension)
+            val fileName = FileUtil().getFileName(requireContext(), fileUri)
+            Log.d(TAG, "initObserver: upload: ${fileName}")
             it?.let {
                 if (it) {
-                    joinViewModel.joinMember(binding.etEmail.text.toString(), binding.etName.text.toString(), binding.etPw.text.toString(), joinViewModel.userImage.value!!)
+                    joinViewModel.joinMember(binding.etEmail.text.toString(), binding.etName.text.toString(), binding.etPw.text.toString(), fileName!!)
                 }
             }
         })

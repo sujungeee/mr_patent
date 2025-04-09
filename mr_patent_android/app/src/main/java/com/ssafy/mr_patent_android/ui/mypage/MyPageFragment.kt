@@ -54,7 +54,7 @@ class MyPageFragment : BaseFragment<FragmentMyPageBinding>(
                 }
                 1-> {
                     if (profileEditViewModel.expertId.value != null) {
-                        findNavController().navigate(MyPageFragmentDirections.actionNavFragmentMypageToPatentAttorneyFragment2(profileEditViewModel.expertId.value!!, "edit"))
+                        findNavController().navigate(MyPageFragmentDirections.actionNavFragmentMypageToPatentAttorneyFragment2(profileEditViewModel.expertId.value!!))
                     } else {
                         showCustomToast("잠시 후에 다시 시도해주세요.")
                     }
@@ -70,15 +70,15 @@ class MyPageFragment : BaseFragment<FragmentMyPageBinding>(
         // 알림 설정
         // TODO
 
-        binding.tvSettingPasswordChange.setOnClickListener {
+        binding.llPasswordChange.setOnClickListener {
             findNavController().navigate(R.id.pwdEditFragment)
         }
 
-        binding.tvSettingLogout.setOnClickListener {
+        binding.llLogout.setOnClickListener {
             userLeaveViewModel.logout()
         }
 
-        binding.tvSettingDelete.setOnClickListener {
+        binding.llLeave.setOnClickListener {
             findNavController().navigate(R.id.userDeleteFragment)
         }
     }
@@ -96,18 +96,21 @@ class MyPageFragment : BaseFragment<FragmentMyPageBinding>(
             }
         }
         profileEditViewModel.profileImage.observe(viewLifecycleOwner, {
-            Log.d(TAG, "initObserver: ${it}")
-            if (it != "") {
-                imageUri = Uri.parse(it)
+            Log.d(TAG, "initObserver: profileImage: ${it}")
+            if (it != null) {
                 Glide.with(requireContext())
-                    .load(imageUri)
-                    .error(R.drawable.image_load_error_icon)
+                    .load(it)
                     .into(binding.ivProfile)
             } else {
                 Glide.with(requireContext())
                     .load(R.drawable.user_profile)
                     .into(binding.ivProfile)
             }
+        })
+
+        profileEditViewModel.memberInfo.observe(viewLifecycleOwner, {
+            Log.d(TAG, "initObserver: userImage: ${it.userImage}")
+            profileEditViewModel.getImage(it.userImage)
         })
     }
 

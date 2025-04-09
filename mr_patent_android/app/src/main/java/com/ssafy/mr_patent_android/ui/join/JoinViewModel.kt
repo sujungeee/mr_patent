@@ -16,6 +16,7 @@ import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.authServic
 import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.fileService
 import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.userService
 import com.ssafy.mr_patent_android.ui.login.LoginActivity
+import com.ssafy.mr_patent_android.util.FileUtil
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -33,10 +34,6 @@ class JoinViewModel: ViewModel() {
     private val _userRole = MutableLiveData<Int>()
     val userRole: LiveData<Int>
         get() = _userRole
-
-    private val _userImage = MutableLiveData<String>()
-    val userImage: LiveData<String>
-        get() = _userImage
 
     private val _userName = MutableLiveData<String>()
     val userName: LiveData<String>
@@ -65,6 +62,10 @@ class JoinViewModel: ViewModel() {
     private val _joinState = MutableLiveData<Boolean?>()
     val joinState: LiveData<Boolean?>
         get() = _joinState
+
+    private val _userImage = MutableLiveData<String>()
+    val userImage: LiveData<String>
+        get() = _userImage
 
     private val _userImagePath = MutableLiveData<String>()
     val userImagePath: LiveData<String>
@@ -219,27 +220,22 @@ class JoinViewModel: ViewModel() {
         }
     }
 
-    suspend fun uploadFile(file: String, contentType: String) {
+    suspend fun uploadFile(context: Context, fileUri: Uri, fileName: String, extension: String, contentType: String) {
         runCatching {
             var response = false
             var preSignedUrl = ""
 
             if (file != null) {
-                preSignedUrl = getPreSignedUrl(file, contentType)
-                response = uploadFileS3(preSignedUrl, contentType)
+                preSignedUrl = getPreSignedUrl(fileName, contentType)
+                response = uploadFileS3(context, fileUri, preSignedUrl, fileName, extension, contentType)
             }
             if (response) {
-                Log.d(TAG, "uploadFile: response ${response}")
                 when (contentType) {
                     "image/jpeg", "image/png" -> {
-                        Log.d(TAG, "uploadFile: image")
-                        _userImage.value = preSignedUrl.substringBefore("?")
                         _uploadImageState.value = true
                     }
 
                     "application/pdf" -> {
-                        Log.d(TAG, "uploadFile: pdf")
-                        _file.value = preSignedUrl.substringBefore("?")
                         _uploadFileState.value = true
                     }
                 }
@@ -272,21 +268,13 @@ class JoinViewModel: ViewModel() {
         }
     }
 
-    suspend fun uploadFileS3(preSignedUrl: String, contentType: String) : Boolean {
+    suspend fun uploadFileS3(context: Context, fileUri: Uri, preSignedUrl: String, fileName: String, extension: String, contentType: String) : Boolean {
         return suspendCoroutine { continuation ->
             viewModelScope.launch {
                 runCatching {
-                    when (contentType) {
-                        "image/jpeg" -> {
-                            fileService.uploadFile(preSignedUrl, File(userImagePath.value!!).asRequestBody(contentType.toMediaType()))
-                        }
-                        "image/png" -> {
-                            fileService.uploadFile(preSignedUrl, File(userImagePath.value!!).asRequestBody(contentType.toMediaType()))
-                        }
-                        else -> { // "application/pdf"
-                            fileService.uploadFile(preSignedUrl, File(userFilePath.value!!).asRequestBody(contentType.toMediaType()))
-                        }
-                    }
+                    val file = FileUtil().getFileFromUri(context, fileUri, fileName, extension)
+                    val requstBody = file.asRequestBody(contentType.toMediaType())
+                    fileService.uploadFile(preSignedUrl, requstBody)
                 }.onSuccess {
                     if (it.isSuccessful) {
                         continuation.resume(true)
