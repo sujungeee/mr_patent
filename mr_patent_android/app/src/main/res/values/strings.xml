@@ -31,4 +31,6 @@
     <string name="default_image">android.resource://com.ssafy.mr_patent_android/drawable/user_profile</string>
 
     <string name="api_key">AIzaSyDHAbGFLMIVr5neZktJWGoPcJlUFN4gKAE</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

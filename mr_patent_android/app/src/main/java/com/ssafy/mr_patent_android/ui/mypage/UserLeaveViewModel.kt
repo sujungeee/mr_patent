@@ -27,9 +27,13 @@ class UserLeaveViewModel : ViewModel() {
                     it.body()?.data?.let { response ->
                         _toastMsg.value = "탈퇴가 완료되었습니다."
                     }
+                } else {
+                    it.errorBody()?.let {
+                        it1 -> networkUtil.getErrorResponse(it1)
+                    }
                 }
             }.onFailure {
-
+                it.printStackTrace()
             }
         }
     }
@@ -51,6 +55,7 @@ class UserLeaveViewModel : ViewModel() {
                     }
                 }
             }.onFailure {
+                it.printStackTrace()
             }
         }
     }

@@ -33,11 +33,14 @@ class ExpertListFragment : BaseFragment<FragmentExpertListBinding>(
         initObserver()
 
     }
+
     private fun initAdapter() {
         viewModel.expertList.observe(viewLifecycleOwner) {
-            expertListAdapter = ExpertListAdapter(it) { id ->
+            binding.rvPatentAttorneys.adapter = ExpertListAdapter(it) { id ->
                 findNavController().navigate(
-                    ExpertListFragmentDirections.actionPatentAttorneyListFragmentToPatentAttorneyFragment(id)
+                    ExpertListFragmentDirections.actionPatentAttorneyListFragmentToPatentAttorneyFragment(
+                        id
+                    )
                 )
             }
             binding.rvPatentAttorneys.adapter = expertListAdapter
@@ -150,7 +153,5 @@ class ExpertListFragment : BaseFragment<FragmentExpertListBinding>(
             }
             binding.rvPatentAttorneys.adapter = expertListAdapter
         }
-
-
     }
 }

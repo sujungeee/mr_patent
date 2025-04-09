@@ -13,7 +13,6 @@ import com.ssafy.mr_patent_android.ui.mypage.ReportSimiliarContentAdapter
 class PatentFrameExpAdapter(
     val mode: String
     , var patentFrameExpList: List<PatentFrameDto>
-    , val itemClickListener : ItemClickListener
 ) : RecyclerView.Adapter<PatentFrameExpAdapter.PatentFrameExpViewHolder>() {
 
     private val editTexts: MutableList<EditText> = mutableListOf()

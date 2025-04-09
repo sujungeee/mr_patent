@@ -19,6 +19,7 @@ import com.ssafy.mr_patent_android.ui.login.EmailVerifyViewModel
 import com.ssafy.mr_patent_android.ui.login.LoginActivity
 import com.ssafy.mr_patent_android.util.FileUtil
 import kotlinx.coroutines.launch
+import kotlin.math.log
 
 private const val TAG = "JoinMemberFragment_Mr_Patent"
 class JoinMemberFragment : BaseFragment<FragmentJoinMemberBinding>(
@@ -29,6 +30,8 @@ class JoinMemberFragment : BaseFragment<FragmentJoinMemberBinding>(
 
     private var emailFlag : Boolean = false
     private var timer: CountDownTimer? = null
+
+    private lateinit var contentType: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,11 +45,12 @@ class JoinMemberFragment : BaseFragment<FragmentJoinMemberBinding>(
     }
 
     private fun initView() {
+        joinViewModel.setToastMsg(null)
         binding.tvBefore.setOnClickListener {
             if (joinViewModel.userImage.value == "") {
                 joinViewModel.setUserImage(requireContext().resources.getString(R.string.default_image))
             }
-            joinViewModel.setCheckDuplEmail(null)
+            emailVerifyViewModel.reset()
             findNavController().popBackStack()
         }
 
@@ -54,7 +58,7 @@ class JoinMemberFragment : BaseFragment<FragmentJoinMemberBinding>(
             if (joinViewModel.userImage.value == "") {
                 joinViewModel.setUserImage(requireContext().resources.getString(R.string.default_image))
             }
-            joinViewModel.setCheckDuplEmail(null)
+            emailVerifyViewModel.reset()
             findNavController().popBackStack()
         }
 
@@ -64,9 +68,17 @@ class JoinMemberFragment : BaseFragment<FragmentJoinMemberBinding>(
                 && isValidName(binding.etName.text.toString())
                 && isValidPw(binding.etPw.text.toString())) {
                 if (joinViewModel.userImage.value != "") {
-                    val type = FileUtil().getFileExtension(requireContext(), Uri.parse(joinViewModel.userImage.value))
                     lifecycleScope.launch {
-                        joinViewModel.uploadFile(joinViewModel.userImage.value!!, type!!)
+                        var fileUri = Uri.parse(joinViewModel.userImage.value)
+                        val fileName = FileUtil().getFileName(requireContext(), fileUri)
+                        var extension = FileUtil().getFileExtension(requireContext(), Uri.parse(joinViewModel.userImage.value))
+                        if (extension == "jpg" || extension == "jpeg") {
+                            extension = "jpeg"
+                            contentType = "image/jpeg"
+                        } else {
+                            contentType = "image/png"
+                        }
+                        joinViewModel.uploadFile(requireContext(), Uri.parse(joinViewModel.userImage.value!!), fileName!!, extension!!, contentType)
                     }
                 } else {
                     joinViewModel.joinMember(binding.etEmail.text.toString(), binding.etName.text.toString(), binding.etPw.text.toString(), "")
@@ -84,6 +96,7 @@ class JoinMemberFragment : BaseFragment<FragmentJoinMemberBinding>(
 
         binding.btnVerificationSend.setOnClickListener {
             emailVerifyViewModel.sendCode((binding.etEmail.text.toString()))
+            binding.btnVerificationSend.isEnabled = false
         }
 
         binding.btnVerify.setOnClickListener {
@@ -93,7 +106,11 @@ class JoinMemberFragment : BaseFragment<FragmentJoinMemberBinding>(
 
     private fun initObserver() {
         joinViewModel.toastMsg.observe(viewLifecycleOwner, {
-          showCustomToast(it)
+          it?.let { showCustomToast(it) }
+        })
+
+        emailVerifyViewModel.toastMsg.observe(viewLifecycleOwner, {
+            it?.let { showCustomToast(it) }
         })
 
         joinViewModel.checkDuplEmail.observe(viewLifecycleOwner,{
@@ -101,11 +118,10 @@ class JoinMemberFragment : BaseFragment<FragmentJoinMemberBinding>(
                 binding.tvIdDupl.visibility = View.VISIBLE
                 binding.btnVerificationSend.visibility = View.GONE
             } else if (it == false) {
-                showCustomToast("사용 가능한 이메일입니다.")
                 binding.btnVerificationSend.visibility = View.VISIBLE
                 binding.clVerify.visibility = View.VISIBLE
                 binding.tvIdDupl.visibility = View.GONE
-                binding.btnVerify.isEnabled = false
+                binding.btnVerificationSend.isEnabled = true
             }
         })
 
@@ -129,25 +145,31 @@ class JoinMemberFragment : BaseFragment<FragmentJoinMemberBinding>(
 
         emailVerifyViewModel.emailVerifyState.observe(viewLifecycleOwner, {
             if(it) {
-                showCustomToast("이메일 인증 성공")
                 emailFlag = true
                 binding.btnVerify.isEnabled = false
                 stopTimer()
             } else {
-                showCustomToast("이메일 인증 실패")
             }
         })
 
         joinViewModel.uploadImageState.observe(viewLifecycleOwner, {
-            if (it) {
-                joinViewModel.joinMember(binding.etEmail.text.toString(), binding.etName.text.toString(), binding.etPw.text.toString(), joinViewModel.userImage.value!!)
+            val uriNoExtension = joinViewModel.userImage.value?.substringBeforeLast(".")
+            var fileUri = Uri.parse(uriNoExtension)
+            val fileName = FileUtil().getFileName(requireContext(), fileUri)
+            Log.d(TAG, "initObserver: upload: ${fileName}")
+            it?.let {
+                if (it) {
+                    joinViewModel.joinMember(binding.etEmail.text.toString(), binding.etName.text.toString(), binding.etPw.text.toString(), fileName!!)
+                }
             }
         })
 
         joinViewModel.joinState.observe(viewLifecycleOwner, {
-            if(it) {
-                findNavController().navigate(R.id.nav_joinFinishFragment)
-                joinViewModel.setJoinState(false)
+            it?.let {
+                if(it) {
+                    findNavController().navigate(R.id.nav_joinFinishFragment)
+                    joinViewModel.setJoinState(false)
+                }
             }
         })
     }

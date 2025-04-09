@@ -88,7 +88,7 @@
         android:id="@+id/tv_file_exp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="파일 형식은 .pdf, .docx 만 가능합니다."
+        android:text="파일 형식은 .pdf, .doc, .docx 만 가능합니다."
         android:textColor="@color/mr_gray"
         android:textSize="12sp"
         android:layout_marginBottom="4dp"

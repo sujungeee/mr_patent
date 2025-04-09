@@ -4,21 +4,19 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.networkUtil
 import com.ssafy.mr_patent_android.data.model.dto.PatentFrameDto
 import com.ssafy.mr_patent_android.data.model.response.FitnessResultResponse
 import com.ssafy.mr_patent_android.data.model.response.PatentContentResponse
 import com.ssafy.mr_patent_android.data.model.response.SimiliarityResultResponse
 import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.patentService
+import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.similiarityTestService
 import kotlinx.coroutines.launch
 
 class ReportResultViewModel : ViewModel() {
     private val _toastMsg = MutableLiveData<String>()
     val toastMsg: LiveData<String>
         get() = _toastMsg
-
-    private val _userPatentId = MutableLiveData<Int>()
-    val userPatentId: LiveData<Int>
-        get() = _userPatentId
 
     private val _patentContent = MutableLiveData<PatentContentResponse>()
     val patentContent: LiveData<PatentContentResponse>
@@ -46,33 +44,13 @@ class ReportResultViewModel : ViewModel() {
         get() = _patentSummaryContents
 
     // 적합도
-    private val _fitnessContents = MutableLiveData<FitnessResultResponse. FitnessContent>()
-    val fitnessContents: LiveData<FitnessResultResponse. FitnessContent>
+    private val _fitnessContents = MutableLiveData<FitnessResultResponse.FitnessContent>()
+    val fitnessContents: LiveData<FitnessResultResponse.FitnessContent>
         get() = _fitnessContents
 
     private val _fitnessResult = MutableLiveData<String>()
     val fitnessResult: LiveData<String>
         get() = _fitnessResult
-
-
-    fun setUserPatentId(patentDraftId: Int) {
-        _userPatentId.value = patentDraftId
-    }
-
-    // TODO: delete
-    fun setFitnessResult(fitnessResult: String) {
-        _fitnessResult.value = fitnessResult
-    }
-
-    // TODO: delete
-    fun setFitnessContents(fitnessContents: FitnessResultResponse. FitnessContent) {
-        _fitnessContents.value = fitnessContents
-    }
-
-    // TODO: delete
-    fun setSimiliarityResult(similiarityResult: List<SimiliarityResultResponse.Comparison>) {
-        _similiarityResult.value = similiarityResult
-    }
 
     fun setMode(mode: String) {
         _mode.value = mode
@@ -97,21 +75,24 @@ class ReportResultViewModel : ViewModel() {
     fun getFitnessResult(userPatentId: Int) {
         viewModelScope.launch {
             runCatching {
-                patentService.getFitnessResult(userPatentId)
+                similiarityTestService.getFitnessResult(userPatentId)
             }.onSuccess {
                 if (it.isSuccessful) {
-                    it.body().let { response ->
-                        response?.data
-                        if (response?.data?.fitnessIsCorrected == 0) {
+                    it.body()?.data?.let { response ->
+                        if (response.isCorrected == 1) {
                             _fitnessResult.value = "PASS"
                         } else {
                             _fitnessResult.value = "FAIL"
-                            _fitnessContents.value = response?.data?.fitnessGoodContent
+                            _fitnessContents.value = response.details
                         }
+                    }
+                } else {
+                    it.errorBody()?.let {
+                        it1 -> networkUtil.getErrorResponse(it1)
                     }
                 }
             }.onFailure {
-
+                it.printStackTrace()
             }
         }
     }
@@ -119,7 +100,7 @@ class ReportResultViewModel : ViewModel() {
     fun getSimiliarityResult(userPatentId: Int) {
         viewModelScope.launch {
             runCatching {
-                patentService.getSimiliarityResult(userPatentId)
+                similiarityTestService.getSimiliarityResult(userPatentId)
             }.onSuccess {
                 if (it.isSuccessful) {
                     it.body().let { response ->
@@ -127,9 +108,13 @@ class ReportResultViewModel : ViewModel() {
                             _similiarityResult.value = response.data.comparisons
                         }
                     }
+                } else {
+                    it.errorBody()?.let {
+                        it1 -> networkUtil.getErrorResponse(it1)
+                    }
                 }
             }.onFailure {
-
+                it.printStackTrace()
             }
         }
     }
@@ -143,9 +128,13 @@ class ReportResultViewModel : ViewModel() {
                     it.body()?.data?.let { response ->
                         _patentContent.value = response
                     }
+                } else {
+                    it.errorBody()?.let {
+                            it1 -> networkUtil.getErrorResponse(it1)
+                    }
                 }
             }.onFailure {
-
+                it.printStackTrace()
             }
         }
     }

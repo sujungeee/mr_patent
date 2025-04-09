@@ -14,7 +14,7 @@ class PatentContentExpFragment : BaseFragment<FragmentPatentContentExpBinding>(
     FragmentPatentContentExpBinding::bind, R.layout.fragment_patent_content_exp
 ) {
     private val reportResultViewModel: ReportResultViewModel by activityViewModels()
-    private lateinit var patentFrameExpAdapter: PatentFrameExpAdapter
+    lateinit var patentFrameExpAdapter: PatentFrameExpAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,8 +29,7 @@ class PatentContentExpFragment : BaseFragment<FragmentPatentContentExpBinding>(
     private fun initView() {
         patentFrameExpAdapter = PatentFrameExpAdapter(
             reportResultViewModel.mode.value!!,
-            reportResultViewModel.patentExpContents.value!!,
-            { position -> }
+            reportResultViewModel.patentExpContents.value!!
         )
 
         binding.rvPatentContentExp.layoutManager = LinearLayoutManager(requireContext())

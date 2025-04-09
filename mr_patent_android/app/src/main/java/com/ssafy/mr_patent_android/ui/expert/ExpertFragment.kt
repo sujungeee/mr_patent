@@ -16,9 +16,9 @@ import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.sharedPrefere
 import com.ssafy.mr_patent_android.base.BaseFragment
 import com.ssafy.mr_patent_android.databinding.DialogChatBinding
 import com.ssafy.mr_patent_android.databinding.FragmentExpertBinding
-import gun0912.tedimagepicker.util.ToastUtil.showToast
+import com.ssafy.mr_patent_android.ui.chat.ChatFragmentArgs
 
-private const val TAG = "ExpertFragment"
+private const val TAG = "ExpertFragment_Mr_Patent"
 class ExpertFragment :
     BaseFragment<FragmentExpertBinding>(FragmentExpertBinding::bind, R.layout.fragment_expert) {
     val viewModel: ExpertViewModel by viewModels()
@@ -28,11 +28,11 @@ class ExpertFragment :
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
 
         initView()
         initObserver()
@@ -41,7 +41,7 @@ class ExpertFragment :
 
     fun initView() {
         viewModel.getExpert(expert_id)
-        if (expert_id == sharedPreferences.getUser().expertId) {
+        if (sharedPreferences.getUser().userRole == 1) {
             binding.btnEditProfile.visibility = View.VISIBLE
             binding.btnEditProfile.setOnClickListener {
                 findNavController().navigate(ExpertFragmentDirections.actionPatentAttorneyFragmentToProfileEditFragment(
@@ -104,7 +104,7 @@ class ExpertFragment :
                             expert.userId, expert.expertId, it, expert.userName, expert.userImage)
                     )
                 }else {
-                    showToast("정보를 받아올 수 없습니다.")
+                    showCustomToast("정보를 받아올 수 없습니다.")
                 }
             }
             dialog.dismiss()

@@ -7,6 +7,7 @@ import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
@@ -70,7 +71,7 @@ class JoinProfileFragment : BaseFragment<FragmentJoinProfileBinding>(
                     handleImageJpgSelected(rotatedUri, extension)
                 }
                 "png" -> {
-                    handleImagePngSelected(uri, bitmap, extension)
+                    handleImagePngSelected(bitmap, extension)
                 }
             }
         }
@@ -115,6 +116,7 @@ class JoinProfileFragment : BaseFragment<FragmentJoinProfileBinding>(
 
     private fun initObserver() {
         joinViewModel.userImage.observe(viewLifecycleOwner, {
+            Log.d(TAG, "initObserver: userImage: ${joinViewModel.userImage.value}")
             Glide.with(requireContext())
                 .load(it)
                 .fallback(R.drawable.user_profile)
@@ -136,7 +138,7 @@ class JoinProfileFragment : BaseFragment<FragmentJoinProfileBinding>(
         }
     }
 
-    private fun handleImagePngSelected(uri: Uri, bitmap: Bitmap, extension: String) {
+    private fun handleImagePngSelected(bitmap: Bitmap, extension: String) {
         viewLifecycleOwner.lifecycleScope.launch {
             val resizedBitmap = ImageUtil().resizeBitmap(bitmap, 600, 600)
             val outputStream = ByteArrayOutputStream()
@@ -152,11 +154,12 @@ class JoinProfileFragment : BaseFragment<FragmentJoinProfileBinding>(
             val fileName = "compressed_${System.currentTimeMillis()}.$extension"
             val file = File(requireContext().cacheDir, fileName)
             file.writeBytes(byteArray)
-            FileProvider.getUriForFile(
+            val uri = FileProvider.getUriForFile(
                 requireContext(),
                 "${requireContext().packageName}.fileprovider",
                 file
             )
+            uri
         }
     }
 
