@@ -1,8 +1,6 @@
 package com.ssafy.mr_patent_android.data.model.dto
 
 import com.google.gson.annotations.SerializedName
-import java.time.Instant
-import java.time.LocalDateTime
 
 data class UserDto(
     @SerializedName("user_id") val userId: Int,
@@ -40,7 +38,7 @@ data class UserDto(
     constructor(userId: Int, userName: String, expertAddress: String, expertDescription: String, expertGetDate: String, expertId: Int, expertLicenseNumber: String, expertPhone: String, userImage: String, expertCreatedAt: String):
             this(userId,"",  userName, -1, expertAddress, expertDescription, expertGetDate, expertId, expertLicenseNumber, expertPhone, mutableListOf(),userImage,expertCreatedAt)
 
-    constructor(userName: String,userImage: String) : this(-1,                                               "", userName, -1, "", "", "", -1, "", "", mutableListOf(), userImage, "")
+    constructor(userName: String,userImage: String) : this(-1, "", userName, -1, "", "", "", -1, "", "", mutableListOf(), userImage, "")
 
     constructor(userId: Int, userEmail: String, userName: String, userImage: String, userRole: Int)
             : this(userId, userEmail, userName, userRole, "", "", "", -1, "", "", mutableListOf(), userImage, "")
