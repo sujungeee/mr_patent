@@ -10,8 +10,8 @@ data class PatentContentResponse (
     @SerializedName("patent_draft_solution") val patentDraftSolution: String,
     @SerializedName("patent_draft_effect") val patentDraftEffect: String,
     @SerializedName("patent_draft_detailed") val patentDraftDetailed: String,
-    @SerializedName("patent_draft_claim") val patentDraftClaim: String,
     @SerializedName("patent_draft_summary") val patentDraftSummary: String,
+    @SerializedName("patent_draft_claim") val patentDraftClaim: String,
     @SerializedName("raw_text") val rawText: String,
     @SerializedName("created_at") val createdAt: String,
     @SerializedName("updated_at") val updatedAt: String

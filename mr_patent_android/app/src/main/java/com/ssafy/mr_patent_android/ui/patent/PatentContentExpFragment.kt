@@ -29,8 +29,7 @@ class PatentContentExpFragment : BaseFragment<FragmentPatentContentExpBinding>(
     private fun initView() {
         patentFrameExpAdapter = PatentFrameExpAdapter(
             reportResultViewModel.mode.value!!,
-            reportResultViewModel.patentExpContents.value!!,
-            { position -> }
+            reportResultViewModel.patentExpContents.value!!
         )
 
         binding.rvPatentContentExp.layoutManager = LinearLayoutManager(requireContext())
