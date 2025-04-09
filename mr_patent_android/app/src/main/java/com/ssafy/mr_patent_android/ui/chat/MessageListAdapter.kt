@@ -118,8 +118,9 @@ open class MessageListAdapter(var user:UserDto,var messageList: List<ChatMessage
                     binding.otherNameText.text = user.userName
                     Glide.with(binding.root)
                         .load(user.userImage)
+                        .circleCrop()
                         .fallback(R.drawable.user_profile)
-                        .error(R.drawable.image_load_error_icon)
+                        .error(R.drawable.user_profile)
                         .into(binding.profileImageOtherText)
                 }
             }
@@ -140,7 +141,9 @@ open class MessageListAdapter(var user:UserDto,var messageList: List<ChatMessage
                     binding.llUserMessageFile.visibility = View.VISIBLE
                     binding.tvUserMessageTimeFile.text = formattedDateTime
                     binding.icUserMessageFile.tvFileName.text = it.fileName
-
+                    binding.icUserMessageFile.layoutFilePreview.setOnClickListener {
+                        messageList[position].fileUrl?.let { it1 -> itemClickListener.onFileClick(it1) }
+                    }
                     binding.viewUserMessageFileIsread.visibility = if (it.isRead) View.GONE else View.VISIBLE
                     if("PDF".equals(it.messageType)){
                         binding.icUserMessageFile.previewImage.setImageResource(R.drawable.pdf_icon)
@@ -157,6 +160,9 @@ open class MessageListAdapter(var user:UserDto,var messageList: List<ChatMessage
                     } else{
                         binding.icOtherMessageFile.previewImage.setImageResource(R.drawable.word_icon)
                     }
+                    binding.icOtherMessageFile.layoutFilePreview.setOnClickListener {
+                        messageList[position].fileUrl?.let { it1 -> itemClickListener.onFileClick(it1) }
+                    }
 
                     binding.profileImageOther.setOnClickListener {
                         itemClickListener.onItemClick()
@@ -165,7 +171,7 @@ open class MessageListAdapter(var user:UserDto,var messageList: List<ChatMessage
                     Glide.with(binding.root)
                         .load(user.userImage)
                         .fallback(R.drawable.user_profile)
-                        .error(R.drawable.image_load_error_icon)
+                        .error(R.drawable.user_profile)
                         .into(binding.profileImageOther)
 
                 }
@@ -206,7 +212,7 @@ open class MessageListAdapter(var user:UserDto,var messageList: List<ChatMessage
                     Glide.with(binding.root)
                         .load(messageList[position].fileUrl)
                         .fallback(R.drawable.user_profile)
-                        .error(R.drawable.image_load_error_icon)
+                        .error(R.drawable.user_profile)
                         .into(binding.ivOtherMessagePhoto)
                     binding.ivOtherMessagePhoto.setOnClickListener {
                         messageList[position].fileUrl?.let { it1 -> itemClickListener.onPhotoClick(it1) }
@@ -218,7 +224,7 @@ open class MessageListAdapter(var user:UserDto,var messageList: List<ChatMessage
                     Glide.with(binding.root)
                         .load(user.userImage)
                         .fallback(R.drawable.user_profile)
-                        .error(R.drawable.image_load_error_icon)
+                        .error(R.drawable.user_profile)
                         .into(binding.profileImageOther)
                 }
             }
@@ -230,10 +236,10 @@ open class MessageListAdapter(var user:UserDto,var messageList: List<ChatMessage
     inner class DividerViewHolder(private val binding: ListItemChatDividerBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(position: Int) {
 //            val date = TimeUtil().parseUtcWithJavaTime(messageList[position].timestamp?:"2025-04-02T23:30:52.123Z")
-            val formatter = DateTimeFormatter.ofPattern("yyyy년 MM월 dd일")
-            val formattedDateTime = messageList[position].timestamp?.format(formatter)
+//            val formatter = DateTimeFormatter.ofPattern("yyyy년 MM월 dd일")
+//            val formattedDateTime = messageList[position].timestamp?.format(formatter)
 
-            binding.tvChatDividerTime.text = formattedDateTime
+            binding.tvChatDividerTime.text = messageList[position].timestamp
         }
     }
 
@@ -245,7 +251,7 @@ open class MessageListAdapter(var user:UserDto,var messageList: List<ChatMessage
         const val NO_CONTENT = 4
     }
 
-    fun addMessage(message: ChatMessageDto) {
+    fun addMessage(message: ChatMessageDto, state:Int) {
         val mutableList = messageList.toMutableList()
         mutableList.add(0,message)
         messageList = mutableList
