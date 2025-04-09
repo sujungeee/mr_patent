@@ -7,10 +7,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.networkUtil
 import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.sharedPreferences
+import com.ssafy.mr_patent_android.data.model.dto.EditFolderRequest
 import com.ssafy.mr_patent_android.data.model.dto.FolderDto
 import com.ssafy.mr_patent_android.data.model.dto.FolderRequest
 import com.ssafy.mr_patent_android.data.model.response.PatentRecentResponse
 import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.patentService
+import com.ssafy.mr_patent_android.util.TimeUtil
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 
@@ -58,11 +60,6 @@ class PatentViewModel : ViewModel() {
         _draftType.value = draftType
     }
 
-    // TODO: delete
-    fun setFolders(folders: MutableList<FolderDto.Folder>) {
-        _folders.value = folders
-    }
-
     fun setPatentDraftId(patentDraftId: Int) {
         _patentDraftId.value = patentDraftId
     }
@@ -102,11 +99,13 @@ class PatentViewModel : ViewModel() {
     fun getRecentPatentList() {
         viewModelScope.launch {
             runCatching {
-                patentService.getRecentPatentList(sharedPreferences.getUser().userId, 5)
+                patentService.getRecentPatentList(sharedPreferences.getUser().userId)
             }.onSuccess {
                 if (it.isSuccessful) {
                     it.body()?.data?.let { response ->
-                        _patentsRecent.value = response.patentDrafts
+                        if (!response.patentDrafts.isEmpty()) {
+                            _patentsRecent.value = response.patentDrafts
+                        }
                     }
                 } else {
                     it.errorBody()?.let {
@@ -129,15 +128,7 @@ class PatentViewModel : ViewModel() {
             }.onSuccess {
                 if (it.isSuccessful) {
                     it.body()?.data?.let { response ->
-                        if (response) {
-                            _folders.value?.add(
-                                FolderDto.Folder(
-                                    sharedPreferences.getUser().userId,
-                                    folderName,
-                                    LocalDateTime.now().toString()
-                                )
-                            )
-                        }
+                        getFolderList()
                     }
                 } else {
                     it.errorBody()?.let {
@@ -153,15 +144,16 @@ class PatentViewModel : ViewModel() {
     fun editFolder(folderId: Int, folderName: String) {
         viewModelScope.launch {
             runCatching {
-                patentService.editFolder(folderId, folderName)
+                patentService.editFolder(folderId, EditFolderRequest(folderName))
             }.onSuccess {
                 if (it.isSuccessful) {
                     it.body()?.data?.let { response ->
+                        getFolderList()
                         _toastMsg.value = response.message
                     }
                 } else {
                     it.errorBody()?.let {
-                            it1 -> networkUtil.getErrorResponse(it1)
+                        it1 -> networkUtil.getErrorResponse(it1)
                     }
                 }
             }.onFailure {
@@ -177,6 +169,7 @@ class PatentViewModel : ViewModel() {
             }.onSuccess {
                 if (it.isSuccessful) {
                     it.body()?.data?.let { response ->
+                        getFolderList()
                         _toastMsg.value = response.message
                     }
                 } else {
