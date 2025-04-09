@@ -34,7 +34,6 @@ class ExpertFragment :
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-
         initView()
         initObserver()
 
@@ -42,7 +41,7 @@ class ExpertFragment :
 
     fun initView() {
         viewModel.getExpert(expert_id)
-        if (expert_id == sharedPreferences.getUser().expertId) {
+        if (sharedPreferences.getUser().userRole == 1) {
             binding.btnEditProfile.visibility = View.VISIBLE
             binding.btnEditProfile.setOnClickListener {
                 findNavController().navigate(ExpertFragmentDirections.actionPatentAttorneyFragmentToProfileEditFragment(
