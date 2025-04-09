@@ -35,4 +35,8 @@ class TimeUtil {
         val formatter = DateTimeFormatter.ofPattern("yyyy년 MM월 dd일")
         return localDateTime.format(formatter)
     }
+    fun formatLocalDateTimeToString(localDateTime: LocalDateTime): String {
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+        return localDateTime.format(formatter)
+    }
 }

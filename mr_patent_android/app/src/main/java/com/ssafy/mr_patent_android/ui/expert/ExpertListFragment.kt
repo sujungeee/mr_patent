@@ -36,7 +36,7 @@ class ExpertListFragment : BaseFragment<FragmentExpertListBinding>(
 
     private fun initAdapter() {
         viewModel.expertList.observe(viewLifecycleOwner) {
-            binding.rvPatentAttorneys.adapter = ExpertListAdapter(it) { id ->
+            expertListAdapter = ExpertListAdapter(it) { id ->
                 findNavController().navigate(
                     ExpertListFragmentDirections.actionPatentAttorneyListFragmentToPatentAttorneyFragment(
                         id

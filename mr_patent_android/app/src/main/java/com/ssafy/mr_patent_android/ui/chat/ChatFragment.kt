@@ -44,6 +44,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.gson.Gson
 import com.ssafy.mr_patent_android.MainViewModel
 import com.ssafy.mr_patent_android.R
+import com.ssafy.mr_patent_android.WebViewActivity
 import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.sharedPreferences
 import com.ssafy.mr_patent_android.base.BaseFragment
 import com.ssafy.mr_patent_android.data.model.dto.ChatMessageDto
@@ -69,6 +70,7 @@ class ChatFragment :
     BaseFragment<FragmentChatBinding>(FragmentChatBinding::bind, R.layout.fragment_chat) {
     private lateinit var messageListAdapter: MessageListAdapter
     val viewModel: ChatViewModel by viewModels()
+    var pendingUrl: String? = null
     val activityViewModel: MainViewModel by activityViewModels()
     private val roomId: String by lazy {
         navArgs<ChatFragmentArgs>().value.roomId
@@ -92,8 +94,8 @@ class ChatFragment :
     lateinit var sizeOverdialog: Dialog
 
 
-    val url = "wss://j12d208.p.ssafy.io/ws/chat"
-//    val url = "ws://192.168.0.14:8080/ws/chat"
+//    val url = "wss://j12d208.p.ssafy.io/ws/chat"
+    val url = "ws://192.168.100.130:8080/ws/chat"
 //    val url = "ws://192.168.100.130:8080/ws/chat"
 //    val url = "ws://172.20.10.3:8080/ws/chat"
 
@@ -222,7 +224,7 @@ class ChatFragment :
         sizeOverDialog()
 //        initStomp()
         initObserver()
-//        initKeyBoard()
+        initKeyBoard()
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -254,7 +256,12 @@ class ChatFragment :
                 override fun onFileClick(url: String) {
                     Log.d(TAG, "onFileClick: $url")
                     if (url.isNotEmpty()) {
-                        downloadImage(url)
+                        val intent = Intent(requireContext(), WebViewActivity::class.java)
+                        intent.putExtra("url", url)
+                        intent.putExtra("file", 1)
+
+                        startActivity(intent)
+
                     }
 
                 }
@@ -632,48 +639,5 @@ class ChatFragment :
         val imm = view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
-
-
-    @SuppressLint("SimpleDateFormat")
-    private fun downloadImage(url: String) {
-        if (checkPermission()) {
-            val fileName =
-                "/${getString(R.string.app_name)}/${SimpleDateFormat("yyyyMMddHHmmss").format(Date())}.jpg" // 이미지 파일 명
-
-
-            val req = DownloadManager.Request(Uri.parse(url))
-
-            req.setTitle(fileName) // 제목
-                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED) // 알림 설정
-                .setMimeType("image/*")
-                .setDestinationInExternalPublicDir(
-                    Environment.DIRECTORY_PICTURES,
-                    fileName
-                ) // 다운로드 완료 시 보여지는 이름
-
-            val manager = requireActivity().getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-
-            manager.enqueue(req)
-        } else requestPermission()
-    }
-
-    fun checkPermission() =
-        (ContextCompat.checkSelfPermission(requireContext(), READ_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_GRANTED)
-                &&
-                (ContextCompat.checkSelfPermission(requireContext(), WRITE_EXTERNAL_STORAGE)
-                        == PackageManager.PERMISSION_GRANTED)
-
-    fun requestPermission() {
-        ActivityCompat.requestPermissions(
-            requireActivity(),
-            arrayOf(
-                READ_EXTERNAL_STORAGE,
-                WRITE_EXTERNAL_STORAGE
-            ),
-            0
-        )
-    }
-
 
 }

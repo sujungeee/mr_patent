@@ -14,6 +14,7 @@ class SseEventHandler(private val viewModel: ChatListViewModel) : BackgroundEven
     }
 
     override fun onClosed() {
+        Log.d(TAG, "❌ SSE 연결 닫힘")
     }
 
     override fun onMessage(event: String, messageEvent: MessageEvent) {

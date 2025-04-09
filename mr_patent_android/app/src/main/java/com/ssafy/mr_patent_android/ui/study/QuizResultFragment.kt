@@ -23,7 +23,9 @@ import com.ssafy.mr_patent_android.databinding.FragmentQuizResultBinding
 private const val TAG = "QuizResultFragment"
 class QuizResultFragment : BaseFragment<FragmentQuizResultBinding>(FragmentQuizResultBinding::bind, R.layout.fragment_quiz_result) {
     private lateinit var gestureDetector: GestureDetectorCompat
-    private val viewModel: QuizResultViewModel by viewModels()
+    private val viewModel: StudyCardViewModel by viewModels()
+
+    private lateinit var wordAllAdapter: WordAllAdapter
     val wrongQuiz by lazy {
        navArgs<QuizResultFragmentArgs>().value.answerDto
     }
@@ -80,11 +82,27 @@ class QuizResultFragment : BaseFragment<FragmentQuizResultBinding>(FragmentQuizR
                     binding.btnGoLevelList.setBackgroundColor(resources.getColor(R.color.mr_blue))
                 }
 
+                if (!::wordAllAdapter.isInitialized) {
+                    wordAllAdapter = WordAllAdapter((viewModel.resultData.value?.words?: listOf()).toMutableList()) { position, checked ->
+                        if (viewModel.isLoading.value == true) return@WordAllAdapter false
+
+                        val result = viewModel.createBookmark(position)
+                        val updatedWord = viewModel.wordList.value?.get(position)
+
+                        if (result && updatedWord != null) {
+                            wordAllAdapter.updateBookmarkState(position, updatedWord, checked)
+                        }
+
+                        return@WordAllAdapter result
+                    }
+                    binding.rvWrongList.adapter = wordAllAdapter
+                } else {
+                    // 필요 시 목록 전체 갱신
+                    // wordAllAdapter.submitList(list.toMutableList()) // 따로 만들거나 전체 업데이트도 가능
+                }
+
                 binding.circularProgressIndicator.progress= result.score
 
-//                val adapter = WordAllAdapter(result.wrong_answers.toMutableList()) { it ->
-//                }
-//                binding.rvWrongList.adapter = adapter
             }
 
 

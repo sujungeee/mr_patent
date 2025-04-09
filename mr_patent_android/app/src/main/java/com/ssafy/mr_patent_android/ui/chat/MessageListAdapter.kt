@@ -170,6 +170,7 @@ open class MessageListAdapter(var user:UserDto,var messageList: List<ChatMessage
                     binding.otherName.text = user.userName
                     Glide.with(binding.root)
                         .load(user.userImage)
+                        .circleCrop()
                         .fallback(R.drawable.user_profile)
                         .error(R.drawable.user_profile)
                         .into(binding.profileImageOther)
@@ -223,6 +224,7 @@ open class MessageListAdapter(var user:UserDto,var messageList: List<ChatMessage
                     binding.otherName.text = user.userName
                     Glide.with(binding.root)
                         .load(user.userImage)
+                        .circleCrop()
                         .fallback(R.drawable.user_profile)
                         .error(R.drawable.user_profile)
                         .into(binding.profileImageOther)

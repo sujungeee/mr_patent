@@ -5,15 +5,21 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ssafy.mr_patent_android.data.model.dto.AnswerDto
 import com.ssafy.mr_patent_android.data.model.dto.WordDto
 import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.studyService
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
+private const val TAG = "StudyCardViewModel"
 class StudyCardViewModel : ViewModel() {
     private val _wordList = MutableLiveData<List<WordDto.Word>>()
     val wordList: LiveData<List<WordDto.Word>>
         get() = _wordList
+
+
+    private val _resultData = MutableLiveData<WordDto>()
+    val resultData: LiveData<WordDto> get() = _resultData
 
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean>
@@ -100,4 +106,45 @@ class StudyCardViewModel : ViewModel() {
         }
     }
 
+    fun getQuizResult(levelId:Int,wrongList: List<Int>){
+        viewModelScope.launch {
+            runCatching {
+                val answerDto = AnswerDto(
+                    answers = wrongList.map { AnswerDto.WordId(it) }
+                )
+
+                studyService.postQuizResult(levelId,answerDto)
+            }.onSuccess { response ->
+                if (response.isSuccessful) {
+                    Log.d(TAG, "getQuizResult: ${response.body()?.data}")
+                    response.body()?.data?.let { result ->
+
+                        val list = result
+                        result.wrong_answers.forEach { it->
+                            list.words = result.wrong_answers.map {
+                                    WordDto.Word(
+                                        is_bookmarked = it.is_bookmarked,
+                                        word_id = it.word_id,
+                                        word_mean = it.word_mean,
+                                        word_name = it.word_name,
+                                        bookmark_id = it.bookmark_id
+                                    )
+
+                            }
+
+                        }
+
+                        _wordList.value= list.words
+                        _resultData.value = list
+                        Log.d(TAG, "getQuizResult: ${_resultData.value}")
+
+
+                    }
+                }
+            }.onFailure { error ->
+                // Handle error
+                error.printStackTrace()
+            }
+        }
+    }
 }

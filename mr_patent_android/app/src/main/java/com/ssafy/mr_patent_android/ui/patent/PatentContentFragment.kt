@@ -171,12 +171,12 @@ class PatentContentFragment : BaseFragment<FragmentPatentContentBinding>(
 
         val patentTitleClaim = PatentTitleDto.PatentTitleClaimDto()
         reportResultViewModel.setPatentClaimContents(listOf(
-            PatentFrameDto(patentTitleClaim.patentDraftClaim, patentContentResponse?.patentDraftClaim ?: getString(R.string.patentDraftClaim))
+            PatentFrameDto(patentTitleClaim.patentDraftClaim, patentContentResponse?.patentDraftClaim ?:"")
         ))
 
         val patentTitleSummary = PatentTitleDto.PatentTitleSummaryDto()
         reportResultViewModel.setPatentSummaryContents(listOf(
-            PatentFrameDto(patentTitleSummary.patentDraftSummary, patentContentResponse?.patentDraftSummary ?: getString(R.string.patentDraftSummary))
+            PatentFrameDto(patentTitleSummary.patentDraftSummary, patentContentResponse?.patentDraftSummary ?: "")
         ))
     }
 
