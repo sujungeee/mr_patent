@@ -15,20 +15,24 @@ class SimiliarityTestViewModel : ViewModel() {
     val toastMsg: LiveData<String>
         get() = _toastMsg
 
-    private val _status = MutableLiveData<String>()
-    val status: LiveData<String>
-        get() = _status
-
-    private val _addState = MutableLiveData<Boolean>()
-    val addState: LiveData<Boolean>
+    private val _addState = MutableLiveData<Boolean?>()
+    val addState: LiveData<Boolean?>
         get() = _addState
+
+    private val _testState = MutableLiveData<Boolean?>()
+    val testState: LiveData<Boolean?>
+        get() = _testState
 
     private val _patentId = MutableLiveData<Int>()
     val patentId: LiveData<Int>
         get() = _patentId
 
-    fun setStatus(status: String) {
-        _status.value = status
+    fun setAddState(addState: Boolean?) {
+        _addState.value = addState
+    }
+
+    fun setTestState(testState: Boolean?) {
+        _testState.value = testState
     }
 
     fun addDraft(folderId: Int, patentDraftDto: PatentDraftDto) {
@@ -39,7 +43,6 @@ class SimiliarityTestViewModel : ViewModel() {
                 if (it.isSuccessful) {
                     it.body()?.data.let { response ->
                         _patentId.value = response?.patentDraftId!!
-                        _addState.value = true
                     }
                 } else {
                     it.errorBody()?.let {
@@ -57,12 +60,9 @@ class SimiliarityTestViewModel : ViewModel() {
             runCatching {
                 similiarityTestService.similiarityTest(patentDraftId)
             }.onSuccess {
-                // success 시 ststus.value = "finished"
-                // patentId 받기
-
                 if (it.isSuccessful) {
                     it.body()?.data.let { response ->
-                        _status.value = response?.status!!
+                        _testState.value = true
                     }
                 } else {
                     it.errorBody()?.let {

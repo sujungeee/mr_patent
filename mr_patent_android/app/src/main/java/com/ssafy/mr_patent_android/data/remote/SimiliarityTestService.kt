@@ -8,11 +8,13 @@ import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface SimiliarityTestService {
-    @POST("draft/{patent_draft_id}/similiarity-check")
+    @POST("draft/{patent_draft_id}/similarity-check")
     suspend fun similiarityTest(
         @Path("patent_draft_id") patentDraftId: Int,
+        @Query("force_legacy") forceLegacy: Boolean = false
     ): Response<BaseResponse<SimiliarityTestResponse>>
 
     @GET("patent/fitness/{user_patent_id}")
