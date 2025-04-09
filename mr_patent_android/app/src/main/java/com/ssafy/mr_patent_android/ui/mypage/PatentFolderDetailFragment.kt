@@ -36,15 +36,6 @@ class PatentFolderDetailFragment : BaseFragment<FragmentPatentFolderDetailBindin
 
     private fun initView() {
         patentFolderDetailViewModel.getPatentList(patentFolderDetailViewModel.folderId.value!!)
-        // TODO: delete
-        val tmp = mutableListOf<PatentListResponse.PatentSummaryInfo>()
-        tmp.add(PatentListResponse.PatentSummaryInfo(
-            1, "더블버블빨대", "적합", 48, "2023-03-01"
-        ))
-        tmp.add(PatentListResponse.PatentSummaryInfo(
-            2, "더블버블빨대", "부분 적합", 70, "2023-03-01"
-        ))
-        patentFolderDetailViewModel.setPatents(tmp)
 
         binding.tvBefore.setOnClickListener {
             findNavController().popBackStack()
@@ -60,7 +51,7 @@ class PatentFolderDetailFragment : BaseFragment<FragmentPatentFolderDetailBindin
     private fun initObserver() {
         patentFolderDetailViewModel.patents.observe(viewLifecycleOwner) {
             binding.rvFolderItems.layoutManager = LinearLayoutManager(requireContext())
-            binding.rvFolderItems.adapter = PatentFolderDetailAdapter(false, it) { position ->
+            binding.rvFolderItems.adapter = PatentFolderDetailAdapter(it) { position ->
                 findNavController().navigate(
                     PatentFolderDetailFragmentDirections.actionPatentFolderDetailFragmentToPatentContentFragment(it[position].patentDraftId, "select")
                 )

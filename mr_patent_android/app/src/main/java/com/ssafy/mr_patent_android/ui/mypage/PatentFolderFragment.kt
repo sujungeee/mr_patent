@@ -39,16 +39,6 @@ class PatentFolderFragment : BaseFragment<FragmentPatentFolderBinding>(
 
     private fun initView() {
         patentViewModel.getFolderList()
-        // TODO: delete
-        val tmp = mutableListOf<FolderDto.Folder>()
-        tmp.add(FolderDto.Folder(
-                   1, "폴더 1", "2025-03-10"
-        ))
-        tmp.add(FolderDto.Folder(
-            2, "폴더 2", "2025-03-10"
-        ))
-        patentViewModel.setFolders(tmp)
-        //
 
         binding.tvBefore.setOnClickListener {
             findNavController().popBackStack()
