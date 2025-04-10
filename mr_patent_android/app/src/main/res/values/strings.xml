@@ -46,7 +46,7 @@
     <!-- format string -->
     <string name="tv_date_test">검사 시간: %s</string>
     <string name="tv_date_create">생성 일시: %s</string>
-    <string name="tv_similiarity_test_result">유사도 검사: %s</string>
+    <string name="tv_similiarity_test_result">유사도 결과: %s</string>
     <string name="tv_version_recent">최근 버전: %s</string>
     <string name="quiz_result">10개의 단어 중 %d개 정답</string>
     <string name="quiz_ment">아쉬워요. \n조금만 더 힘내서 도전해볼까요?</string>
