@@ -5,7 +5,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.gson.Gson
 import com.ssafy.mr_patent_android.base.ApplicationClass.Companion.networkUtil
+import com.ssafy.mr_patent_android.base.ErrorResponse
 import com.ssafy.mr_patent_android.data.model.response.PatentContentResponse
 import com.ssafy.mr_patent_android.data.model.response.PatentRecentResponse
 import com.ssafy.mr_patent_android.data.remote.RetrofitUtil.Companion.patentService
@@ -59,8 +61,13 @@ class FileViewModel : ViewModel() {
                         _patentContent.value = response!!
                     }
                 } else {
-                    it.errorBody()?.let {
-                        it1 -> networkUtil.getErrorResponse(it1)
+                    it.errorBody()?.let { error ->
+                        Log.d(TAG, "getOcrContent: error: ${error}")
+                        val code = Gson().fromJson(error.string(), ErrorResponse::class.java).error?.code
+                        Log.d(TAG, "getOcrContent: code: ${code}")
+                        networkUtil.getErrorResponse(error)?.let { errorResponse ->
+                            Log.d(TAG, "getOcrContent: errorResponse: ${errorResponse}")
+                        }
                     }
                 }
             }.onFailure {
