@@ -128,6 +128,7 @@ class PatentViewModel : ViewModel() {
             }.onSuccess {
                 if (it.isSuccessful) {
                     it.body()?.data?.let { response ->
+                        _toastMsg.value = "폴더가 생성되었습니다."
                         getFolderList()
                     }
                 } else {
@@ -149,7 +150,7 @@ class PatentViewModel : ViewModel() {
                 if (it.isSuccessful) {
                     it.body()?.data?.let { response ->
                         getFolderList()
-                        _toastMsg.value = response.message
+                        _toastMsg.value = "폴더 이름이 변경되었습니다."
                     }
                 } else {
                     it.errorBody()?.let {
@@ -169,6 +170,7 @@ class PatentViewModel : ViewModel() {
             }.onSuccess {
                 if (it.isSuccessful) {
                     it.body()?.let { response ->
+                        _toastMsg.value = "폴더가 삭제되었습니다."
                         getFolderList()
                     }
                 } else {
