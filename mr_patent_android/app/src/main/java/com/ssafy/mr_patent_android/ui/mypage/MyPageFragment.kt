@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.ssafy.mr_patent_android.R
@@ -20,8 +21,6 @@ class MyPageFragment : BaseFragment<FragmentMyPageBinding>(
 ) {
     private val userLeaveViewModel : UserLeaveViewModel by activityViewModels()
     private val profileEditViewModel : ProfileEditViewModel by activityViewModels()
-
-    private lateinit var imageUri: Uri
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -98,13 +97,12 @@ class MyPageFragment : BaseFragment<FragmentMyPageBinding>(
         }
 
         profileEditViewModel.profileImage.observe(viewLifecycleOwner, {
-            Log.d(TAG, "initObserver: profileImage: ${it}")
             if (it != null) {
                 Glide.with(requireContext())
                     .load(it)
                     .circleCrop()
                     .into(binding.ivProfile)
-            } else {
+            } else if (it == "") {
                 Glide.with(requireContext())
                     .load(R.drawable.user_profile)
                     .circleCrop()
@@ -113,7 +111,6 @@ class MyPageFragment : BaseFragment<FragmentMyPageBinding>(
         })
 
         profileEditViewModel.memberInfo.observe(viewLifecycleOwner, {
-            Log.d(TAG, "initObserver: userImage: ${it.userImage}")
             profileEditViewModel.getImage(it.userImage)
         })
     }
