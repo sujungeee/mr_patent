@@ -11,6 +11,7 @@ import com.d208.mr_patent_backend.domain.chat.service.SseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -52,7 +53,7 @@ public class ChatRoomController {
             @PathVariable String roomId,
             @RequestParam(required = false) Long lastMessageId // 파라미터 없어도 괜찮음(첫 대화 불러오기 때문에)
     ) {
-        int size = 10;
+        int size = 20;
         List<ChatMessageDto> messages = chatService.getMessages(roomId, lastMessageId, size);
         Map<String, Object> response = new HashMap<>();
         response.put("data", messages);
@@ -60,8 +61,9 @@ public class ChatRoomController {
     }
 
     @Operation(summary = "SSE 연결")
-    @GetMapping("/subscribe/{userId}")
+    @GetMapping(value = "/subscribe/{userId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter subscribe(@PathVariable Integer userId) {
         return sseService.subscribe(userId);
     }
+
 }

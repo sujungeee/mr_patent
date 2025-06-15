@@ -1,10 +1,10 @@
 package com.d208.mr_patent_backend.domain.voca.controller;
 
 import com.d208.mr_patent_backend.domain.user.entity.User;
-import com.d208.mr_patent_backend.domain.voca.dto.BookmarkCountDTO;
+import com.d208.mr_patent_backend.domain.voca.dto.bookmark.BookmarkCountDTO;
 import com.d208.mr_patent_backend.domain.voca.dto.bookmark.BookmarkListDTO;
-import com.d208.mr_patent_backend.domain.voca.dto.BookmarkRequestDTO;
-import com.d208.mr_patent_backend.domain.voca.dto.BookmarkResponseDTO;
+import com.d208.mr_patent_backend.domain.voca.dto.bookmark.BookmarkRequestDTO;
+import com.d208.mr_patent_backend.domain.voca.dto.bookmark.BookmarkResponseDTO;
 import com.d208.mr_patent_backend.domain.voca.service.BookmarkService;
 import com.d208.mr_patent_backend.global.dto.CommonResponseDto;
 import com.d208.mr_patent_backend.global.util.SecurityUtils;
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
-@Tag(name = "북마크 API", description = "단어 북마크 추가, 조회, 삭제 기능")
+@Tag(name = "북마크 API", description = "단어 북마크 추가/조회/삭제")
 @RestController
 @RequestMapping("/api/bookmarks")
 @RequiredArgsConstructor

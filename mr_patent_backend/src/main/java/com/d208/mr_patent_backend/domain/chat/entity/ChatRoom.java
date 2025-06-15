@@ -24,6 +24,7 @@ public class ChatRoom {
 
     @Id
     private Integer userId;
+
     private Integer receiverId;
     private Integer status;
     private Integer unreadCount;
@@ -34,6 +35,10 @@ public class ChatRoom {
     private Instant lastTimestamp;
     private Instant created;
     private Instant updated;
+
+    @Column(name = "heartbeat")
+    private Instant heartbeat;
+
 
 //    private String userName;
 //    private String userImage;
